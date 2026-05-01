@@ -1,0 +1,633 @@
+<div id="mc-cs-block" class="mc-cs">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap">
+  <style>
+    .mc-cs {
+      --cs-bg:   #0c0c0c;
+      --cs-text: #e5e5e5;
+      --cs-muted:#707070;
+      --cs-gold: #d4a84b;
+      font-family: 'Manrope', -apple-system, sans-serif;
+      background: var(--cs-bg);
+      padding: 4rem 1.5rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* ── Header ── */
+    .mc-cs__header {
+      max-width: 80rem;
+      margin: 0 auto 3rem;
+      padding: 0 1.5rem;
+    }
+    .mc-cs__label {
+      font-size: 16px;
+      font-weight: 300;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #808080;
+      margin: 0 0 10px;
+    }
+    .mc-cs__title {
+      font-size: 2.5rem;
+      font-weight: 400;
+      color: var(--cs-text);
+      margin: 0;
+      line-height: 1.15;
+    }
+
+    /* ── Carousel structure ── */
+    .mc-cs__carousel {
+      position: relative;
+      max-width: 80rem;
+      margin: 0 auto;
+      padding: 0 4rem;
+    }
+    .mc-cs__viewport { overflow: hidden; }
+    .mc-cs__nav svg { display: block; }
+    .mc-cs__track {
+      display: flex;
+      gap: 1.5rem;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 0.75rem 1.5rem 1.25rem;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .mc-cs__track::-webkit-scrollbar { display: none; }
+
+    /* ── Card ── */
+    .mc-cs__card {
+      flex: 0 0 280px;
+      min-width: 280px;
+      width: 280px;
+      height: 420px;
+      border-radius: 1rem;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      scroll-snap-align: start;
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: transform 0.38s cubic-bezier(0.16,1,0.3,1),
+                  border-color 0.3s;
+    }
+    .mc-cs__card:hover:not(.mc-expanded) {
+      transform: translateY(-6px);
+      border-color: rgba(212,168,75,0.22);
+    }
+
+    /* ── Image ── */
+    .mc-cs__img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: filter 0.55s, transform 0.55s;
+    }
+    .mc-cs__card:hover:not(.mc-expanded) .mc-cs__img { transform: scale(1.04); }
+    .mc-cs__card.mc-expanded .mc-cs__img {
+      filter: blur(14px) brightness(0.35);
+      transform: scale(1.1);
+    }
+
+    /* ── Overlay ── */
+    .mc-cs__overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(12,12,12,0.96) 0%,
+        rgba(12,12,12,0.52) 45%,
+        rgba(12,12,12,0.12) 100%
+      );
+      transition: background 0.55s;
+    }
+    .mc-cs__card.mc-expanded .mc-cs__overlay {
+      background: rgba(12,12,12,0.84);
+    }
+
+    /* ── FRONT (collapsed) ── */
+    .mc-cs__front {
+      position: absolute;
+      inset: 0;
+      padding: 1.25rem 1.375rem 1.375rem;
+      display: flex;
+      flex-direction: column;
+      transition: opacity 0.22s, visibility 0.22s;
+    }
+    .mc-cs__card.mc-expanded .mc-cs__front {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .mc-cs__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .mc-cs__num {
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      color: var(--cs-muted);
+    }
+    .mc-cs__tag {
+      font-size: 8px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--cs-gold);
+      border: 1px solid rgba(212,168,75,0.28);
+      border-radius: 20px;
+      padding: 3px 9px;
+      line-height: 1.5;
+    }
+
+    .mc-cs__bottom { margin-top: auto; }
+    .mc-cs__stat-val {
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--cs-gold);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .mc-cs__stat-lbl {
+      font-size: 0.6875rem;
+      color: var(--cs-muted);
+      margin-bottom: 0.6rem;
+    }
+    .mc-cs__name {
+      font-size: 1.0625rem;
+      font-weight: 400;
+      color: var(--cs-text);
+      margin: 0;
+      line-height: 1.35;
+      padding-right: 2.5rem;
+    }
+
+    /* ── Toggle button (↓ / ↑) ── */
+    .mc-cs__toggle {
+      position: absolute;
+      bottom: 1.375rem;
+      right: 1.375rem;
+      width: 1.875rem;
+      height: 1.875rem;
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--cs-muted);
+      font-size: 13px;
+      z-index: 5;
+      transition: border-color 0.3s, color 0.3s, transform 0.38s cubic-bezier(0.16,1,0.3,1);
+    }
+    .mc-cs__card:hover:not(.mc-expanded) .mc-cs__toggle {
+      border-color: rgba(212,168,75,0.35);
+      color: var(--cs-gold);
+    }
+    .mc-cs__card.mc-expanded .mc-cs__toggle {
+      transform: rotate(180deg);
+      border-color: rgba(255,255,255,0.13);
+      color: var(--cs-muted);
+    }
+
+    /* ── STORY (expanded) ── */
+    .mc-cs__story {
+      position: absolute;
+      inset: 0;
+      padding: 1.25rem 1.375rem 4rem;
+      overflow-y: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      -webkit-overflow-scrolling: touch;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.28s 0.06s, visibility 0.28s;
+    }
+    .mc-cs__story::-webkit-scrollbar { display: none; }
+    .mc-cs__card.mc-expanded .mc-cs__story {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .mc-cs__s-num {
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      color: var(--cs-muted);
+      margin-bottom: 0.25rem;
+    }
+    .mc-cs__s-title {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--cs-text);
+      margin: 0 0 0.875rem;
+      line-height: 1.3;
+      padding-right: 2rem;
+    }
+    .mc-cs__s-line {
+      height: 1px;
+      background: rgba(255,255,255,0.07);
+      margin-bottom: 0.875rem;
+    }
+    .mc-cs__section { margin-bottom: 0.875rem; }
+    .mc-cs__section:last-child { margin-bottom: 0; }
+    .mc-cs__s-label {
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--cs-gold);
+      margin-bottom: 0.3rem;
+    }
+    .mc-cs__s-text {
+      font-size: 0.8125rem;
+      line-height: 1.65;
+      color: rgba(229,229,229,0.72);
+      margin: 0;
+    }
+    .mc-cs__s-text--result {
+      color: var(--cs-text);
+      font-weight: 500;
+    }
+
+    /* ── Nav buttons ── */
+    .mc-cs__nav {
+      display: none;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3rem;
+      height: 3rem;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 50%;
+      background: rgba(12,12,12,0.65);
+      color: var(--cs-text);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      z-index: 10;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+      box-sizing: border-box;
+      padding: 0;
+      aspect-ratio: 1;
+    }
+    .mc-cs__nav:hover {
+      background: rgba(12,12,12,0.95);
+      border-color: var(--cs-gold);
+      color: var(--cs-gold);
+    }
+    .mc-cs__nav--prev { left: 0; }
+    .mc-cs__nav--next { right: 0; }
+
+    /* ── Mobile ── */
+    @media (max-width: 767px) {
+      .mc-cs { padding: 2.5rem 20px; }
+      .mc-cs__header { padding: 0 0; margin-bottom: 1.5rem; }
+      .mc-cs__label { font-size: 16px; letter-spacing: 0.08em; }
+      .mc-cs__title { font-size: 40px; }
+      .mc-cs__carousel { padding: 0; }
+      .mc-cs__track { padding: 0 1.5rem 1rem; gap: 1rem; }
+      .mc-cs__card {
+        flex: 0 0 85vw;
+        min-width: 85vw;
+        width: 85vw;
+        height: 440px;
+      }
+    }
+
+    /* ── Desktop ── */
+    @media (min-width: 768px) {
+      .mc-cs__nav { display: flex; }
+      .mc-cs__viewport {
+        overflow-x: hidden;
+        overflow-y: visible;
+        width: calc(280px * 4 + 24px * 3);
+        margin: 0 auto;
+      }
+      .mc-cs__track.mc-carousel {
+        overflow: visible;
+        padding: 0.75rem 0 1.25rem;
+        transition: transform 0.42s cubic-bezier(0.16,1,0.3,1);
+      }
+    }
+  </style>
+
+  <div class="mc-cs__header">
+    <p class="mc-cs__label" id="mcc-label">Кейсы</p>
+    <h2 class="mc-cs__title" id="mcc-title">Реальные запросы</h2>
+  </div>
+
+  <div class="mc-cs__carousel">
+    <button type="button" class="mc-cs__nav mc-cs__nav--prev" id="mcc-prev" aria-label="Назад">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+        <path d="M14.5 5L8 12l6.5 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+    </button>
+    <button type="button" class="mc-cs__nav mc-cs__nav--next" id="mcc-next" aria-label="Вперёд">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+        <path d="M9.5 5L16 12l-6.5 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+    </button>
+    <div class="mc-cs__viewport">
+      <div class="mc-cs__track" id="mcc-track"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+
+/* ================================================================
+   РАЗДЕЛ ДЛЯ РЕДАКТИРОВАНИЯ
+   Меняйте только тексты и картинки ниже.
+   Код ниже линии «ТЕХНИЧЕСКАЯ ЧАСТЬ» — не трогать.
+================================================================ */
+
+// ── Заголовок блока ─────────────────────────────────────────────
+//   HEADER_LABEL — маленькая надпись над заголовком
+//   HEADER_TITLE — большой заголовок
+var HEADER_LABEL = 'Кейсы';
+var HEADER_TITLE  = 'Реальные запросы';
+
+// ── Карточки кейсов ─────────────────────────────────────────────
+//
+//  title     — заголовок на карточке (желательно до 5 слов)
+//  tag       — ярлык-категория (1–2 слова, вверху справа)
+//  stat      — ключевой факт крупным шрифтом (цифра, время, слово)
+//  statLabel — подпись под фактом (маленький текст)
+//  image     — прямая ссылка на картинку
+//              Как добавить свою: загрузите картинку на Tilda
+//              (в любой блок с картинкой), нажмите ПКМ → «Копировать адрес»
+//              и вставьте сюда в кавычки вместо существующей ссылки.
+//  situation — текст «Ситуация» (что нужно было клиенту)
+//  solution  — текст «Решение» (что сделали вы)
+//  result    — текст «Результат» (итог)
+//
+//  Чтобы ДОБАВИТЬ карточку — скопируйте блок { ... },
+//  вставьте его после последнего блока, поставьте запятую между блоками.
+//  Чтобы УДАЛИТЬ карточку — уберите нужный блок { ... } и запятую перед/после него.
+
+var CASES = [
+  {
+    title: 'Срочный private jet',
+    tag: 'Авиация',
+    stat: '2 часа',
+    statLabel: 'от запроса до вылета',
+    image: 'https://static.tildacdn.com/tild6461-3738-4264-a262-333366626363/case-jet_1.jpg',
+    situation: 'Клиенту нужно было вылететь из ОАЭ в Европу в тот же день — стандартные варианты были недоступны из-за политической нестабильности.',
+    solution: 'За 2 часа нашли и организовали private jet, согласовали маршрут и сопровождение.',
+    result: 'Клиент вылетел в день обращения без задержек.'
+  },
+  {
+    title: 'Стол в закрытом ресторане',
+    tag: 'Рестораны',
+    stat: '30 мин',
+    statLabel: 'время решения',
+    image: 'https://static.tildacdn.com/tild6237-3766-4065-a161-626633643361/case-restaurant_1.jpg',
+    situation: 'Клиент хотел попасть в ресторан без доступных бронирований в тот же вечер.',
+    solution: 'Связались с партнёрами и организовали стол в течение 30 минут.',
+    result: 'Ужин состоялся без ожидания и компромиссов.'
+  },
+  {
+    title: 'Переезд в другую страну',
+    tag: 'Переезд',
+    stat: 'Анталья',
+    statLabel: 'переезд в срок',
+    image: 'https://static.tildacdn.com/tild3936-3666-4564-a265-353638303838/case-relocation_1.jpg',
+    situation: 'Клиенту нужно было за короткий срок организовать переезд в Анталью: жильё, перелёт и базовую инфраструктуру.',
+    solution: 'Подобрали варианты, организовали перелёт и заселение, подключили локальных партнёров.',
+    result: 'Переезд прошёл без стресса и в согласованные сроки.'
+  },
+  {
+    title: 'Оплата через криптовалюту',
+    tag: 'Финансы',
+    stat: '1 день',
+    statLabel: 'срок платежа',
+    image: 'https://static.tildacdn.com/tild3235-3834-4532-b061-353332333665/case-crypto_1.jpg',
+    situation: 'Клиенту нужно было оплатить услугу в Европе, принимающую только банковский перевод.',
+    solution: 'Организовали конвертацию криптовалюты и провели оплату через партнёров.',
+    result: 'Платёж прошёл в тот же день без участия клиента.'
+  },
+  {
+    title: 'Видеограф в Лос-Анджелесе',
+    tag: 'Поиск',
+    stat: '7',
+    statLabel: 'проверено кандидатов',
+    image: 'https://static.tildacdn.com/tild3866-3838-4631-b337-376563323262/case-videographer.jpg',
+    situation: 'Клиент искал профессионального русскоязычного видеографа в Лос-Анджелесе для съёмки lookbook новой коллекции бренда одежды.',
+    solution: 'Проверили 7 видеографов, отобрали 3 с актуальным портфолио, организовали сравнение по цене, стилю и срокам.',
+    result: 'Клиент выбрал видеографа. Съёмка прошла успешно, материал получен в срок.'
+  },
+  {
+    title: 'Ужин на крыше в Дубае',
+    tag: 'События',
+    stat: 'Принято',
+    statLabel: 'предложение руки и сердца',
+    image: 'https://static.tildacdn.com/tild6136-3436-4534-a164-323461323061/case-rooftop-dinner.jpg',
+    situation: 'Клиент хотел сделать предложение в Дубае: приватный ужин на крыше отеля с видом на Бурдж-Халифу.',
+    solution: 'Нашли площадку, договорились о декоре, живой музыке и специальном меню.',
+    result: 'Ужин прошёл идеально. Предложение было принято.'
+  },
+  {
+    title: 'Оплата виллы на Пхукете',
+    tag: 'Жильё',
+    stat: '14 ч',
+    statLabel: 'до заселения',
+    image: 'https://static.tildacdn.com/tild3432-6537-4561-a235-333332326333/case-villa-phuket.jpg',
+    situation: 'Клиент забронировал виллу на Пхукете, но не смог оплатить из-за отсутствия иностранной карты. До заселения оставалось 14 часов.',
+    solution: 'Нашли владельца, согласовали условия и провели оплату в рублях.',
+    result: 'Клиент заехал в виллу вовремя.'
+  },
+  {
+    title: 'Аренда яхты за 2 дня',
+    tag: 'Яхты',
+    stat: '5',
+    statLabel: 'вариантов подобрано',
+    image: 'https://static.tildacdn.com/tild3464-6338-4164-b564-353832626665/case-yacht.jpg',
+    situation: 'Клиент хотел отметить день рождения на яхте в Анталье на 8 человек. Обратился за 2 дня до события.',
+    solution: 'Нашли 5 вариантов, выбрали лучшую яхту с капитаном и кейтерингом.',
+    result: 'Праздник прошёл на высшем уровне.'
+  },
+  {
+    title: 'Трансфер группы в Стамбуле',
+    tag: 'Трансфер',
+    stat: '12',
+    statLabel: 'человек — без задержек',
+    image: 'https://static.tildacdn.com/tild6533-6638-4335-b535-613738613530/case-transfer.jpg',
+    situation: 'Группа из 12 человек прилетала в Стамбул ночью. Нужно было организовать встречу в аэропорту, VIP-трансфер на двух автомобилях и размещение в отеле.',
+    solution: 'Встретили всех гостей с табличками, провели через все формальности и доставили в отель с комфортом.',
+    result: 'Все гости размещены без задержек.'
+  },
+  {
+    title: 'Поиск доулы в Бразилии',
+    tag: 'Личное',
+    stat: 'Santos',
+    statLabel: 'всё организовано',
+    image: 'https://static.tildacdn.com/tild6234-3938-4565-b237-376537643861/case-doula.jpg',
+    situation: 'Клиентка решила рожать в г. Сантос, Бразилия. Нужна была доула и помощь с выбором роддома.',
+    solution: 'Сделали подборку роддомов, нашли русскоязычную португалоговорящую доулу и договорились об условиях.',
+    result: 'Клиентка без переживаний ожидает важного события в своей жизни.'
+  }
+];
+
+
+/* ================================================================
+   ТЕХНИЧЕСКАЯ ЧАСТЬ — не редактировать
+================================================================ */
+
+var CARD_W   = 280;
+var CARD_GAP = 24;
+var STEP     = CARD_W + CARD_GAP;
+var N        = CASES.length;
+
+var track       = document.getElementById('mcc-track');
+var prevBtn     = document.getElementById('mcc-prev');
+var nextBtn     = document.getElementById('mcc-next');
+var expandedIdx = null;
+var curSlide    = 0;
+var isDesktop   = false;
+
+// Устанавливаем заголовки из констант
+var lblEl = document.getElementById('mcc-label');
+var ttlEl = document.getElementById('mcc-title');
+if (lblEl) lblEl.textContent = HEADER_LABEL;
+if (ttlEl) ttlEl.textContent = HEADER_TITLE;
+
+// ── HTML одной карточки ──────────────────────────────────────────
+function cardHtml(c, i) {
+  var realIdx = i % N;
+  var num     = String(realIdx + 1).padStart(2, '0');
+  return (
+    '<div class="mc-cs__card" data-index="' + realIdx + '">' +
+      '<img class="mc-cs__img" src="' + c.image + '" alt="' + c.title + '" loading="lazy">' +
+      '<div class="mc-cs__overlay"></div>' +
+
+      // Лицевая сторона
+      '<div class="mc-cs__front">' +
+        '<div class="mc-cs__top">' +
+          '<span class="mc-cs__num">' + num + '</span>' +
+          '<span class="mc-cs__tag">' + c.tag + '</span>' +
+        '</div>' +
+        '<div class="mc-cs__bottom">' +
+          '<div class="mc-cs__stat-val">' + c.stat + '</div>' +
+          '<div class="mc-cs__stat-lbl">' + c.statLabel + '</div>' +
+          '<h3 class="mc-cs__name">' + c.title + '</h3>' +
+        '</div>' +
+      '</div>' +
+
+      // Кнопка раскрыть / свернуть
+      '<span class="mc-cs__toggle">&#8595;</span>' +
+
+      // История (открытое состояние)
+      '<div class="mc-cs__story">' +
+        '<div class="mc-cs__s-num">' + num + '</div>' +
+        '<h3 class="mc-cs__s-title">' + c.title + '</h3>' +
+        '<div class="mc-cs__s-line"></div>' +
+        '<div class="mc-cs__section">' +
+          '<div class="mc-cs__s-label">Ситуация</div>' +
+          '<p class="mc-cs__s-text">' + c.situation + '</p>' +
+        '</div>' +
+        '<div class="mc-cs__section">' +
+          '<div class="mc-cs__s-label">Решение</div>' +
+          '<p class="mc-cs__s-text">' + c.solution + '</p>' +
+        '</div>' +
+        '<div class="mc-cs__section">' +
+          '<div class="mc-cs__s-label">Результат</div>' +
+          '<p class="mc-cs__s-text mc-cs__s-text--result">' + c.result + '</p>' +
+        '</div>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+// ── Отрисовка ───────────────────────────────────────────────────
+function render() {
+  expandedIdx = null;
+  if (isDesktop) {
+    var triple = CASES.concat(CASES, CASES);
+    track.innerHTML = triple.map(function (c, i) { return cardHtml(c, i); }).join('');
+    track.classList.add('mc-carousel');
+    track.style.width = (triple.length * CARD_W + (triple.length - 1) * CARD_GAP) + 'px';
+    track.style.transition = 'none';
+    curSlide = N;
+    setPos(N);
+    track.offsetHeight; // принудительный reflow
+    track.style.transition = '';
+  } else {
+    track.innerHTML = CASES.map(function (c, i) { return cardHtml(c, i); }).join('');
+    track.classList.remove('mc-carousel');
+    track.style.width     = '';
+    track.style.transform = '';
+  }
+  bindClicks();
+}
+
+// ── Позиция карусели ─────────────────────────────────────────────
+function setPos(idx) {
+  track.style.transform = 'translateX(' + (-idx * STEP) + 'px)';
+}
+
+// ── Кнопки навигации ─────────────────────────────────────────────
+function next() {
+  curSlide++;
+  setPos(curSlide);
+  if (curSlide >= N * 2) {
+    setTimeout(function () {
+      track.style.transition = 'none';
+      curSlide = N;
+      setPos(N);
+      track.offsetHeight;
+      track.style.transition = '';
+    }, 440);
+  }
+}
+
+function prev() {
+  if (curSlide === 0) {
+    track.style.transition = 'none';
+    curSlide = N * 2 - 1;
+    setPos(curSlide);
+    track.offsetHeight;
+    track.style.transition = '';
+    return;
+  }
+  curSlide--;
+  setPos(curSlide);
+}
+
+// ── Раскрытие карточки по клику ──────────────────────────────────
+function bindClicks() {
+  track.querySelectorAll('.mc-cs__card').forEach(function (card) {
+    card.addEventListener('click', function () {
+      var idx = parseInt(card.getAttribute('data-index'), 10);
+      expandedIdx = (expandedIdx === idx) ? null : idx;
+      track.querySelectorAll('.mc-cs__card').forEach(function (c) {
+        var match = parseInt(c.getAttribute('data-index'), 10) === expandedIdx;
+        c.classList.toggle('mc-expanded', match);
+        if (match) {
+          // сбрасываем скролл истории при открытии
+          var story = c.querySelector('.mc-cs__story');
+          if (story) story.scrollTop = 0;
+        }
+      });
+    });
+  });
+}
+
+// ── Адаптация к размеру окна ─────────────────────────────────────
+function checkViewport() {
+  var was   = isDesktop;
+  isDesktop = window.innerWidth >= 768;
+  if (was !== isDesktop) render();
+}
+
+// ── Инициализация ────────────────────────────────────────────────
+checkViewport();
+render();
+window.addEventListener('resize', checkViewport);
+if (prevBtn) prevBtn.addEventListener('click', function () { if (isDesktop) prev(); });
+if (nextBtn) nextBtn.addEventListener('click', function () { if (isDesktop) next(); });
+
+})();
+</script>

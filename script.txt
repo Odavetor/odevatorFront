@@ -1,0 +1,461 @@
+<div id="mercury-services-slider" class="mc-slider">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap">
+  <style>
+    .mc-slider {
+      --mc-bg: #0c0c0c;
+      --mc-text: #e5e5e5;
+      --mc-muted: #808080;
+      --mc-silver: #c0c0c0;
+      --mc-gold: #d4a84b;
+      font-family: 'Manrope', -apple-system, sans-serif;
+      background: var(--mc-bg);
+      padding: 4rem 1.5rem;
+      width: 100%;
+      box-sizing: border-box;
+      overflow-x: visible;
+      overflow-y: visible;
+    }
+    .mc-slider__header {
+      max-width: 80rem;
+      margin: 0 auto 3rem;
+      padding: 0 1.5rem;
+      text-align: left;
+    }
+    .mc-slider__label {
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--mc-muted);
+      margin-bottom: 10px;
+    }
+    .mc-slider__title {
+      font-family: 'Manrope', -apple-system, sans-serif;
+      font-size: 2.5rem;
+      font-weight: 300;
+      color: var(--mc-text);
+      margin: 0;
+    }
+    .mc-slider__track {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 0 1.5rem 1rem;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      justify-content: flex-start;
+      max-width: 80rem;
+      margin: 0 auto;
+      min-width: 0;
+      scroll-padding: 0 1.5rem;
+    }
+    @media (min-width: 768px) {
+      .mc-slider__track { padding: 0 2rem 1rem; gap: 1.5rem; }
+    }
+    .mc-slider__track::-webkit-scrollbar { display: none; height: 0; }
+    .mc-slider__card {
+      flex: 0 0 280px;
+      min-width: 280px;
+      width: 280px;
+      height: 420px;
+      border-radius: 1rem;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      scroll-snap-align: start;
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: transform 0.38s cubic-bezier(0.16,1,0.3,1),
+                  border-color 0.3s;
+    }
+    .mc-slider__card:hover:not(.mc-expanded) {
+      transform: translateY(-6px);
+      border-color: rgba(212,168,75,0.22);
+    }
+    @media (max-width: 767px) {
+      .mc-slider__card {
+        flex: 0 0 85vw;
+        min-width: 85vw;
+        width: 85vw;
+        height: 420px;
+      }
+      .mc-slider { padding: 2.5rem 20px; }
+      .mc-slider__header {
+        padding: 0 0;
+        margin-bottom: 1.5rem;
+        max-width: none;
+        margin-left: 0;
+        margin-right: 0;
+        text-align: left;
+      }
+      .mc-slider__label { font-size: 16px; letter-spacing: 0.08em; }
+      .mc-slider__title { font-size: 40px; }
+      .mc-slider__list { padding: 0.75rem 1rem; }
+      .mc-slider__name { font-size: 1.25rem; }
+    }
+    .mc-slider__card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: filter 0.55s, transform 0.55s;
+    }
+    .mc-slider__card:hover:not(.mc-expanded) img { transform: scale(1.04); }
+    .mc-slider__card.mc-expanded img {
+      filter: blur(14px) brightness(0.35);
+      transform: scale(1.1);
+    }
+    .mc-slider__overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(12,12,12,0.96) 0%,
+        rgba(12,12,12,0.52) 45%,
+        rgba(12,12,12,0.12) 100%
+      );
+      transition: background 0.55s;
+    }
+    .mc-slider__card.mc-expanded .mc-slider__overlay {
+      background: rgba(12,12,12,0.84);
+    }
+    .mc-slider__content {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 1.5rem;
+      transition: opacity 0.22s, visibility 0.22s;
+    }
+    .mc-slider__num {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--mc-muted);
+    }
+    .mc-slider__name {
+      font-family: 'Manrope', -apple-system, sans-serif;
+      font-size: 1.5rem;
+      font-weight: 300;
+      color: var(--mc-text);
+      margin: 0.25rem 0 0.5rem;
+    }
+    .mc-slider__count {
+      font-size: 0.875rem;
+      color: var(--mc-muted);
+    }
+    .mc-slider__list {
+      position: absolute;
+      inset: 0;
+      top: 0;
+      padding: 1rem 1.5rem 1rem;
+      overflow-y: auto;
+      overflow-x: hidden;
+      list-style: none;
+      margin: 0;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.28s 0.06s, visibility 0.28s;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .mc-slider__list::-webkit-scrollbar { display: none; }
+    .mc-slider__card.mc-expanded .mc-slider__list {
+      opacity: 1;
+      visibility: visible;
+    }
+    .mc-slider__card.mc-expanded .mc-slider__content {
+      opacity: 0;
+      visibility: hidden;
+    }
+    .mc-slider__item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      font-size: 0.9375rem;
+      line-height: 1.55;
+      color: var(--mc-text);
+      margin-bottom: 0.75rem;
+    }
+    @media (min-width: 768px) {
+      .mc-slider__item { font-size: 1rem; line-height: 1.6; margin-bottom: 0.85rem; }
+    }
+    .mc-slider__item::before {
+      content: '';
+      flex-shrink: 0;
+      width: 5px;
+      height: 5px;
+      margin-top: 6px;
+      border-radius: 50%;
+      background: var(--mc-gold);
+    }
+    .mc-slider__arrow {
+      position: absolute;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      width: 1.875rem;
+      height: 1.875rem;
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--mc-muted);
+      font-size: 14px;
+      z-index: 5;
+      transition: border-color 0.3s, color 0.3s, transform 0.38s cubic-bezier(0.16,1,0.3,1);
+    }
+    .mc-slider__card:hover:not(.mc-expanded) .mc-slider__arrow {
+      border-color: rgba(212,168,75,0.35);
+      color: var(--mc-gold);
+    }
+    .mc-slider__card.mc-expanded .mc-slider__arrow {
+      transform: rotate(180deg);
+      border-color: rgba(255,255,255,0.13);
+      color: var(--mc-muted);
+    }
+    .mc-slider__carousel {
+      position: relative;
+      max-width: 80rem;
+      margin: 0 auto;
+      padding: 0 4rem;
+    }
+    .mc-slider__nav {
+      display: none;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3rem;
+      height: 3rem;
+      min-width: 3rem;
+      min-height: 3rem;
+      padding: 0;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      background: rgba(12,12,12,0.6);
+      color: var(--mc-text);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      z-index: 10;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+      box-sizing: border-box;
+      flex-shrink: 0;
+      aspect-ratio: 1;
+    }
+    .mc-slider__nav svg { display: block; }
+    .mc-slider__nav:hover {
+      background: rgba(12,12,12,0.9);
+      border-color: var(--mc-gold);
+      color: var(--mc-gold);
+    }
+    .mc-slider__nav--prev { left: 0; }
+    .mc-slider__nav--next { right: 0; }
+    .mc-slider__viewport {
+      overflow: hidden;
+    }
+    @media (min-width: 768px) {
+      .mc-slider__nav { display: flex; }
+      .mc-slider__viewport {
+        overflow-x: hidden;
+        overflow-y: visible;
+        margin: 0 auto;
+        width: calc(280px * 4 + 24px * 3);
+      }
+      .mc-slider__track.mc-carousel {
+        overflow: visible;
+        padding: 0.75rem 0 1.25rem;
+        justify-content: flex-start;
+        transition: transform 0.4s ease;
+      }
+    }
+    @media (max-width: 767px) {
+      .mc-slider__carousel { padding: 0; }
+    }
+  </style>
+
+  <div class="mc-slider__header">
+    <p class="mc-slider__label">Услуги</p>
+    <h2 class="mc-slider__title">Что мы делаем</h2>
+  </div>
+
+  <div class="mc-slider__carousel">
+    <button type="button" class="mc-slider__nav mc-slider__nav--prev" id="mc-prev" aria-label="Назад">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+        <path d="M14.5 5L8 12l6.5 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+    </button>
+    <button type="button" class="mc-slider__nav mc-slider__nav--next" id="mc-next" aria-label="Вперёд">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+        <path d="M9.5 5L16 12l-6.5 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+    </button>
+    <div class="mc-slider__viewport">
+      <div class="mc-slider__track" id="mc-track"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var CARD_WIDTH = 280;
+  var CARD_GAP = 24;
+  var STEP = CARD_WIDTH + CARD_GAP;
+  var VISIBLE = 4;
+
+  var IMAGES = {
+    travel: 'https://static.tildacdn.com/tild6532-3432-4131-b561-383938336164/luxury-travel.jpg',   // luxury-travel.jpg
+    lifestyle: 'https://static.tildacdn.com/tild3062-3963-4461-b631-383331663063/luxury-dining.jpg', // luxury-dining.jpg
+    admin: 'https://static.tildacdn.com/tild3465-3531-4532-b834-356532313038/luxury-hotel.jpg',     // luxury-hotel.jpg
+    buying: 'https://static.tildacdn.com/tild3236-3863-4739-a635-396131303162/luxury-shopping.jpg', // luxury-shopping.jpg
+    urgent: 'https://static.tildacdn.com/tild3436-6334-4564-a236-313230363335/luxury-spa.jpg'       // luxury-spa.jpg
+  };
+
+  var CATEGORIES = [
+    { id: 'travel', title: 'Путешествия и транспорт', imageKey: 'travel', items: [
+      'Бронирование и подбор путешествий, авиабилетов, отелей',
+      'Аренда private jet / чартеры, яхты, лимузины',
+      'VIP-прохождение аэропортов / встреча и проводы',
+      'Помощь при переезде',
+      'Аренда/покупка жилья',
+      'Аренда/покупка автомобиля',
+      'Организация трансфера'
+    ]},
+    { id: 'lifestyle', title: 'Образ жизни и события', imageKey: 'lifestyle', items: [
+      'Бронирование элитных ресторанов и столиков',
+      'VIP-доступ на закрытые мероприятия / выставки / спортивные события',
+      'Организация частных вечеринок и эксклюзивных experiences (день рождения, свадьба, свидание, деловое мероприятие)',
+      'Доставка подарков, посылок, цветов по миру',
+      'Доставка еды / заказ такси',
+      'Услуги стилистов, персональных тренеров, нянь, водителей, охраны, клининга',
+      'Подбор и рекомендация различных услуг'
+    ]},
+    { id: 'admin', title: 'Персональные и административные услуги', imageKey: 'admin', items: [
+      'Помощь с документами',
+      'Юридические и образовательные консультации',
+      'ВЭД: оплата услуг, инвойсы, обмен криптовалюты',
+      'Выпуск карт / помощь с ВНЖ',
+      'Оформление международного водительского удостоверения'
+    ]},
+    { id: 'buying', title: 'Покупки за рубежом', imageKey: 'buying', items: [
+      'Покупка за границей: бренды, часы, украшения',
+      'Поиск редких товаров'
+    ]},
+    { id: 'urgent', title: 'Срочные вопросы', imageKey: 'urgent', items: [
+      'Любой срочный вопрос — решаем оперативно'
+    ]}
+  ];
+
+  var track = document.getElementById('mc-track');
+  var prevBtn = document.getElementById('mc-prev');
+  var nextBtn = document.getElementById('mc-next');
+  var expandedIndex = null;
+  var currentSlide = 0;
+  var totalSlides = CATEGORIES.length;
+  var isDesktop = false;
+
+  function cardHtml(cat, i) {
+    var num = String((i % totalSlides) + 1).padStart(2, '0');
+    var imgUrl = IMAGES[cat.imageKey] || '';
+    var itemsHtml = cat.items.map(function(item) {
+      return '<li class="mc-slider__item">' + item + '</li>';
+    }).join('');
+    return '<div class="mc-slider__card" data-index="' + (i % totalSlides) + '">' +
+      '<img src="' + imgUrl + '" alt="' + cat.title + '">' +
+      '<div class="mc-slider__overlay"></div>' +
+      '<ul class="mc-slider__list">' + itemsHtml + '</ul>' +
+      '<div class="mc-slider__content">' +
+        '<span class="mc-slider__num">' + num + '</span>' +
+        '<h3 class="mc-slider__name">' + cat.title + '</h3>' +
+        '<p class="mc-slider__count">' + cat.items.length + ' направлений</p>' +
+      '</div>' +
+      '<span class="mc-slider__arrow">↓</span>' +
+    '</div>';
+  }
+
+  function render() {
+    if (isDesktop) {
+      var tripled = CATEGORIES.concat(CATEGORIES, CATEGORIES);
+      track.innerHTML = tripled.map(function(cat, i) { return cardHtml(cat, i); }).join('');
+      track.classList.add('mc-carousel');
+      track.style.width = (tripled.length * CARD_WIDTH + (tripled.length - 1) * CARD_GAP) + 'px';
+      track.style.transition = 'none';
+      currentSlide = totalSlides;
+      goToSlide(totalSlides);
+      track.offsetHeight;
+      track.style.transition = '';
+    } else {
+      track.innerHTML = CATEGORIES.map(function(cat, i) { return cardHtml(cat, i); }).join('');
+      track.classList.remove('mc-carousel');
+      track.style.width = '';
+    }
+    bindCardClicks();
+  }
+
+  function goToSlide(idx) {
+    currentSlide = idx;
+    var offset = -idx * STEP;
+    track.style.transform = 'translateX(' + offset + 'px)';
+  }
+
+  function next() {
+    currentSlide++;
+    goToSlide(currentSlide);
+    if (currentSlide >= totalSlides * 2) {
+      setTimeout(function() {
+        track.style.transition = 'none';
+        currentSlide = totalSlides;
+        goToSlide(totalSlides);
+        track.offsetHeight;
+        track.style.transition = '';
+      }, 400);
+    }
+  }
+
+  function prev() {
+    if (currentSlide === 0) {
+      track.style.transition = 'none';
+      currentSlide = totalSlides * 2 - 1;
+      goToSlide(currentSlide);
+      track.offsetHeight;
+      track.style.transition = '';
+      return;
+    }
+    currentSlide--;
+    goToSlide(currentSlide);
+  }
+
+  function checkViewport() {
+    var w = window.innerWidth;
+    var wasDesktop = isDesktop;
+    isDesktop = w >= 768;
+    if (wasDesktop !== isDesktop) {
+      expandedIndex = null;
+      render();
+      if (isDesktop) { currentSlide = totalSlides; goToSlide(currentSlide); }
+    }
+  }
+
+  function bindCardClicks() {
+    track.querySelectorAll('.mc-slider__card').forEach(function(card) {
+      card.addEventListener('click', function() {
+        var idx = parseInt(card.getAttribute('data-index'), 10);
+        expandedIndex = expandedIndex === idx ? null : idx;
+        track.querySelectorAll('.mc-slider__card').forEach(function(c) {
+          c.classList.toggle('mc-expanded', parseInt(c.getAttribute('data-index'), 10) === expandedIndex);
+        });
+      });
+    });
+  }
+
+  checkViewport();
+  render();
+  window.addEventListener('resize', checkViewport);
+
+  if (prevBtn) prevBtn.addEventListener('click', function() { if (isDesktop) prev(); });
+  if (nextBtn) nextBtn.addEventListener('click', function() { if (isDesktop) next(); });
+})();
+</script>
