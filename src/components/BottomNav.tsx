@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -14,7 +15,7 @@ const NAV = [
   { href: '/profile', icon: UserCircle, label: 'Профиль' },
 ]
 
-export default function BottomNav() {
+function BottomNavBase() {
   const pathname = usePathname()
 
   return (
@@ -71,3 +72,5 @@ export default function BottomNav() {
     </nav>
   )
 }
+
+export default memo(BottomNavBase)

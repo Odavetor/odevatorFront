@@ -1,6 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
+import Image from 'next/image'
 import { useState } from 'react'
 import { DownloadSimple, ClockCounterClockwise, X } from '@phosphor-icons/react'
 import type { HistoryItem } from '@/types'
@@ -54,12 +55,12 @@ function ImageCard({ item }: { item: HistoryItem }) {
         whileTap={{ scale: 0.97 }}
         transition={{ type: 'spring', stiffness: 400, damping: 28 }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={item.image_url}
           alt=""
-          className="w-full h-full object-cover"
-          loading="lazy"
+          fill
+          sizes="(max-width: 430px) 50vw, 215px"
+          className="object-cover"
         />
 
         {/* Gradient overlay */}
@@ -104,8 +105,14 @@ function ImageCard({ item }: { item: HistoryItem }) {
               onClick={(e) => e.stopPropagation()}
               className="relative max-w-full max-h-[85dvh] rounded-3xl overflow-hidden"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.image_url} alt="" className="max-w-full max-h-[85dvh] object-contain" />
+              <Image
+                src={item.image_url}
+                alt=""
+                width={800}
+                height={1294}
+                className="max-w-full max-h-[85dvh] object-contain w-auto h-auto"
+                priority
+              />
               <button
                 onClick={() => setLightbox(false)}
                 className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center"
@@ -167,9 +174,13 @@ export default function HistoryGrid({ items, loading }: Props) {
       {items.map((item, i) => (
         <motion.div
           key={item.id}
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+          transition={{
+            duration: 0.35,
+            delay: Math.min(i, 5) * 0.04,
+            ease: [0.16, 1, 0.3, 1],
+          }}
         >
           <ImageCard item={item} />
         </motion.div>

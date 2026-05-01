@@ -183,17 +183,15 @@ export default function VideoGenerateModal({ scenario, onClose, onStart }: Props
                       transition: 'border-color 0.22s ease, background 0.22s ease',
                     }}
                   >
-                    <motion.div
+                    <div
                       className="w-14 h-14 rounded-2xl flex items-center justify-center"
                       style={{
-                        background: 'rgba(224,63,106,0.1)',
-                        border: '1px solid rgba(224,63,106,0.18)',
+                        background: 'var(--rose-dim)',
+                        border: '1px solid var(--border-rose)',
                       }}
-                      animate={{ y: [0, -4, 0] }}
-                      transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut' }}
                     >
-                      <Camera size={24} color="#e03f6a" weight="duotone" />
-                    </motion.div>
+                      <Camera size={24} color="var(--rose)" weight="duotone" />
+                    </div>
                     <div className="text-center">
                       <p className="text-white text-sm font-medium">Загрузить фото</p>
                       <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.32)' }}>
@@ -249,11 +247,11 @@ export default function VideoGenerateModal({ scenario, onClose, onStart }: Props
                       }}
                       className="flex-1 py-2 rounded-xl text-sm font-medium"
                       style={{
-                        background: active ? 'rgba(224,63,106,0.1)' : 'rgba(255,255,255,0.04)',
+                        background: active ? 'var(--rose-dim)' : 'rgba(255,255,255,0.04)',
                         boxShadow: active
-                          ? '0 0 0 1.5px #E03F6A'
-                          : '0 0 0 1px rgba(255,255,255,0.08)',
-                        color: active ? '#E03F6A' : 'rgba(255,255,255,0.42)',
+                          ? 'inset 0 0 0 1.5px var(--rose)'
+                          : 'inset 0 0 0 1px var(--border-2)',
+                        color: active ? 'var(--rose)' : 'rgba(255,255,255,0.42)',
                         transition: 'all 0.18s ease',
                         WebkitTapHighlightColor: 'transparent',
                       }}
@@ -324,10 +322,12 @@ export default function VideoGenerateModal({ scenario, onClose, onStart }: Props
                 className="relative w-full py-4 rounded-2xl flex items-center justify-center gap-2.5 font-semibold text-base overflow-hidden"
                 style={{
                   background: canStart
-                    ? 'linear-gradient(135deg, #C85D0A 0%, #E07820 55%, #F0952E 100%)'
+                    ? 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)'
                     : 'rgba(255,255,255,0.04)',
-                  boxShadow: canStart ? '0 4px 24px rgba(200,93,10,0.42)' : 'none',
-                  border: canStart ? 'none' : '1px solid rgba(255,255,255,0.07)',
+                  boxShadow: canStart
+                    ? 'inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 0 rgba(0,0,0,0.4)'
+                    : 'none',
+                  border: canStart ? 'none' : '1px solid var(--border-1)',
                   color: canStart ? '#FFFFFF' : 'rgba(255,255,255,0.22)',
                   transition: 'all 0.25s ease',
                 }}
@@ -348,7 +348,7 @@ export default function VideoGenerateModal({ scenario, onClose, onStart }: Props
                     className="flex items-center gap-1 px-2 py-0.5 rounded-full"
                     style={{ background: 'rgba(0,0,0,0.18)' }}
                   >
-                    <Lightning size={11} weight="fill" color="#FFE066" />
+                    <Lightning size={11} weight="fill" color="rgba(255,255,255,0.9)" />
                     <span className="font-mono text-xs">{cost}</span>
                   </div>
                 )}

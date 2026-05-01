@@ -3,32 +3,31 @@
 @tailwind utilities;
 
 :root {
+  /* Surfaces */
   --bg: #0D0D0F;
   --s1: #111116;
   --s2: #18181F;
   --s3: #1F1F28;
   --s4: #2A2A35;
 
-  --rose: #e03f6a;
-  --rose-dim: rgba(224, 63, 106, 0.14);
-  --rose-glow: rgba(224, 63, 106, 0.08);
-  --rose-deep: #c9294a;
+  /* Single accent — rose */
+  --rose: #E03F6A;
+  --rose-deep: #C9294A;
+  --rose-dim: rgba(224, 63, 106, 0.12);
+  --rose-soft: rgba(224, 63, 106, 0.06);
 
-  --violet: #8B5CF6;
-  --violet-solid: #7C3AED;
-  --violet-dim: rgba(139, 92, 246, 0.14);
-  --violet-glow: rgba(139, 92, 246, 0.08);
+  /* Editorial gold for premium hints (used sparingly) */
+  --gold: #C9966A;
 
-  --gold: #c9966a;
-  --gold-dim: rgba(201, 150, 106, 0.12);
+  /* Text ladder */
+  --text: #F5EEF0;
+  --text-2: #C4889E;
+  --text-3: #7A4A5E;
 
-  --text: #f5eef0;
-  --text-2: #c4889e;
-  --text-3: #7a4a5e;
-
-  --border: rgba(255, 255, 255, 0.06);
-  --border-2: rgba(255, 255, 255, 0.1);
-  --border-rose: rgba(224, 63, 106, 0.2);
+  /* Border tokens — only 3 levels */
+  --border-1: rgba(255, 255, 255, 0.06);   /* dividers, hairlines */
+  --border-2: rgba(255, 255, 255, 0.10);   /* surfaces, buttons */
+  --border-rose: rgba(224, 63, 106, 0.22); /* accent borders */
 }
 
 *,
@@ -46,7 +45,7 @@ body {
   min-height: 100%;
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-family: var(--font-onest), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
@@ -56,27 +55,28 @@ body {
   position: relative;
 }
 
-/* Grain overlay */
+/* Grain overlay — under modals/lightbox */
 body::after {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
   pointer-events: none;
-  z-index: 999;
-  opacity: 0.7;
+  z-index: 1;
+  opacity: 0.6;
+  mix-blend-mode: overlay;
 }
 
-/* Глубокое красное свечение на фоне */
+/* Static atmospheric glow — bottom right, deep red */
 body::before {
   content: '';
   position: fixed;
-  top: -20%;
+  bottom: -30%;
   right: -20%;
-  width: 60vw;
-  height: 60vw;
+  width: 75vw;
+  height: 75vw;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.07) 0%, rgba(180, 20, 60, 0.06) 50%, transparent 70%);
+  background: radial-gradient(circle, rgba(224, 63, 106, 0.06) 0%, rgba(180, 20, 60, 0.04) 45%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -92,15 +92,18 @@ body::before {
 }
 
 @layer components {
-  .glass-card {
-    background: linear-gradient(135deg, var(--s2) 0%, var(--s3) 100%);
-    border: 1px solid var(--border-rose);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  .surface {
+    background: var(--s2);
+    border: 1px solid var(--border-1);
   }
 
-  .rose-border {
-    border: 1px solid rgba(224, 63, 106, 0.25);
-    box-shadow: inset 0 1px 0 rgba(224, 63, 106, 0.08);
+  .surface-2 {
+    background: linear-gradient(135deg, var(--s2) 0%, var(--s3) 100%);
+    border: 1px solid var(--border-2);
+  }
+
+  .rose-ring {
+    box-shadow: inset 0 0 0 1.5px var(--rose);
   }
 
   .skeleton {

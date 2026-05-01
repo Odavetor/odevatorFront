@@ -258,7 +258,7 @@ export default function GeneratePage() {
               <button
                 onClick={() => router.push('/shop')}
                 className="text-xs font-medium px-3 py-1.5 rounded-lg flex-shrink-0"
-                style={{ background: 'rgba(139,92,246,0.18)', color: '#A78BFA' }}
+                style={{ background: 'var(--rose-dim)', color: 'var(--rose)' }}
               >
                 Купить
               </button>
@@ -340,11 +340,11 @@ export default function GeneratePage() {
                         className="flex-shrink-0 rounded-full text-sm font-medium"
                         style={{
                           padding: '7px 14px',
-                          background: active ? 'rgba(139,92,246,0.12)' : 'rgba(255,255,255,0.04)',
+                          background: active ? 'var(--rose-dim)' : 'rgba(255,255,255,0.04)',
                           boxShadow: active
-                            ? '0 0 0 1.5px #8B5CF6, 0 0 12px rgba(139,92,246,0.25)'
-                            : '0 0 0 1px rgba(255,255,255,0.08)',
-                          color: active ? '#A78BFA' : 'rgba(255,255,255,0.55)',
+                            ? 'inset 0 0 0 1.5px var(--rose)'
+                            : 'inset 0 0 0 1px var(--border-2)',
+                          color: active ? 'var(--rose)' : 'rgba(255,255,255,0.55)',
                           transition: 'all 0.18s ease',
                           WebkitTapHighlightColor: 'transparent',
                         }}
@@ -423,10 +423,12 @@ export default function GeneratePage() {
               className="relative w-full py-4 rounded-2xl flex items-center justify-center gap-2.5 font-semibold text-base overflow-hidden"
               style={{
                 background: canGenerate
-                  ? 'linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%)'
+                  ? 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)'
                   : 'rgba(255,255,255,0.04)',
-                boxShadow: canGenerate ? '0 4px 28px rgba(139,92,246,0.4)' : 'none',
-                border: canGenerate ? 'none' : '1px solid rgba(255,255,255,0.07)',
+                boxShadow: canGenerate
+                  ? 'inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 0 rgba(0,0,0,0.4)'
+                  : 'none',
+                border: canGenerate ? 'none' : '1px solid var(--border-1)',
                 color: canGenerate ? '#FFFFFF' : 'rgba(255,255,255,0.25)',
                 transition: 'all 0.25s ease',
                 opacity: busy ? 0.7 : 1,

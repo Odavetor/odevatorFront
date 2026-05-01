@@ -6,7 +6,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         display: ['var(--font-playfair)', 'Georgia', 'serif'],
-        sans:    ['var(--font-dm-sans)', 'system-ui', 'sans-serif'],
+        sans:    ['var(--font-onest)', 'system-ui', 'sans-serif'],
         mono:    ['var(--font-jetbrains)', 'ui-monospace', 'monospace'],
       },
       // φ = 1.618 — type scale from 16px base
@@ -41,13 +41,6 @@ const config: Config = {
           700: '#1F1F28',
           600: '#2A2A35',
           500: '#3A3A48',
-        },
-        violet: {
-          400: '#A78BFA',
-          500: '#8B5CF6',
-          600: '#7C3AED',
-          700: '#6D28D9',
-          DEFAULT: '#8B5CF6',
         },
         rose: {
           50:  '#FEF0F4',

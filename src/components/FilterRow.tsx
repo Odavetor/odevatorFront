@@ -34,17 +34,17 @@ export default function FilterRow({ category, selected, onSelect }: Props) {
             key={opt.id}
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.04, duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ delay: Math.min(i, 6) * 0.025, duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             onClick={() => onSelect(opt)}
             whileTap={{ scale: 0.94 }}
             className="flex-shrink-0 rounded-full text-sm font-medium"
             style={{
               ...CHIP_STYLE,
-              background: active ? 'rgba(224,63,106,0.1)' : 'rgba(255,255,255,0.04)',
+              background: active ? 'var(--rose-dim)' : 'rgba(255,255,255,0.04)',
               boxShadow: active
-                ? '0 0 0 1.5px #E03F6A, 0 0 14px rgba(224,63,106,0.3)'
-                : '0 0 0 1px rgba(255,255,255,0.08)',
-              color: active ? '#E03F6A' : 'rgba(255,255,255,0.6)',
+                ? 'inset 0 0 0 1.5px var(--rose)'
+                : 'inset 0 0 0 1px var(--border-2)',
+              color: active ? 'var(--rose)' : 'rgba(255,255,255,0.6)',
               transition: 'all 0.18s ease',
               WebkitTapHighlightColor: 'transparent',
             }}

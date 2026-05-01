@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getUser, haptic, hapticNotify, openLink } from '@/lib/telegram'
 import PackageCard from '@/components/PackageCard'
 import BottomNav from '@/components/BottomNav'
 import CurrencyPill from '@/components/CurrencyPill'
-import type { Package, PaymentMethod, UserData } from '@/types'
+import { useUser } from '@/components/TelegramProvider'
+import type { Package, PaymentMethod } from '@/types'
 import { CurrencyDollar, Bank, CreditCard, CheckCircle } from '@phosphor-icons/react'
 
 const PACKAGES: Package[] = [
@@ -26,23 +27,14 @@ const METHODS: Array<{ id: PaymentMethod; label: string; sub: string; icon: Reac
 type Step = 'packages' | 'method' | 'pending' | 'success'
 
 export default function ShopPage() {
+  const { refreshBalance } = useUser()
   const [selectedPkg, setSelectedPkg] = useState<string | null>(null)
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null)
   const [step, setStep] = useState<Step>('packages')
   const [invoiceUrl, setInvoiceUrl] = useState('')
   const [invoiceId, setInvoiceId] = useState('')
-  const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(false)
-
-  useEffect(() => {
-    const user = getUser()
-    const uid = user?.id ?? 0
-    fetch(`/api/balance?userId=${uid}`)
-      .then((r) => r.json())
-      .then((d) => setUserData(d?.data ?? null))
-      .catch(() => null)
-  }, [])
 
   const pkg = PACKAGES.find((p) => p.id === selectedPkg)
 
@@ -95,11 +87,7 @@ export default function ShopPage() {
       if (data.status === 'paid') {
         setStep('success')
         hapticNotify('success')
-        // Refresh balance
-        fetch(`/api/balance?userId=${user.id}`)
-          .then((r) => r.json())
-          .then((d) => setUserData(d?.data ?? null))
-          .catch(() => null)
+        refreshBalance()
       } else {
         hapticNotify('warning')
       }
@@ -136,13 +124,20 @@ export default function ShopPage() {
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
               className="flex flex-col gap-4"
             >
-              <div className="grid grid-cols-2 gap-3">
+              <div
+                className="flex flex-col"
+                style={{ marginLeft: -20, marginRight: -20 }}
+              >
                 {PACKAGES.map((pkg, i) => (
                   <motion.div
                     key={pkg.id}
-                    initial={{ opacity: 0, y: 16 }}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: i * 0.07, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.32, delay: Math.min(i, 4) * 0.04, ease: [0.16, 1, 0.3, 1] }}
+                    style={{
+                      borderTop: i === 0 ? '1px solid var(--border-1)' : undefined,
+                      borderBottom: '1px solid var(--border-1)',
+                    }}
                   >
                     <PackageCard
                       pkg={pkg}
@@ -167,8 +162,8 @@ export default function ShopPage() {
                     whileTap={{ scale: 0.98 }}
                     className="w-full py-4 rounded-2xl font-medium text-base text-white"
                     style={{
-                      background: 'linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%)',
-                      boxShadow: '0 4px 24px rgba(139,92,246,0.35)',
+                      background: 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)',
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 0 rgba(0,0,0,0.4)',
                     }}
                   >
                     Выбрать способ оплаты →
@@ -260,11 +255,13 @@ export default function ShopPage() {
                   className="w-full py-4 rounded-2xl font-medium text-base"
                   style={{
                     background: selectedMethod
-                      ? 'linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%)'
+                      ? 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)'
                       : 'rgba(31,31,40,0.8)',
-                    border: selectedMethod ? 'none' : '1px solid rgba(255,255,255,0.07)',
-                    boxShadow: selectedMethod ? '0 4px 24px rgba(139,92,246,0.35)' : 'none',
-                    color: selectedMethod ? '#FFFFFF' : '#7a4a5e',
+                    border: selectedMethod ? 'none' : '1px solid var(--border-1)',
+                    boxShadow: selectedMethod
+                      ? 'inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 0 rgba(0,0,0,0.4)'
+                      : 'none',
+                    color: selectedMethod ? '#FFFFFF' : 'var(--text-3)',
                     transition: 'all 0.25s ease',
                     opacity: loading ? 0.7 : 1,
                   }}
@@ -297,17 +294,14 @@ export default function ShopPage() {
             >
               <div
                 className="rounded-3xl p-8 flex flex-col items-center gap-4 text-center"
-                style={{ background: 'rgba(31,25,41,0.8)', border: '1px solid rgba(255,255,255,0.07)' }}
+                style={{ background: 'rgba(31,25,41,0.8)', border: '1px solid var(--border-1)' }}
               >
-                {/* Pulsing indicator */}
-                <motion.div
+                <div
                   className="w-16 h-16 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(224,63,106,0.12)', border: '2px solid rgba(224,63,106,0.25)' }}
-                  animate={{ scale: [1, 1.08, 1] }}
-                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                  style={{ background: 'var(--rose-dim)', border: '1px solid var(--border-rose)' }}
                 >
-                  <Bank size={28} color="#e03f6a" weight="duotone" />
-                </motion.div>
+                  <Bank size={28} color="var(--rose)" weight="duotone" />
+                </div>
 
                 <div>
                   <p className="text-cream-100 font-medium text-lg mb-1">Ожидание оплаты</p>
@@ -318,7 +312,7 @@ export default function ShopPage() {
 
                 <div
                   className="font-mono text-2xl font-semibold"
-                  style={{ color: '#e03f6a' }}
+                  style={{ color: 'var(--rose)' }}
                 >
                   {pkg?.price.toLocaleString('ru')} ₽
                 </div>
@@ -329,8 +323,8 @@ export default function ShopPage() {
                   onClick={() => openLink(invoiceUrl)}
                   className="w-full py-4 rounded-2xl font-medium text-base text-white"
                   style={{
-                    background: 'linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%)',
-                    boxShadow: '0 4px 24px rgba(139,92,246,0.35)',
+                    background: 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 0 rgba(0,0,0,0.4)',
                   }}
                 >
                   Открыть счёт
@@ -342,8 +336,8 @@ export default function ShopPage() {
                   className="w-full py-4 rounded-2xl font-medium text-base"
                   style={{
                     background: 'rgba(31,25,41,0.9)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    color: '#c4889e',
+                    border: '1px solid var(--border-2)',
+                    color: 'var(--text-2)',
                     opacity: checking ? 0.7 : 1,
                   }}
                 >
@@ -368,23 +362,22 @@ export default function ShopPage() {
           {step === 'success' && (
             <motion.div
               key="success"
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
               className="flex flex-col items-center gap-6 py-10"
             >
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ delay: 0.1, type: 'spring', stiffness: 260, damping: 20 }}
+                transition={{ delay: 0.08, type: 'spring', stiffness: 260, damping: 20 }}
                 className="w-20 h-20 rounded-full flex items-center justify-center"
                 style={{
-                  background: 'rgba(224,63,106,0.15)',
-                  border: '2px solid rgba(224,63,106,0.3)',
-                  boxShadow: '0 0 40px rgba(224,63,106,0.2)',
+                  background: 'var(--rose-dim)',
+                  border: '1px solid var(--border-rose)',
                 }}
               >
-                <CheckCircle size={40} color="#e03f6a" weight="fill" />
+                <CheckCircle size={40} color="var(--rose)" weight="fill" />
               </motion.div>
 
               <div className="text-center">
@@ -404,8 +397,8 @@ export default function ShopPage() {
                 className="w-full py-4 rounded-2xl font-medium"
                 style={{
                   background: 'rgba(31,25,41,0.8)',
-                  border: '1px solid rgba(255,255,255,0.07)',
-                  color: '#c4889e',
+                  border: '1px solid var(--border-1)',
+                  color: 'var(--text-2)',
                 }}
               >
                 Назад в магазин

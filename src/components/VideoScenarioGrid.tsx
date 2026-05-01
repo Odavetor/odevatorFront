@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import { Play } from '@phosphor-icons/react'
 import { haptic } from '@/lib/telegram'
 import type { VideoScenario } from '@/data/generate-options'
@@ -33,9 +34,9 @@ function ScenarioCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.055, duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ delay: Math.min(index, 5) * 0.035, duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
       className="flex flex-col gap-2"
     >
       <motion.button
@@ -52,11 +53,12 @@ function ScenarioCard({
         }}
       >
         {/* Main thumbnail (result preview) */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={scenario.thumbnail}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover"
+          fill
+          sizes="(max-width: 430px) 50vw, 215px"
+          className="object-cover"
         />
 
         {/* Bottom vignette */}
@@ -78,8 +80,13 @@ function ScenarioCard({
             boxShadow: '0 2px 10px rgba(0,0,0,0.6)',
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={sourcePhoto} alt="" className="w-full h-full object-cover" />
+          <Image
+            src={sourcePhoto}
+            alt=""
+            fill
+            sizes="38px"
+            className="object-cover"
+          />
         </div>
 
         {/* Play badge — bottom right */}

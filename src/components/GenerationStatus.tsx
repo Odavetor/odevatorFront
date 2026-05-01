@@ -103,39 +103,14 @@ export default function GenerationStatus({ state, onDownload, onRetry }: Props) 
               <span className="text-rose-400 font-mono text-xs">{state.progress}%</span>
             </div>
 
-            <div className="relative h-1.5 w-full rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
+            <div className="relative h-1.5 w-full rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
               <motion.div
                 className="absolute inset-y-0 left-0 rounded-full"
-                style={{ background: 'linear-gradient(90deg, #e03f6a, #c9294a)' }}
+                style={{ background: 'linear-gradient(90deg, var(--rose), var(--rose-deep))' }}
                 initial={{ width: '0%' }}
                 animate={{ width: `${state.progress}%` }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               />
-              {/* Shimmer on progress bar */}
-              <motion.div
-                className="absolute inset-y-0 w-16 rounded-full"
-                style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)' }}
-                animate={{ left: [`${state.progress - 20}%`, `${state.progress}%`] }}
-                transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
-              />
-            </div>
-
-            {/* Pulsing dots */}
-            <div className="flex items-center justify-center gap-1.5">
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{ background: '#e03f6a' }}
-                  animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.1, 0.8] }}
-                  transition={{
-                    duration: 1.4,
-                    repeat: Infinity,
-                    delay: i * 0.2,
-                    ease: 'easeInOut',
-                  }}
-                />
-              ))}
             </div>
           </div>
         )}

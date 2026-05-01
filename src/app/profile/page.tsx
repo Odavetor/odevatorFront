@@ -1,11 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { getUser } from '@/lib/telegram'
-import type { TelegramUser, UserData } from '@/types'
 import BottomNav from '@/components/BottomNav'
 import CurrencyPill from '@/components/CurrencyPill'
+import { useUser } from '@/components/TelegramProvider'
 import {
   User,
   Lightning,
@@ -46,18 +44,7 @@ function StatBlock({
 }
 
 export default function ProfilePage() {
-  const [tgUser, setTgUser] = useState<TelegramUser | null>(null)
-  const [userData, setUserData] = useState<UserData | null>(null)
-
-  useEffect(() => {
-    const user = getUser()
-    setTgUser(user)
-    const uid = user?.id ?? 0
-    fetch(`/api/balance?userId=${uid}`)
-      .then((r) => r.json())
-      .then((d) => setUserData(d?.data ?? null))
-      .catch(() => null)
-  }, [])
+  const { tgUser, userData } = useUser()
 
   const memberSince = userData?.reg_date
     ? new Date(userData.reg_date).toLocaleDateString('ru', { month: 'long', year: 'numeric' })

@@ -1,31 +1,31 @@
 import type { Metadata, Viewport } from 'next'
-import { Playfair_Display, Nunito, JetBrains_Mono } from 'next/font/google'
+import { Playfair_Display, Onest, JetBrains_Mono } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import { TelegramProvider } from '@/components/TelegramProvider'
 
-// Playfair Display — editorial serif, отличная кириллица
 const playfair = Playfair_Display({
   subsets: ['latin', 'cyrillic'],
   variable: '--font-playfair',
   display: 'swap',
-  weight: ['400', '500', '600', '700'],
-  style: ['normal', 'italic'],
+  weight: ['500', '600'],
+  preload: true,
 })
 
-// Nunito — современный, специально доработан для кириллицы
-const nunito = Nunito({
+const onest = Onest({
   subsets: ['latin', 'cyrillic'],
-  variable: '--font-dm-sans',
+  variable: '--font-onest',
   display: 'swap',
+  weight: ['400', '500', '600'],
+  preload: true,
 })
 
-// JetBrains Mono — отличная кириллица для цифр/ID
 const jetbrains = JetBrains_Mono({
   subsets: ['latin', 'cyrillic'],
   variable: '--font-jetbrains',
   display: 'swap',
-  weight: ['400', '500'],
+  weight: ['500'],
+  preload: false,
 })
 
 export const metadata: Metadata = {
@@ -45,15 +45,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="ru"
-      className={`${playfair.variable} ${nunito.variable} ${jetbrains.variable}`}
+      className={`${playfair.variable} ${onest.variable} ${jetbrains.variable}`}
     >
-      <head>
+      <body>
         <Script
           src="https://telegram.org/js/telegram-web-app.js"
           strategy="beforeInteractive"
         />
-      </head>
-      <body>
         <TelegramProvider>{children}</TelegramProvider>
       </body>
     </html>

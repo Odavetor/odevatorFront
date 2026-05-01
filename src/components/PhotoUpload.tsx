@@ -96,8 +96,8 @@ export default function PhotoUpload({ onFile, preview, onClear, compact }: Props
         ) : (
           <motion.button
             key="dropzone"
-            initial={{ opacity: 0, scale: 1 }}
-            animate={{ opacity: 1, scale: dragging ? 1.02 : 1 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, scale: dragging ? 1.01 : 1 }}
             exit={{ opacity: 0 }}
             onClick={() => {
               haptic()
@@ -111,38 +111,26 @@ export default function PhotoUpload({ onFile, preview, onClear, compact }: Props
             onDrop={onDrop}
             className="relative w-full rounded-3xl flex flex-col items-center justify-center gap-4 py-16 cursor-pointer"
             style={{
-              border: `1px dashed ${dragging ? 'rgba(224,63,106,0.6)' : 'rgba(224,63,106,0.22)'}`,
-              background: dragging ? 'rgba(224,63,106,0.06)' : 'rgba(31,25,41,0.6)',
+              border: `1px dashed ${dragging ? 'var(--rose)' : 'var(--border-rose)'}`,
+              background: dragging ? 'var(--rose-soft)' : 'rgba(31,25,41,0.6)',
               transition: 'all 0.25s ease',
             }}
           >
-            {/* Breathing glow */}
-            <motion.div
-              className="absolute inset-0 rounded-3xl pointer-events-none"
-              style={{
-                background: 'radial-gradient(ellipse at center, rgba(224,63,106,0.06) 0%, transparent 70%)',
-              }}
-              animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.02, 1] }}
-              transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-            />
-
-            <motion.div
+            <div
               className="w-16 h-16 rounded-2xl flex items-center justify-center"
-              style={{ background: 'rgba(224,63,106,0.1)', border: '1px solid rgba(224,63,106,0.2)' }}
-              animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ background: 'var(--rose-dim)', border: '1px solid var(--border-rose)' }}
             >
-              <Camera size={28} color="#e03f6a" weight="duotone" />
-            </motion.div>
+              <Camera size={28} color="var(--rose)" weight="duotone" />
+            </div>
 
             <div className="text-center px-6">
               <p className="text-cream-200 font-medium text-base mb-1">Загрузить фото</p>
               <p className="text-cream-700 text-sm">Нажмите или перетащите изображение</p>
             </div>
 
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl" style={{ background: 'rgba(224,63,106,0.08)', border: '1px solid rgba(224,63,106,0.15)' }}>
-              <UploadSimple size={14} color="#e03f6a" />
-              <span className="text-rose-400 text-xs font-medium">JPG, PNG, WEBP</span>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl" style={{ background: 'var(--rose-soft)', border: '1px solid var(--border-rose)' }}>
+              <UploadSimple size={14} color="var(--rose)" />
+              <span className="text-xs font-medium" style={{ color: 'var(--rose)' }}>JPG, PNG, WEBP</span>
             </div>
           </motion.button>
         )}

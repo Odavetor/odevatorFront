@@ -27,9 +27,8 @@ export default function ConsentGate({ checked, onChange }: Props) {
           <div
             className="flex-shrink-0 w-5 h-5 rounded-md flex items-center justify-center mt-0.5"
             style={{
-              background: checked[i] ? '#7C3AED' : 'rgba(255,255,255,0.04)',
-              border: checked[i] ? 'none' : '1.5px solid rgba(255,255,255,0.14)',
-              boxShadow: checked[i] ? '0 0 10px rgba(139,92,246,0.4)' : 'none',
+              background: checked[i] ? 'var(--rose)' : 'rgba(255,255,255,0.04)',
+              border: checked[i] ? 'none' : '1.5px solid var(--border-2)',
               transition: 'all 0.18s ease',
             }}
           >

@@ -64,34 +64,29 @@ export default function HistoryPage() {
         <HistoryGrid items={items} loading={loading && page === 1} />
 
         {hasMore && !loading && (
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+          <button
             onClick={() => {
               const next = page + 1
               setPage(next)
               load(next)
             }}
-            className="w-full mt-5 py-3.5 rounded-2xl text-sm font-medium text-cream-600"
-            style={{ background: 'rgba(31,25,41,0.8)', border: '1px solid rgba(255,255,255,0.07)' }}
+            className="w-full mt-5 py-3.5 rounded-2xl text-sm font-medium text-cream-600 active:scale-[0.99] transition-transform"
+            style={{ background: 'rgba(31,25,41,0.8)', border: '1px solid var(--border-1)' }}
           >
             Загрузить ещё
-          </motion.button>
+          </button>
         )}
 
         {loading && page > 1 && (
           <div className="flex justify-center py-6">
-            <div className="flex gap-1.5">
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{ background: '#e03f6a' }}
-                  animate={{ opacity: [0.3, 1, 0.3] }}
-                  transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
-                />
-              ))}
-            </div>
+            <div
+              className="w-5 h-5 rounded-full"
+              style={{
+                border: '1.5px solid var(--border-2)',
+                borderTopColor: 'var(--rose)',
+                animation: 'spin 0.8s linear infinite',
+              }}
+            />
           </div>
         )}
       </div>
