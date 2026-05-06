@@ -1,0 +1,119 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
+import { ArrowLeft, ShieldCheck } from '@phosphor-icons/react'
+import { useUser } from '@/components/TelegramProvider'
+import { haptic } from '@/lib/telegram'
+import HeroEditor from '@/components/admin/HeroEditor'
+import PhotoCatalogEditor from '@/components/admin/PhotoCatalogEditor'
+import VideoCatalogEditor from '@/components/admin/VideoCatalogEditor'
+import TextsEditor from '@/components/admin/TextsEditor'
+
+type Tab = 'Главная' | 'Фото' | 'Видео' | 'Тексты'
+const TABS: Tab[] = ['Главная', 'Фото', 'Видео', 'Тексты']
+
+export default function AdminPage() {
+  const router = useRouter()
+  const { tgUser, isAdmin } = useUser()
+  const [tab, setTab] = useState<Tab>('Главная')
+  const [readyChecked, setReadyChecked] = useState(false)
+
+  // Гейтинг — после загрузки tgUser, если не админ, кикаем на главную.
+  useEffect(() => {
+    if (tgUser === null) return
+    setReadyChecked(true)
+    if (!isAdmin) router.replace('/')
+  }, [tgUser, isAdmin, router])
+
+  // Кросс-табовая навигация: HeroEditor может попросить открыть «Фото».
+  useEffect(() => {
+    function onGoto(e: Event) {
+      const detail = (e as CustomEvent<Tab>).detail
+      if (detail && TABS.includes(detail)) setTab(detail)
+    }
+    window.addEventListener('velvet:admin:goto', onGoto)
+    return () => window.removeEventListener('velvet:admin:goto', onGoto)
+  }, [])
+
+  if (!readyChecked) {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center">
+        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>Проверка доступа…</p>
+      </div>
+    )
+  }
+  if (!isAdmin) return null
+
+  return (
+    <div className="flex flex-col min-h-[100dvh]">
+      <motion.header
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="flex items-center justify-between px-5 pt-6 pb-4"
+      >
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => { haptic(); router.push('/') }}
+            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <ArrowLeft size={18} color="rgba(255,255,255,0.6)" />
+          </button>
+          <div>
+            <h1 className="text-white font-semibold text-lg leading-tight">Админка</h1>
+            <p className="text-[11px] uppercase tracking-[0.14em]" style={{ color: 'rgba(255,255,255,0.35)' }}>
+              Управление каталогом
+            </p>
+          </div>
+        </div>
+        <div
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+          style={{ background: 'var(--rose-dim)', border: '1px solid var(--border-rose)', color: 'var(--rose)' }}
+        >
+          <ShieldCheck size={12} weight="fill" />
+          admin
+        </div>
+      </motion.header>
+
+      <div className="px-5 pb-10 flex flex-col gap-4">
+        <div
+          className="flex p-1 rounded-full self-start overflow-x-auto max-w-full"
+          style={{
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            scrollbarWidth: 'none',
+          }}
+        >
+          {TABS.map((t) => (
+            <button
+              key={t}
+              onClick={() => { haptic('light'); setTab(t) }}
+              className="relative px-4 py-1.5 text-sm font-medium rounded-full flex-shrink-0"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
+            >
+              {tab === t && (
+                <motion.div
+                  layoutId="admin-tab"
+                  className="absolute inset-0 rounded-full"
+                  style={{ background: 'rgba(255,255,255,0.11)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10" style={{ color: tab === t ? '#fff' : 'rgba(255,255,255,0.4)' }}>
+                {t}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {tab === 'Главная' && <HeroEditor />}
+        {tab === 'Фото' && <PhotoCatalogEditor />}
+        {tab === 'Видео' && <VideoCatalogEditor />}
+        {tab === 'Тексты' && <TextsEditor />}
+      </div>
+    </div>
+  )
+}

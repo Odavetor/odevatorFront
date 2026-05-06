@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Lightning, Sparkle, VideoCamera } from '@phosphor-icons/react'
@@ -15,13 +15,24 @@ import VideoGenerateModal from '@/components/VideoGenerateModal'
 import CurrencyPill from '@/components/CurrencyPill'
 import BottomNav from '@/components/BottomNav'
 import type { GenerationState } from '@/types'
-import type { FilterOption, VideoDuration } from '@/data/generate-options'
+import type { FilterCategory, FilterOption, VideoDuration, VideoScenario } from '@/data/generate-options'
 import { PHOTO_FILTER_CATEGORIES, VIDEO_SCENARIOS, VIDEO_SLOT_COST } from '@/data/generate-options'
+import { fetchPhotoCatalog, fetchVideoCatalog } from '@/lib/catalog'
+import { useContent } from '@/lib/content'
+import {
+  pollGeneration,
+  startPhotoGeneration,
+  startVideoGeneration,
+  uploadUserPhoto,
+} from '@/lib/api/generate'
+import { ApiError } from '@/lib/api-client'
+import { useUser } from '@/components/TelegramProvider'
 
 type Mode = 'Фото' | 'Видео'
 
 export default function GeneratePage() {
   const router = useRouter()
+  const { refreshBalance } = useUser()
 
   // Upload
   const [file, setFile] = useState<File | null>(null)
@@ -32,15 +43,43 @@ export default function GeneratePage() {
   // Mode
   const [mode, setMode] = useState<Mode>('Фото')
 
-  // Photo: активная категория + выбранный вариант
-  const [activeCategoryId, setActiveCategoryId] = useState<string>(PHOTO_FILTER_CATEGORIES[0].id)
-  const [selectedOption, setSelectedOption] = useState<FilterOption | null>(null)
+  // Caталог: при загрузке страницы тянем из API. Если бэк недоступен — фолбэк на хардкод.
+  const [photoCategories, setPhotoCategories] = useState<FilterCategory[]>(PHOTO_FILTER_CATEGORIES)
+  const [videoScenarios, setVideoScenarios] = useState<VideoScenario[]>(VIDEO_SCENARIOS)
+
+  // Photo: активная категория + выбранный вариант (по умолчанию первая категория, первый вариант)
+  const [activeCategoryId, setActiveCategoryId] = useState<string>(photoCategories[0]?.id ?? '')
+  const [selectedOption, setSelectedOption] = useState<FilterOption | null>(
+    photoCategories[0]?.options[0] ?? null,
+  )
+
+  useEffect(() => {
+    let cancelled = false
+    fetchPhotoCatalog()
+      .then((d) => {
+        if (cancelled || !d.categories?.length) return
+        setPhotoCategories(d.categories)
+        setActiveCategoryId((prev) => (d.categories.find((c) => c.id === prev) ? prev : d.categories[0].id))
+        setSelectedOption((prev) => {
+          if (prev && d.categories.some((c) => c.options.some((o) => o.id === prev.id))) return prev
+          return d.categories[0].options[0] ?? null
+        })
+      })
+      .catch(() => {})
+    fetchVideoCatalog()
+      .then((d) => {
+        if (cancelled || !d.scenarios?.length) return
+        setVideoScenarios(d.scenarios)
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
 
   // Video
   const [scenario, setScenario] = useState<string | null>(null)
   const [duration, setDuration] = useState<VideoDuration>(5)
   const [modalScenarioId, setModalScenarioId] = useState<string | null>(null)
-  const modalScenario = VIDEO_SCENARIOS.find((s) => s.id === modalScenarioId) ?? null
+  const modalScenario = videoScenarios.find((s) => s.id === modalScenarioId) ?? null
 
   // Consent
   const [consent, setConsent] = useState([false, false, false])
@@ -50,7 +89,7 @@ export default function GeneratePage() {
   const videoCost = VIDEO_SLOT_COST[duration]
   const currentCost = mode === 'Фото' ? photoCost : videoCost
 
-  const activeCategory = PHOTO_FILTER_CATEGORIES.find((c) => c.id === activeCategoryId)!
+  const activeCategory = photoCategories.find((c) => c.id === activeCategoryId) ?? photoCategories[0]
 
   const handleFile = useCallback((f: File) => {
     setFile(f)
@@ -67,13 +106,14 @@ export default function GeneratePage() {
   function handleCategoryChange(id: string) {
     haptic('light')
     setActiveCategoryId(id)
-    setSelectedOption(null) // сбрасываем выбор при смене категории
+    // при смене категории автоматически выбираем её первый вариант — превью всегда видно
+    const cat = photoCategories.find((c) => c.id === id)
+    if (cat && cat.options[0]) setSelectedOption(cat.options[0])
   }
 
   function handleOptionSelect(opt: FilterOption) {
-    // toggle: повторный тап снимает выбор
-    const toggled = selectedOption?.id === opt.id ? null : opt
-    setSelectedOption(toggled)
+    // повторный тап не снимает выбор — превью всегда показывается
+    setSelectedOption(opt)
     haptic('light')
   }
 
@@ -81,89 +121,95 @@ export default function GeneratePage() {
     setConsent((prev) => prev.map((c, i) => (i === index ? val : c)))
   }
 
+  async function pollUntilDone(uid: string): Promise<string | null> {
+    // Long-poll до 120с. Если бэк не дошёл за это время — ещё круг.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const res = await pollGeneration(uid, { wait: true, maxWaitSeconds: 120 })
+      if (res.status === 'completed' && res.results?.[0]) return res.results[0]
+      if (res.status === 'failed') {
+        throw new Error(res.error_message ?? 'Обработка не удалась')
+      }
+    }
+    return null
+  }
+
   async function generate() {
-    if (!file) return
+    if (!file || !selectedOption) return
     const user = getUser()
     if (!user) return
 
     haptic('medium')
-    setGenState({ phase: 'uploading', progress: 15 })
+    setGenState({ phase: 'uploading', progress: 10 })
 
     try {
-      const formData = new FormData()
-      formData.append('image', file)
-      formData.append('userId', String(user.id))
-      formData.append('username', user.username ?? user.first_name ?? '')
-      formData.append('mode', mode === 'Фото' ? 'photo' : 'video')
+      const { url: fileUrl } = await uploadUserPhoto(file)
+      setGenState({ phase: 'uploading', progress: 35 })
 
-      if (mode === 'Фото') {
-        formData.append('filter_category', activeCategoryId)
-        formData.append('filter_option', selectedOption?.id ?? '')
-      } else {
-        formData.append('scenario', scenario ?? '')
-        formData.append('duration', String(duration))
+      const { uid } = await startPhotoGeneration({
+        file_url: fileUrl,
+        filter_category: activeCategoryId,
+        filter_option: selectedOption.id,
+      })
+
+      setGenState({ phase: 'processing', progress: 60 })
+
+      const resultUrl = await pollUntilDone(uid)
+      if (!resultUrl) {
+        setGenState({ phase: 'error', progress: 0, error: 'Превышено время ожидания' })
+        return
       }
 
-      setGenState({ phase: 'processing', progress: 50 })
-
-      const res = await fetch('/api/generate', { method: 'POST', body: formData })
-      const data = await res.json()
-
-      if (res.status === 402) {
+      setGenState({ phase: 'done', progress: 100, resultUrl })
+      void refreshBalance()
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 402) {
         setNoCredits(true)
         setGenState({ phase: 'idle', progress: 0 })
         hapticNotify('warning')
         return
       }
-
-      if (!res.ok || !data.url) {
-        setGenState({ phase: 'error', progress: 0, error: data.error ?? 'Ошибка обработки' })
-        return
-      }
-
-      setGenState({ phase: 'done', progress: 100, resultUrl: data.url })
-    } catch {
-      setGenState({ phase: 'error', progress: 0, error: 'Сетевая ошибка. Попробуйте ещё раз.' })
+      const msg = e instanceof Error ? e.message : 'Ошибка обработки'
+      setGenState({ phase: 'error', progress: 0, error: msg })
     }
   }
 
   async function generateVideo(videoFile: File, dur: VideoDuration) {
     const user = getUser()
-    if (!user) return
+    if (!user || !scenario) return
 
     setModalScenarioId(null)
     haptic('medium')
-    setGenState({ phase: 'uploading', progress: 15 })
+    setGenState({ phase: 'uploading', progress: 10 })
 
     try {
-      const formData = new FormData()
-      formData.append('image', videoFile)
-      formData.append('userId', String(user.id))
-      formData.append('username', user.username ?? user.first_name ?? '')
-      formData.append('mode', 'video')
-      formData.append('scenario', scenario ?? '')
-      formData.append('duration', String(dur))
+      const { url: fileUrl } = await uploadUserPhoto(videoFile)
+      setGenState({ phase: 'uploading', progress: 35 })
 
-      setGenState({ phase: 'processing', progress: 50 })
+      const { uid } = await startVideoGeneration({
+        file_url: fileUrl,
+        scenario,
+        duration: dur,
+      })
 
-      const res = await fetch('/api/generate', { method: 'POST', body: formData })
-      const data = await res.json()
+      setGenState({ phase: 'processing', progress: 60 })
 
-      if (res.status === 402) {
+      const resultUrl = await pollUntilDone(uid)
+      if (!resultUrl) {
+        setGenState({ phase: 'error', progress: 0, error: 'Превышено время ожидания' })
+        return
+      }
+
+      setGenState({ phase: 'done', progress: 100, resultUrl })
+      void refreshBalance()
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 402) {
         setNoCredits(true)
         setGenState({ phase: 'idle', progress: 0 })
         hapticNotify('warning')
         return
       }
-
-      if (!res.ok || !data.url) {
-        setGenState({ phase: 'error', progress: 0, error: data.error ?? 'Ошибка обработки' })
-        return
-      }
-
-      setGenState({ phase: 'done', progress: 100, resultUrl: data.url })
-    } catch {
-      setGenState({ phase: 'error', progress: 0, error: 'Сетевая ошибка. Попробуйте ещё раз.' })
+      const msg = e instanceof Error ? e.message : 'Ошибка обработки'
+      setGenState({ phase: 'error', progress: 0, error: msg })
     }
   }
 
@@ -178,7 +224,12 @@ export default function GeneratePage() {
   }
 
   const busy = genState.phase === 'uploading' || genState.phase === 'processing'
-  const canGenerate = !!file && allConsented && !busy && genState.phase !== 'done'
+  const canGenerate =
+    !!file && allConsented && !!selectedOption && !busy && genState.phase !== 'done'
+
+  const subtitleText = useContent('generate.subtitle')
+  const hintNoFile = useContent('generate.hint.no_file')
+  const hintNoConsent = useContent('generate.hint.no_consent')
 
   return (
     <div className="flex flex-col min-h-[100dvh]">
@@ -201,7 +252,7 @@ export default function GeneratePage() {
           <div>
             <h1 className="text-white font-semibold text-lg leading-tight">Создать</h1>
             <p className="text-gr-2xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
-              ИИ обрабатывает за 30–60 сек
+              {subtitleText}
             </p>
           </div>
         </div>
@@ -221,7 +272,10 @@ export default function GeneratePage() {
               onClick={() => {
                 haptic('light')
                 setMode(m)
-                setSelectedOption(null)
+                if (m === 'Фото' && !selectedOption) {
+                  const cat = photoCategories.find((c) => c.id === activeCategoryId)
+                  if (cat && cat.options[0]) setSelectedOption(cat.options[0])
+                }
               }}
               className="relative px-5 py-1.5 text-sm font-medium rounded-full"
               style={{ WebkitTapHighlightColor: 'transparent' }}
@@ -266,16 +320,6 @@ export default function GeneratePage() {
           )}
         </AnimatePresence>
 
-        {/* Photo upload — photo mode only */}
-        {mode === 'Фото' && (genState.phase === 'idle' || genState.phase === 'error') && (
-          <PhotoUpload
-            onFile={handleFile}
-            preview={preview}
-            onClear={handleClear}
-            compact={!!file}
-          />
-        )}
-
         {/* Generation status / result */}
         {genState.phase !== 'idle' && (
           <GenerationStatus
@@ -317,7 +361,19 @@ export default function GeneratePage() {
                 transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
                 className="flex flex-col gap-4"
               >
-                {/* Category pills — bleed за px-5 чтобы не обрезались */}
+                {/* 1. Before/After preview — на самом верху, всегда видно */}
+                <AnimatePresence mode="wait">
+                  {selectedOption && (
+                    <BeforeAfterPreview
+                      key={selectedOption.id}
+                      beforeUrl={selectedOption.beforeExample}
+                      afterUrl={selectedOption.afterExample}
+                      label={selectedOption.label}
+                    />
+                  )}
+                </AnimatePresence>
+
+                {/* 2. Category pills — bleed за px-5 чтобы не обрезались */}
                 <div
                   className="flex gap-2 overflow-x-auto"
                   style={{
@@ -331,7 +387,7 @@ export default function GeneratePage() {
                     paddingBottom: 4,
                   }}
                 >
-                  {PHOTO_FILTER_CATEGORIES.map((cat) => {
+                  {photoCategories.map((cat) => {
                     const active = cat.id === activeCategoryId
                     return (
                       <button
@@ -355,34 +411,32 @@ export default function GeneratePage() {
                   })}
                 </div>
 
-                {/* Options for active category */}
+                {/* 3. Options for active category */}
                 <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeCategoryId}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                  >
-                    <FilterRow
-                      category={activeCategory}
-                      selected={selectedOption?.id ?? null}
-                      onSelect={handleOptionSelect}
-                    />
-                  </motion.div>
-                </AnimatePresence>
-
-                {/* Before/After preview */}
-                <AnimatePresence>
-                  {selectedOption && (
-                    <BeforeAfterPreview
-                      key={selectedOption.id}
-                      beforeUrl={selectedOption.beforeExample}
-                      afterUrl={selectedOption.afterExample}
-                      label={selectedOption.label}
-                    />
+                  {activeCategory && (
+                    <motion.div
+                      key={activeCategoryId}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                      <FilterRow
+                        category={activeCategory}
+                        selected={selectedOption?.id ?? null}
+                        onSelect={handleOptionSelect}
+                      />
+                    </motion.div>
                   )}
                 </AnimatePresence>
+
+                {/* 4. Photo upload — компактно */}
+                <PhotoUpload
+                  onFile={handleFile}
+                  preview={preview}
+                  onClear={handleClear}
+                  compact
+                />
               </motion.div>
             ) : (
               <motion.div
@@ -393,7 +447,7 @@ export default function GeneratePage() {
                 transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               >
                 <VideoScenarioGrid
-                  scenarios={VIDEO_SCENARIOS}
+                  scenarios={videoScenarios}
                   onSelectScenario={(id) => {
                     setScenario(id)
                     setModalScenarioId(id)
@@ -462,12 +516,12 @@ export default function GeneratePage() {
 
             {!file && (
               <p className="text-center text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                Загрузите фото чтобы начать
+                {hintNoFile}
               </p>
             )}
             {file && !allConsented && (
               <p className="text-center text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                Подтвердите все пункты выше
+                {hintNoConsent}
               </p>
             )}
           </motion.div>

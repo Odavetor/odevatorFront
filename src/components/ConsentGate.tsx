@@ -2,12 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check } from '@phosphor-icons/react'
-
-const ITEMS = [
-  'Мне исполнилось 18 лет',
-  'Я принимаю условия использования сервиса',
-  'Я являюсь правообладателем загружаемых материалов и получил согласие изображённых лиц',
-]
+import { useContent } from '@/lib/content'
 
 interface Props {
   checked: boolean[]
@@ -15,9 +10,14 @@ interface Props {
 }
 
 export default function ConsentGate({ checked, onChange }: Props) {
+  const items = [
+    useContent('consent.adult'),
+    useContent('consent.terms'),
+    useContent('consent.rights'),
+  ]
   return (
     <div className="flex flex-col gap-3">
-      {ITEMS.map((text, i) => (
+      {items.map((text, i) => (
         <button
           key={i}
           onClick={() => onChange(i, !checked[i])}

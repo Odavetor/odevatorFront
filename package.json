@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/dev-url.mjs",
     "dev": "next dev --turbopack --hostname 0.0.0.0",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --hostname 0.0.0.0",
     "lint": "next lint",
     "format": "prettier --write ."
   },
@@ -14,11 +15,10 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "framer-motion": "^12.10.0",
-    "@phosphor-icons/react": "^2.1.10",
-    "sharp": "^0.34.1"
+    "@phosphor-icons/react": "^2.1.10"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["sharp", "unrs-resolver"]
+    "onlyBuiltDependencies": ["unrs-resolver"]
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

@@ -12,19 +12,25 @@ interface Props {
   loading?: boolean
 }
 
+const HOUR_MS = 3_600_000
+const TTL_MS = 72 * HOUR_MS
+
 function timeLeft(createdAt: string): string {
-  const expiry = new Date(createdAt).getTime() + 3 * 24 * 60 * 60 * 1000
+  const expiry = new Date(createdAt).getTime() + TTL_MS
   const diff = expiry - Date.now()
-  if (diff <= 0) return 'Удалено'
-  const h = Math.floor(diff / 3_600_000)
-  if (h < 1) return `< 1 ч`
-  if (h < 24) return `${h} ч`
-  return `${Math.floor(h / 24)} д`
+  if (diff <= 0) return 'удалено'
+  const h = Math.floor(diff / HOUR_MS)
+  if (h < 1) return '< 1ч'
+  if (h < 24) return `${h}ч`
+  return `${Math.floor(h / 24)}д`
 }
 
 function SkeletonCard() {
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ aspectRatio: '1 / 1.618' }}>
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{ aspectRatio: '1 / 1.618', background: 'rgba(255,255,255,0.03)' }}
+    >
       <div className="w-full h-full skeleton" />
     </div>
   )
@@ -43,6 +49,9 @@ function ImageCard({ item }: { item: HistoryItem }) {
     a.click()
   }
 
+  const left = timeLeft(item.created_at)
+  const expiringSoon = item.expires_in_hours !== undefined && item.expires_in_hours <= 6
+
   return (
     <>
       <motion.div
@@ -51,7 +60,10 @@ function ImageCard({ item }: { item: HistoryItem }) {
           setLightbox(true)
         }}
         className="relative rounded-2xl overflow-hidden cursor-pointer"
-        style={{ aspectRatio: '1 / 1.618' }}
+        style={{
+          aspectRatio: '1 / 1.618',
+          border: '1px solid var(--border-1)',
+        }}
         whileTap={{ scale: 0.97 }}
         transition={{ type: 'spring', stiffness: 400, damping: 28 }}
       >
@@ -63,30 +75,59 @@ function ImageCard({ item }: { item: HistoryItem }) {
           className="object-cover"
         />
 
-        {/* Gradient overlay */}
         <div
-          className="absolute inset-0"
-          style={{ background: 'linear-gradient(to top, rgba(13,11,16,0.85) 0%, transparent 50%)' }}
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'linear-gradient(to top, rgba(13,11,16,0.78) 0%, rgba(13,11,16,0.15) 28%, transparent 55%)',
+          }}
         />
 
-        {/* Expiry badge */}
-        <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded-lg px-2 py-1"
-          style={{ background: 'rgba(13,11,16,0.7)', backdropFilter: 'blur(8px)' }}>
-          <ClockCounterClockwise size={10} color="#c4889e" />
-          <span className="text-cream-700 text-[10px]">{timeLeft(item.created_at)}</span>
+        {/* Expiry badge — bottom-left, mono */}
+        <div
+          className="absolute bottom-2 left-2 flex items-center gap-1 rounded-md px-1.5 py-0.5"
+          style={{
+            background: 'rgba(13,11,16,0.72)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+            border: expiringSoon
+              ? '1px solid rgba(201,150,106,0.32)'
+              : '1px solid rgba(255,255,255,0.06)',
+          }}
+        >
+          <ClockCounterClockwise
+            size={9}
+            color={expiringSoon ? 'var(--gold)' : 'rgba(255,255,255,0.55)'}
+            weight="fill"
+          />
+          <span
+            className="font-mono"
+            style={{
+              fontSize: 9,
+              letterSpacing: '0.04em',
+              color: expiringSoon ? 'var(--gold)' : 'rgba(255,255,255,0.7)',
+            }}
+          >
+            {left}
+          </span>
         </div>
 
-        {/* Download button */}
         <button
           onClick={handleDownload}
+          aria-label="Скачать"
           className="absolute bottom-2 right-2 w-7 h-7 rounded-lg flex items-center justify-center"
-          style={{ background: 'rgba(224,63,106,0.2)', border: '1px solid rgba(224,63,106,0.25)' }}
+          style={{
+            background: 'var(--rose-dim)',
+            border: '1px solid var(--border-rose)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+            WebkitTapHighlightColor: 'transparent',
+          }}
         >
-          <DownloadSimple size={13} color="#e03f6a" weight="bold" />
+          <DownloadSimple size={13} color="var(--rose)" weight="bold" />
         </button>
       </motion.div>
 
-      {/* Lightbox */}
       <AnimatePresence>
         {lightbox && (
           <motion.div
@@ -94,8 +135,12 @@ function ImageCard({ item }: { item: HistoryItem }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setLightbox(false)}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(13,11,16,0.92)', backdropFilter: 'blur(16px)' }}
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+            style={{
+              background: 'rgba(13,11,16,0.94)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+            }}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -104,6 +149,7 @@ function ImageCard({ item }: { item: HistoryItem }) {
               transition={{ type: 'spring', stiffness: 280, damping: 26 }}
               onClick={(e) => e.stopPropagation()}
               className="relative max-w-full max-h-[85dvh] rounded-3xl overflow-hidden"
+              style={{ border: '1px solid var(--border-1)' }}
             >
               <Image
                 src={item.image_url}
@@ -116,14 +162,21 @@ function ImageCard({ item }: { item: HistoryItem }) {
               <button
                 onClick={() => setLightbox(false)}
                 className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(13,11,16,0.7)', border: '1px solid rgba(255,255,255,0.12)' }}
+                style={{
+                  background: 'rgba(13,11,16,0.7)',
+                  border: '1px solid var(--border-2)',
+                }}
               >
-                <X size={16} color="#f2ece6" weight="bold" />
+                <X size={16} color="var(--text)" weight="bold" />
               </button>
               <button
                 onClick={handleDownload}
                 className="absolute bottom-4 right-4 px-4 py-2.5 rounded-xl flex items-center gap-2 text-sm font-medium"
-                style={{ background: 'rgba(224,63,106,0.2)', border: '1px solid rgba(224,63,106,0.3)', color: '#e03f6a' }}
+                style={{
+                  background: 'var(--rose-dim)',
+                  border: '1px solid var(--border-rose)',
+                  color: 'var(--rose)',
+                }}
               >
                 <DownloadSimple size={15} weight="bold" />
                 Сохранить
@@ -136,16 +189,18 @@ function ImageCard({ item }: { item: HistoryItem }) {
   )
 }
 
+export function HistorySkeletonGrid({ count = 6 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-2 gap-2.5">
+      {Array.from({ length: count }).map((_, i) => (
+        <SkeletonCard key={i} />
+      ))}
+    </div>
+  )
+}
+
 export default function HistoryGrid({ items, loading }: Props) {
-  if (loading) {
-    return (
-      <div className="grid grid-cols-2 gap-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <SkeletonCard key={i} />
-        ))}
-      </div>
-    )
-  }
+  if (loading) return <HistorySkeletonGrid count={6} />
 
   if (!items.length) {
     return (
@@ -153,32 +208,42 @@ export default function HistoryGrid({ items, loading }: Props) {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col items-center justify-center py-20 gap-4"
+        className="flex flex-col items-center justify-center py-16 gap-4 text-center"
       >
         <div
           className="w-16 h-16 rounded-2xl flex items-center justify-center"
-          style={{ background: 'rgba(31,25,41,0.8)', border: '1px solid rgba(255,255,255,0.07)' }}
+          style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px dashed var(--border-rose)',
+          }}
         >
-          <ClockCounterClockwise size={28} color="#7a4a5e" weight="duotone" />
+          <ClockCounterClockwise size={26} color="var(--rose)" weight="duotone" />
         </div>
-        <div className="text-center">
-          <p className="text-cream-200 font-medium mb-1">История пуста</p>
-          <p className="text-cream-700 text-sm">Результаты хранятся 3 дня</p>
+        <div className="max-w-[260px]">
+          <p
+            className="font-medium mb-1"
+            style={{ fontSize: 16, lineHeight: 1.2, color: 'var(--text)' }}
+          >
+            Пока пусто
+          </p>
+          <p className="text-[12px] leading-snug" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            Создайте первую обработку — она появится здесь и пробудет 72 часа.
+          </p>
         </div>
       </motion.div>
     )
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-2.5">
       {items.map((item, i) => (
         <motion.div
           key={item.id}
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
-            duration: 0.35,
-            delay: Math.min(i, 5) * 0.04,
+            duration: 0.32,
+            delay: Math.min(i, 5) * 0.035,
             ease: [0.16, 1, 0.3, 1],
           }}
         >

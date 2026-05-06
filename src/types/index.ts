@@ -7,6 +7,8 @@ export interface TelegramUser {
   photo_url?: string
 }
 
+// Aggregated view-model собранный из MeResponse + WalletResponse в TelegramProvider.
+// Сам бэк возвращает их как два отдельных DTO (см. src/lib/api/types.ts).
 export interface UserData {
   user_id: number
   username: string | null
@@ -24,24 +26,6 @@ export interface HistoryItem {
   local_path: string | null
   created_at: string
   expires_in_hours?: number
-}
-
-export interface Package {
-  id: string
-  count: number
-  price: number
-  label: string
-  popular?: boolean
-  savingsLabel?: string
-}
-
-export type PaymentMethod = 'cryptobot' | 'platega_sbp' | 'platega_crypto' | 'rollypay'
-
-export interface PaymentIntent {
-  method: PaymentMethod
-  amount: number
-  invoiceUrl: string
-  invoiceId: string
 }
 
 export type GenerationPhase = 'idle' | 'uploading' | 'processing' | 'done' | 'error'

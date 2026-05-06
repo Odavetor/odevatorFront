@@ -3,6 +3,7 @@ import { Playfair_Display, Onest, JetBrains_Mono } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import { TelegramProvider } from '@/components/TelegramProvider'
+import DevToggle from '@/components/DevToggle'
 
 const playfair = Playfair_Display({
   subsets: ['latin', 'cyrillic'],
@@ -52,7 +53,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           src="https://telegram.org/js/telegram-web-app.js"
           strategy="beforeInteractive"
         />
-        <TelegramProvider>{children}</TelegramProvider>
+        <TelegramProvider>
+          {children}
+          <DevToggle />
+        </TelegramProvider>
       </body>
     </html>
   )

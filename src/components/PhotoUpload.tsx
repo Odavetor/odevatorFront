@@ -60,6 +60,66 @@ export default function PhotoUpload({ onFile, preview, onClear, compact }: Props
     )
   }
 
+  // Compact mode: small empty state — tap to upload
+  if (compact && !preview) {
+    return (
+      <motion.button
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        onClick={() => {
+          haptic()
+          inputRef.current?.click()
+        }}
+        onDragOver={(e) => {
+          e.preventDefault()
+          setDragging(true)
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={onDrop}
+        className="flex items-center gap-3 rounded-2xl px-3 py-2.5 w-full text-left"
+        style={{
+          background: dragging ? 'var(--rose-soft)' : 'rgba(31,25,41,0.6)',
+          border: `1px dashed ${dragging ? 'var(--rose)' : 'var(--border-rose)'}`,
+          transition: 'all 0.2s ease',
+          WebkitTapHighlightColor: 'transparent',
+        }}
+      >
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: 'var(--rose-dim)', border: '1px solid var(--border-rose)' }}
+        >
+          <Camera size={18} color="var(--rose)" weight="duotone" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium leading-tight" style={{ color: 'rgba(255,255,255,0.85)' }}>
+            Загрузить своё фото
+          </p>
+          <p className="text-[11px] leading-tight mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            JPG, PNG, WEBP
+          </p>
+        </div>
+        <div
+          className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ background: 'var(--rose-dim)', border: '1px solid var(--border-rose)' }}
+        >
+          <UploadSimple size={13} color="var(--rose)" weight="bold" />
+        </div>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) handleFile(file)
+            e.target.value = ''
+          }}
+        />
+      </motion.button>
+    )
+  }
+
   return (
     <div className="relative w-full">
       <AnimatePresence mode="wait">

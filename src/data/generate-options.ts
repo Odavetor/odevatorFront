@@ -6,6 +6,14 @@ export interface FilterOption {
   label: string
   beforeExample: string
   afterExample: string
+  // Параметры генерации (опциональны на фронте — приходят из админки/бэка):
+  // - prompt_text  — что подсунуть AI-провайдеру
+  // - ai_model_type — модель провайдера (2 или 3, см. бэк-валидацию)
+  // - width / height — размеры результата (1..1024)
+  prompt_text?: string
+  ai_model_type?: 2 | 3
+  width?: number
+  height?: number
 }
 
 export interface FilterCategory {

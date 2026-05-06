@@ -1,0 +1,37 @@
+# Caddyfile для Velvet Mini App.
+# Положить в /etc/caddy/Caddyfile (или /etc/caddy/conf.d/velvet.caddy если используешь conf.d).
+# После правки: sudo systemctl reload caddy
+#
+# Caddy сам выпустит TLS-сертификат через Let's Encrypt при первом запросе на домен.
+
+velvet.example.com {
+    # Прокси Go-бэка
+    handle /api/v1/* {
+        reverse_proxy localhost:8080
+    }
+
+    # Health-чек бэка (опционально)
+    handle /health {
+        reverse_proxy localhost:8080
+    }
+
+    # Всё остальное — Next.js
+    handle {
+        reverse_proxy localhost:3000
+    }
+
+    encode gzip zstd
+
+    # Можно поднять лимит на multipart (по дефолту Caddy не лимитит, это ок)
+    # request_body {
+    #     max_size 12MB
+    # }
+
+    log {
+        output file /var/log/caddy/velvet.log {
+            roll_size 50mb
+            roll_keep 5
+        }
+        format console
+    }
+}

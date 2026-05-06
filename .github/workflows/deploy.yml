@@ -1,0 +1,32 @@
+name: Deploy frontend
+
+on:
+  push:
+    branches: [main]
+  # Можно запускать руками из вкладки Actions в GitHub
+  workflow_dispatch:
+
+# Не делаем параллельные деплои — если в очереди уже один,
+# отменяем предыдущий чтобы не было гонок.
+concurrency:
+  group: deploy-frontend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: SSH → run deploy.sh on server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # Хост-чек: первый раз GHA не знает fingerprint, поэтому отключаем строгую проверку.
+          # При желании — добавь known_hosts через secrets и убери эту опцию.
+          script_stop: true
+          script: |
+            set -euo pipefail
+            bash /opt/velvet/deploy/deploy.sh

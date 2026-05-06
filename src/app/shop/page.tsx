@@ -1,99 +1,151 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getUser, haptic, hapticNotify, openLink } from '@/lib/telegram'
-import PackageCard from '@/components/PackageCard'
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bank,
+  CheckCircle,
+  CurrencyEth,
+  Lightning,
+  WarningCircle,
+} from '@phosphor-icons/react'
+import { haptic, hapticNotify, openLink } from '@/lib/telegram'
 import BottomNav from '@/components/BottomNav'
-import CurrencyPill from '@/components/CurrencyPill'
 import { useUser } from '@/components/TelegramProvider'
-import type { Package, PaymentMethod } from '@/types'
-import { CurrencyDollar, Bank, CreditCard, CheckCircle } from '@phosphor-icons/react'
+import {
+  getGenerationPackCatalog,
+  initGenerationPackPayment,
+} from '@/lib/api/payments'
+import {
+  PAYMENT_METHOD,
+  type GenerationPackCatalog,
+  type GenerationPackOption,
+  type PaymentMethodId,
+} from '@/lib/api/types'
+import { useRouter } from 'next/navigation'
 
-const PACKAGES: Package[] = [
-  { id: '1', count: 1, price: 59, label: '1 обработка' },
-  { id: '10', count: 10, price: 349, label: '10 обработок', savingsLabel: '−41%' },
-  { id: '25', count: 25, price: 690, label: '25 обработок', popular: true, savingsLabel: '−53%' },
-  { id: '50', count: 50, price: 1190, label: '50 обработок', savingsLabel: '−59%' },
+type Step = 'select' | 'pending' | 'success'
+type Tier = 'standard' | 'weekly_promo'
+
+const FALLBACK_OPTIONS: GenerationPackOption[] = [
+  { quantity: 1, price_minor: 4900, currency: 'RUB' },
+  { quantity: 3, price_minor: 12900, currency: 'RUB' },
+  { quantity: 10, price_minor: 39900, currency: 'RUB' },
+  { quantity: 50, price_minor: 179900, currency: 'RUB' },
 ]
 
-const METHODS: Array<{ id: PaymentMethod; label: string; sub: string; icon: React.ElementType }> = [
-  { id: 'cryptobot', label: 'CryptoBot', sub: 'USDT', icon: CurrencyDollar },
-  { id: 'platega_sbp', label: 'СБП', sub: 'QR-код', icon: Bank },
-  { id: 'platega_crypto', label: 'Crypto', sub: 'Через Platega', icon: CurrencyDollar },
-  { id: 'rollypay', label: 'СБП #2', sub: 'RollyPay', icon: CreditCard },
+const METHODS: Array<{
+  id: PaymentMethodId
+  label: string
+  sub: string
+  icon: React.ElementType
+}> = [
+  { id: PAYMENT_METHOD.SBP, label: 'СБП', sub: 'Российские банки · мгновенно', icon: Bank },
+  { id: PAYMENT_METHOD.CRYPTO, label: 'Криптовалюта', sub: 'USDT · до 5 минут', icon: CurrencyEth },
 ]
 
-type Step = 'packages' | 'method' | 'pending' | 'success'
+const fmtRub = (minor: number) => Math.round(minor / 100).toLocaleString('ru')
 
 export default function ShopPage() {
-  const { refreshBalance } = useUser()
-  const [selectedPkg, setSelectedPkg] = useState<string | null>(null)
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null)
-  const [step, setStep] = useState<Step>('packages')
-  const [invoiceUrl, setInvoiceUrl] = useState('')
-  const [invoiceId, setInvoiceId] = useState('')
+  const router = useRouter()
+  const { wallet, refreshBalance } = useUser()
+
+  const [step, setStep] = useState<Step>('select')
+  const [tier, setTier] = useState<Tier>('standard')
+  const [catalog, setCatalog] = useState<GenerationPackCatalog | null>(null)
+  const [selectedQty, setSelectedQty] = useState<number | null>(null)
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodId | null>(null)
   const [loading, setLoading] = useState(false)
-  const [checking, setChecking] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null)
+  const [walletAtInit, setWalletAtInit] = useState<number>(0)
 
-  const pkg = PACKAGES.find((p) => p.id === selectedPkg)
-
-  async function createInvoice() {
-    if (!selectedPkg || !selectedMethod) return
-    const user = getUser()
-    if (!user) return
-
-    setLoading(true)
-    haptic('medium')
-
-    try {
-      const res = await fetch('/api/payment/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          packageId: selectedPkg,
-          method: selectedMethod,
-        }),
+  useEffect(() => {
+    let cancelled = false
+    getGenerationPackCatalog()
+      .then((c) => {
+        if (!cancelled) setCatalog(c)
       })
-      const data = await res.json()
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
-      if (!res.ok) {
-        hapticNotify('error')
-        return
-      }
+  const options: GenerationPackOption[] = useMemo(() => {
+    const tierData = catalog?.tiers.find((t) => t.id === tier)
+    if (tierData?.options?.length) return tierData.options
+    return FALLBACK_OPTIONS
+  }, [catalog, tier])
 
-      setInvoiceUrl(data.invoiceUrl)
-      setInvoiceId(data.invoiceId)
+  const hasPromo = useMemo(
+    () => Boolean(catalog?.tiers.find((t) => t.id === 'weekly_promo')?.options?.length),
+    [catalog],
+  )
+
+  const selectedOption = options.find((o) => o.quantity === selectedQty) ?? null
+
+  const unitBaseMinor = options[0]?.price_minor ?? 4900 // 1 шт. — базовая цена
+  function savingsPercent(opt: GenerationPackOption): number {
+    if (opt.quantity <= 1) return 0
+    const base = unitBaseMinor * opt.quantity
+    if (base <= 0) return 0
+    return Math.round((1 - opt.price_minor / base) * 100)
+  }
+
+  async function handlePay() {
+    if (!selectedOption || !selectedMethod) return
+    setLoading(true)
+    setError(null)
+    haptic('medium')
+    try {
+      const initial = wallet?.prepaid_generations_remaining ?? 0
+      setWalletAtInit(initial)
+      const r = await initGenerationPackPayment({
+        tier,
+        quantity: selectedOption.quantity,
+        paymentMethod: selectedMethod,
+      })
+      const url = r.redirect ?? r.return ?? null
+      if (!url) throw new Error('Не получили ссылку на оплату')
+      setRedirectUrl(url)
       setStep('pending')
-      openLink(data.invoiceUrl)
+      openLink(url)
+    } catch (e) {
+      hapticNotify('error')
+      setError(e instanceof Error ? e.message : 'Ошибка инициализации оплаты')
     } finally {
       setLoading(false)
     }
   }
 
-  async function checkPayment() {
-    if (!invoiceId || !selectedMethod) return
-    const user = getUser()
-    if (!user) return
-
-    setChecking(true)
+  async function handleCheck() {
+    if (!selectedOption) return
+    setLoading(true)
+    haptic('light')
     try {
-      const res = await fetch(
-        `/api/payment/check/${invoiceId}?method=${selectedMethod}&userId=${user.id}&packageId=${selectedPkg}`,
-      )
-      const data = await res.json()
-
-      if (data.status === 'paid') {
-        setStep('success')
+      await refreshBalance()
+      // через короткую паузу даём провайдеру вебхуком обновить wallet
+      const after = wallet?.prepaid_generations_remaining ?? 0
+      if (after > walletAtInit) {
         hapticNotify('success')
-        refreshBalance()
+        setStep('success')
       } else {
         hapticNotify('warning')
       }
     } finally {
-      setChecking(false)
+      setLoading(false)
     }
+  }
+
+  function reset() {
+    setStep('select')
+    setSelectedQty(null)
+    setSelectedMethod(null)
+    setRedirectUrl(null)
+    setError(null)
   }
 
   return (
@@ -103,254 +155,453 @@ export default function ShopPage() {
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="flex items-start justify-between px-5 pt-7 pb-4"
+        className="px-5 pt-[max(env(safe-area-inset-top),20px)] pb-5 flex items-start justify-between gap-3"
       >
-        <div>
-          <p className="text-cream-700 text-gr-2xs uppercase tracking-[0.15em] mb-0.5">Слоты</p>
-          <h1 className="font-display text-gr-xl text-cream-100">Магазин</h1>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              haptic()
+              router.back()
+            }}
+            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            <ArrowLeft size={18} color="rgba(255,255,255,0.6)" />
+          </button>
+          <div>
+            <p
+              className="font-mono uppercase mb-1"
+              style={{ fontSize: 10, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.4)' }}
+            >
+              Магазин
+            </p>
+            <h1
+              className="font-display"
+              style={{ fontSize: 30, fontWeight: 500, lineHeight: 0.95, color: 'var(--text)' }}
+            >
+              Купи генерации
+            </h1>
+          </div>
         </div>
-        <CurrencyPill />
+        {/* Balance summary, не CurrencyPill (мы и так в магазине) */}
+        <div
+          className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5"
+          style={{ background: 'rgba(18,18,24,0.92)', border: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          <Lightning size={13} weight="fill" color="var(--rose)" />
+          <span
+            className="font-mono text-xs"
+            style={{ color: 'rgba(255,255,255,0.92)' }}
+          >
+            {wallet?.prepaid_generations_remaining ?? 0}
+          </span>
+        </div>
       </motion.header>
 
-      <div className="flex-1 px-5 pb-4">
+      <div className="flex-1 px-5 pb-6">
         <AnimatePresence mode="wait">
-          {/* Step 1: packages */}
-          {step === 'packages' && (
+          {step === 'select' && (
             <motion.div
-              key="packages"
+              key="select"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col gap-4"
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col gap-5"
             >
-              <div
-                className="flex flex-col"
-                style={{ marginLeft: -20, marginRight: -20 }}
-              >
-                {PACKAGES.map((pkg, i) => (
-                  <motion.div
-                    key={pkg.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.32, delay: Math.min(i, 4) * 0.04, ease: [0.16, 1, 0.3, 1] }}
-                    style={{
-                      borderTop: i === 0 ? '1px solid var(--border-1)' : undefined,
-                      borderBottom: '1px solid var(--border-1)',
-                    }}
-                  >
-                    <PackageCard
-                      pkg={pkg}
-                      selected={selectedPkg === pkg.id}
-                      onSelect={setSelectedPkg}
-                    />
-                  </motion.div>
-                ))}
-              </div>
-
-              <AnimatePresence>
-                {selectedPkg && (
-                  <motion.button
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 5 }}
-                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    onClick={() => {
-                      haptic('medium')
-                      setStep('method')
-                    }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full py-4 rounded-2xl font-medium text-base text-white"
-                    style={{
-                      background: 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)',
-                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 0 rgba(0,0,0,0.4)',
-                    }}
-                  >
-                    Выбрать способ оплаты →
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          )}
-
-          {/* Step 2: method */}
-          {step === 'method' && (
-            <motion.div
-              key="method"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col gap-4"
-            >
-              {/* Selected package summary */}
-              <div
-                className="flex items-center justify-between rounded-2xl p-4"
-                style={{ background: 'rgba(224,63,106,0.08)', border: '1px solid rgba(224,63,106,0.18)' }}
-              >
-                <div>
-                  <p className="text-cream-600 text-xs mb-0.5">Выбран пакет</p>
-                  <p className="text-cream-100 font-medium">{pkg?.label}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-mono text-xl font-semibold text-rose-400">
-                    {pkg?.price.toLocaleString('ru')} ₽
-                  </p>
-                </div>
-              </div>
-
-              <p className="text-cream-700 text-gr-2xs uppercase tracking-[0.12em]">Способ оплаты</p>
-
-              <div className="flex flex-col gap-2">
-                {METHODS.map((m, i) => {
-                  const Icon = m.icon
-                  const active = selectedMethod === m.id
-                  return (
-                    <motion.button
-                      key={m.id}
-                      initial={{ opacity: 0, x: 12 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.07, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              {/* Promo toggle — показываем только если бэк отдал weekly_promo тир */}
+              {hasPromo && (
+                <div
+                  className="flex p-1 rounded-full self-start"
+                  style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                  }}
+                >
+                  {(['standard', 'weekly_promo'] as const).map((t) => (
+                    <button
+                      key={t}
                       onClick={() => {
-                        haptic()
-                        setSelectedMethod(m.id)
+                        haptic('light')
+                        setTier(t)
                       }}
-                      whileTap={{ scale: 0.98 }}
-                      className="flex items-center gap-3 rounded-2xl p-4 text-left"
-                      style={{
-                        background: active
-                          ? 'rgba(224,63,106,0.1)'
-                          : 'rgba(31,25,41,0.8)',
-                        border: active
-                          ? '1px solid rgba(224,63,106,0.32)'
-                          : '1px solid rgba(255,255,255,0.07)',
-                        transition: 'all 0.2s ease',
-                      }}
+                      className="relative px-4 py-1.5 text-xs font-medium rounded-full"
+                      style={{ WebkitTapHighlightColor: 'transparent' }}
                     >
-                      <div
-                        className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                      {tier === t && (
+                        <motion.div
+                          layoutId="tier-tab"
+                          className="absolute inset-0 rounded-full"
+                          style={{
+                            background:
+                              t === 'weekly_promo' ? 'rgba(201,150,106,0.16)' : 'rgba(255,255,255,0.11)',
+                            border:
+                              t === 'weekly_promo'
+                                ? '1px solid rgba(201,150,106,0.32)'
+                                : '1px solid rgba(255,255,255,0.1)',
+                          }}
+                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                        />
+                      )}
+                      <span
+                        className="relative z-10"
                         style={{
-                          background: active ? 'rgba(224,63,106,0.15)' : 'rgba(255,255,255,0.05)',
-                          border: active ? '1px solid rgba(224,63,106,0.22)' : '1px solid rgba(255,255,255,0.07)',
+                          color:
+                            tier === t
+                              ? t === 'weekly_promo'
+                                ? 'var(--gold)'
+                                : '#fff'
+                              : 'rgba(255,255,255,0.4)',
                         }}
                       >
-                        <Icon size={17} color={active ? '#e03f6a' : '#7a4a5e'} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-cream-100 text-sm font-medium">{m.label}</p>
-                        <p className="text-cream-700 text-gr-2xs">{m.sub}</p>
-                      </div>
-                      {active && (
-                        <CheckCircle size={18} color="#e03f6a" weight="fill" />
-                      )}
-                    </motion.button>
-                  )
-                })}
-              </div>
+                        {t === 'standard' ? 'Стандарт' : 'Промо · −22%'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
 
-              <div className="flex flex-col gap-2 mt-2">
-                <button
-                  onClick={createInvoice}
-                  disabled={!selectedMethod || loading}
-                  className="w-full py-4 rounded-2xl font-medium text-base"
+              {/* Packages */}
+              <section className="flex flex-col gap-2">
+                <p
+                  className="font-mono uppercase mb-1"
                   style={{
-                    background: selectedMethod
+                    fontSize: 10,
+                    letterSpacing: '0.18em',
+                    color: 'rgba(255,255,255,0.45)',
+                  }}
+                >
+                  1 · Размер пакета
+                </p>
+                <div className="flex flex-col gap-2">
+                  {options.map((opt, i) => {
+                    const active = selectedQty === opt.quantity
+                    const savings = savingsPercent(opt)
+                    const unit = Math.round(opt.price_minor / opt.quantity / 100)
+                    const popular = opt.quantity === 10
+                    return (
+                      <motion.button
+                        key={opt.quantity}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                          delay: Math.min(i, 4) * 0.04,
+                          duration: 0.3,
+                          ease: [0.16, 1, 0.3, 1],
+                        }}
+                        onClick={() => {
+                          haptic('light')
+                          setSelectedQty(opt.quantity)
+                        }}
+                        whileTap={{ scale: 0.985 }}
+                        className="relative rounded-2xl px-4 py-3.5 flex items-center justify-between gap-3 text-left"
+                        style={{
+                          background: active ? 'var(--rose-dim)' : 'rgba(255,255,255,0.03)',
+                          border: active
+                            ? '1.5px solid var(--rose)'
+                            : '1px solid var(--border-1)',
+                          transition: 'all 0.2s ease',
+                          WebkitTapHighlightColor: 'transparent',
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className="font-display"
+                            style={{
+                              fontSize: 28,
+                              lineHeight: 1,
+                              letterSpacing: '-0.02em',
+                              color: active ? 'var(--rose)' : 'var(--text)',
+                            }}
+                          >
+                            {opt.quantity}
+                          </span>
+                          <div className="flex flex-col">
+                            <span
+                              className="text-[12px] leading-tight"
+                              style={{ color: 'rgba(255,255,255,0.55)' }}
+                            >
+                              {opt.quantity === 1
+                                ? 'генерация'
+                                : opt.quantity < 5
+                                ? 'генерации'
+                                : 'генераций'}
+                            </span>
+                            <span
+                              className="font-mono text-[10px] mt-0.5"
+                              style={{ color: 'rgba(255,255,255,0.38)' }}
+                            >
+                              {unit}₽ за шт
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {savings > 0 && (
+                            <span
+                              className="font-mono px-1.5 py-0.5 rounded"
+                              style={{
+                                fontSize: 10,
+                                letterSpacing: '0.04em',
+                                background: tier === 'weekly_promo' ? 'rgba(201,150,106,0.16)' : 'rgba(95,210,150,0.12)',
+                                color: tier === 'weekly_promo' ? 'var(--gold)' : '#5fd296',
+                                border: `1px solid ${tier === 'weekly_promo' ? 'rgba(201,150,106,0.28)' : 'rgba(95,210,150,0.22)'}`,
+                              }}
+                            >
+                              −{savings}%
+                            </span>
+                          )}
+                          <span
+                            className="font-mono text-base font-medium"
+                            style={{ color: active ? 'var(--rose)' : 'var(--text)' }}
+                          >
+                            {fmtRub(opt.price_minor)} ₽
+                          </span>
+                        </div>
+
+                        {popular && (
+                          <span
+                            className="absolute -top-2 right-4 px-2 py-0.5 rounded-full font-mono uppercase"
+                            style={{
+                              fontSize: 9,
+                              letterSpacing: '0.16em',
+                              background: 'var(--rose)',
+                              color: '#fff',
+                              boxShadow: '0 2px 12px rgba(224,63,106,0.32)',
+                            }}
+                          >
+                            популярно
+                          </span>
+                        )}
+                      </motion.button>
+                    )
+                  })}
+                </div>
+              </section>
+
+              {/* Method */}
+              <section className="flex flex-col gap-2">
+                <p
+                  className="font-mono uppercase mb-1"
+                  style={{
+                    fontSize: 10,
+                    letterSpacing: '0.18em',
+                    color: 'rgba(255,255,255,0.45)',
+                  }}
+                >
+                  2 · Способ оплаты
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {METHODS.map((m) => {
+                    const Icon = m.icon
+                    const active = selectedMethod === m.id
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() => {
+                          haptic('light')
+                          setSelectedMethod(m.id)
+                        }}
+                        className="relative rounded-2xl p-3 flex flex-col gap-2 text-left"
+                        style={{
+                          background: active ? 'var(--rose-dim)' : 'rgba(255,255,255,0.03)',
+                          border: active
+                            ? '1.5px solid var(--rose)'
+                            : '1px solid var(--border-1)',
+                          transition: 'all 0.2s ease',
+                          WebkitTapHighlightColor: 'transparent',
+                        }}
+                      >
+                        <div
+                          className="w-9 h-9 rounded-xl flex items-center justify-center"
+                          style={{
+                            background: active ? 'var(--rose-dim)' : 'rgba(255,255,255,0.05)',
+                            border: active
+                              ? '1px solid var(--border-rose)'
+                              : '1px solid var(--border-1)',
+                          }}
+                        >
+                          <Icon size={18} color={active ? 'var(--rose)' : 'rgba(255,255,255,0.6)'} weight="duotone" />
+                        </div>
+                        <div>
+                          <p
+                            className="font-medium text-[14px] leading-tight"
+                            style={{ color: active ? 'var(--rose)' : 'var(--text)' }}
+                          >
+                            {m.label}
+                          </p>
+                          <p
+                            className="text-[11px] leading-snug mt-0.5"
+                            style={{ color: 'rgba(255,255,255,0.45)' }}
+                          >
+                            {m.sub}
+                          </p>
+                        </div>
+                        {active && (
+                          <CheckCircle
+                            size={14}
+                            color="var(--rose)"
+                            weight="fill"
+                            className="absolute top-2.5 right-2.5"
+                          />
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+
+              {error && (
+                <div
+                  className="rounded-xl px-3 py-2 flex items-start gap-2 text-xs"
+                  style={{
+                    background: 'rgba(180,30,60,0.12)',
+                    border: '1px solid rgba(180,30,60,0.22)',
+                    color: '#ff9aae',
+                  }}
+                >
+                  <WarningCircle size={14} weight="fill" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* Confirm */}
+              <motion.button
+                onClick={handlePay}
+                disabled={!selectedOption || !selectedMethod || loading}
+                whileTap={selectedOption && selectedMethod ? { scale: 0.98 } : {}}
+                className="w-full py-4 rounded-2xl font-semibold text-base flex items-center justify-center gap-2"
+                style={{
+                  background:
+                    selectedOption && selectedMethod
                       ? 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)'
-                      : 'rgba(31,31,40,0.8)',
-                    border: selectedMethod ? 'none' : '1px solid var(--border-1)',
-                    boxShadow: selectedMethod
-                      ? 'inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 0 rgba(0,0,0,0.4)'
+                      : 'rgba(255,255,255,0.04)',
+                  boxShadow:
+                    selectedOption && selectedMethod
+                      ? 'inset 0 1px 0 rgba(255,255,255,0.18), 0 8px 28px rgba(224,63,106,0.32)'
                       : 'none',
-                    color: selectedMethod ? '#FFFFFF' : 'var(--text-3)',
-                    transition: 'all 0.25s ease',
-                    opacity: loading ? 0.7 : 1,
-                  }}
-                >
-                  {loading ? 'Создаю счёт…' : `Оплатить ${pkg?.price.toLocaleString('ru')} ₽`}
-                </button>
-                <button
-                  onClick={() => {
-                    haptic()
-                    setStep('packages')
-                  }}
-                  className="w-full py-3 rounded-2xl text-sm font-medium text-cream-700"
-                  style={{ background: 'rgba(22,18,28,0.5)' }}
-                >
-                  Назад
-                </button>
-              </div>
+                  border: !(selectedOption && selectedMethod) ? '1px solid var(--border-1)' : 'none',
+                  color: selectedOption && selectedMethod ? '#fff' : 'rgba(255,255,255,0.3)',
+                  transition: 'all 0.25s ease',
+                  opacity: loading ? 0.7 : 1,
+                }}
+              >
+                {loading
+                  ? 'Создаём счёт…'
+                  : selectedOption && selectedMethod
+                  ? `Оплатить ${fmtRub(selectedOption.price_minor)} ₽`
+                  : selectedOption
+                  ? 'Выберите способ оплаты'
+                  : 'Выберите пакет'}
+                {selectedOption && selectedMethod && !loading && <ArrowRight size={16} weight="bold" />}
+              </motion.button>
             </motion.div>
           )}
 
-          {/* Step 3: pending payment */}
-          {step === 'pending' && (
+          {/* Pending */}
+          {step === 'pending' && selectedOption && (
             <motion.div
               key="pending"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="flex flex-col gap-5"
             >
               <div
-                className="rounded-3xl p-8 flex flex-col items-center gap-4 text-center"
-                style={{ background: 'rgba(31,25,41,0.8)', border: '1px solid var(--border-1)' }}
+                className="rounded-3xl p-7 flex flex-col items-center gap-4 text-center"
+                style={{
+                  background:
+                    'linear-gradient(180deg, rgba(31,25,41,0.8) 0%, rgba(13,11,16,0.8) 100%)',
+                  border: '1px solid var(--border-1)',
+                }}
               >
                 <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center"
-                  style={{ background: 'var(--rose-dim)', border: '1px solid var(--border-rose)' }}
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                  style={{
+                    background: 'var(--rose-dim)',
+                    border: '1px solid var(--border-rose)',
+                  }}
                 >
-                  <Bank size={28} color="var(--rose)" weight="duotone" />
+                  <Lightning
+                    size={26}
+                    weight="duotone"
+                    color="var(--rose)"
+                    className="animate-breathe"
+                  />
                 </div>
-
                 <div>
-                  <p className="text-cream-100 font-medium text-lg mb-1">Ожидание оплаты</p>
-                  <p className="text-cream-700 text-sm max-w-[260px]">
-                    Оплатите счёт и нажмите кнопку ниже для подтверждения
+                  <p
+                    className="font-display mb-1.5"
+                    style={{ fontSize: 22, lineHeight: 1.1, color: 'var(--text)' }}
+                  >
+                    Ждём оплату
+                  </p>
+                  <p className="text-[12px]" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                    Оплатите счёт и нажмите «Я оплатил»
                   </p>
                 </div>
-
-                <div
-                  className="font-mono text-2xl font-semibold"
-                  style={{ color: 'var(--rose)' }}
-                >
-                  {pkg?.price.toLocaleString('ru')} ₽
+                <div className="flex items-center gap-2 mt-1">
+                  <span
+                    className="font-mono"
+                    style={{ fontSize: 24, color: 'var(--rose)', letterSpacing: '-0.01em' }}
+                  >
+                    {fmtRub(selectedOption.price_minor)} ₽
+                  </span>
+                  <span
+                    className="text-[11px] font-mono uppercase px-2 py-0.5 rounded"
+                    style={{
+                      letterSpacing: '0.16em',
+                      background: 'rgba(255,255,255,0.06)',
+                      color: 'rgba(255,255,255,0.5)',
+                    }}
+                  >
+                    {METHODS.find((m) => m.id === selectedMethod)?.label}
+                  </span>
                 </div>
               </div>
 
               <div className="flex flex-col gap-2">
-                <button
-                  onClick={() => openLink(invoiceUrl)}
-                  className="w-full py-4 rounded-2xl font-medium text-base text-white"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)',
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 0 rgba(0,0,0,0.4)',
-                  }}
-                >
-                  Открыть счёт
-                </button>
+                {redirectUrl && (
+                  <button
+                    onClick={() => {
+                      haptic('light')
+                      openLink(redirectUrl)
+                    }}
+                    className="w-full py-4 rounded-2xl font-medium text-base text-white flex items-center justify-center gap-2"
+                    style={{
+                      background:
+                        'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)',
+                      boxShadow:
+                        'inset 0 1px 0 rgba(255,255,255,0.18), 0 6px 24px rgba(224,63,106,0.28)',
+                    }}
+                  >
+                    Открыть счёт ещё раз
+                    <ArrowRight size={15} weight="bold" />
+                  </button>
+                )}
 
                 <button
-                  onClick={checkPayment}
-                  disabled={checking}
+                  onClick={handleCheck}
+                  disabled={loading}
                   className="w-full py-4 rounded-2xl font-medium text-base"
                   style={{
-                    background: 'rgba(31,25,41,0.9)',
+                    background: 'rgba(255,255,255,0.04)',
                     border: '1px solid var(--border-2)',
-                    color: 'var(--text-2)',
-                    opacity: checking ? 0.7 : 1,
+                    color: 'rgba(255,255,255,0.85)',
+                    opacity: loading ? 0.6 : 1,
                   }}
                 >
-                  {checking ? 'Проверяю…' : 'Я оплатил'}
+                  {loading ? 'Проверяем…' : 'Я оплатил'}
                 </button>
 
                 <button
-                  onClick={() => {
-                    haptic()
-                    setStep('packages')
-                    setSelectedMethod(null)
-                  }}
-                  className="text-cream-700 text-sm py-2"
+                  onClick={reset}
+                  className="text-cream-700 text-xs py-2"
+                  style={{ color: 'rgba(255,255,255,0.45)' }}
                 >
                   Отмена
                 </button>
@@ -358,8 +609,8 @@ export default function ShopPage() {
             </motion.div>
           )}
 
-          {/* Step 4: success */}
-          {step === 'success' && (
+          {/* Success */}
+          {step === 'success' && selectedOption && (
             <motion.div
               key="success"
               initial={{ opacity: 0, scale: 0.96 }}
@@ -372,37 +623,51 @@ export default function ShopPage() {
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.08, type: 'spring', stiffness: 260, damping: 20 }}
                 className="w-20 h-20 rounded-full flex items-center justify-center"
-                style={{
-                  background: 'var(--rose-dim)',
-                  border: '1px solid var(--border-rose)',
-                }}
+                style={{ background: 'var(--rose-dim)', border: '1px solid var(--border-rose)' }}
               >
-                <CheckCircle size={40} color="var(--rose)" weight="fill" />
+                <CheckCircle size={42} color="var(--rose)" weight="fill" />
               </motion.div>
 
               <div className="text-center">
-                <p className="font-display text-gr-xl text-cream-100 mb-2">Оплачено</p>
-                <p className="text-cream-700 text-sm">
-                  {pkg?.count} обработок добавлено на ваш счёт
+                <p
+                  className="font-display mb-2"
+                  style={{ fontSize: 32, lineHeight: 1, color: 'var(--text)' }}
+                >
+                  Оплачено
+                </p>
+                <p className="text-[13px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                  +{selectedOption.quantity} {selectedOption.quantity === 1 ? 'генерация' : selectedOption.quantity < 5 ? 'генерации' : 'генераций'}
                 </p>
               </div>
 
-              <button
-                onClick={() => {
-                  haptic()
-                  setStep('packages')
-                  setSelectedPkg(null)
-                  setSelectedMethod(null)
-                }}
-                className="w-full py-4 rounded-2xl font-medium"
-                style={{
-                  background: 'rgba(31,25,41,0.8)',
-                  border: '1px solid var(--border-1)',
-                  color: 'var(--text-2)',
-                }}
-              >
-                Назад в магазин
-              </button>
+              <div className="w-full flex flex-col gap-2">
+                <button
+                  onClick={() => {
+                    haptic('medium')
+                    router.push('/generate')
+                  }}
+                  className="w-full py-4 rounded-2xl font-semibold text-base text-white flex items-center justify-center gap-2"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)',
+                    boxShadow:
+                      'inset 0 1px 0 rgba(255,255,255,0.18), 0 6px 24px rgba(224,63,106,0.28)',
+                  }}
+                >
+                  Создать фото
+                  <ArrowRight size={16} weight="bold" />
+                </button>
+                <button
+                  onClick={reset}
+                  className="w-full py-3 rounded-2xl text-sm"
+                  style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    color: 'rgba(255,255,255,0.55)',
+                  }}
+                >
+                  Купить ещё
+                </button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

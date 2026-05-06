@@ -1,0 +1,39 @@
+# systemd unit для Next.js фронта.
+# Положить в /etc/systemd/system/velvet-frontend.service
+# Команды:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable velvet-frontend     # автозапуск при ребуте
+#   sudo systemctl start velvet-frontend
+#   sudo systemctl status velvet-frontend
+#   sudo journalctl -u velvet-frontend -f      # смотреть логи в реалтайме
+#
+# Важно: User=velvet — отдельный системный юзер БЕЗ root-прав, владеет /opt/velvet/.
+
+[Unit]
+Description=Velvet Mini App (Next.js frontend)
+After=network.target
+
+[Service]
+Type=simple
+User=velvet
+Group=velvet
+WorkingDirectory=/opt/velvet
+EnvironmentFile=/opt/velvet/.env.production
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOSTNAME=127.0.0.1
+ExecStart=/usr/bin/pnpm start
+Restart=always
+RestartSec=4
+StandardOutput=journal
+StandardError=journal
+
+# Безопасность: ограничиваем права процесса
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/velvet
+
+[Install]
+WantedBy=multi-user.target

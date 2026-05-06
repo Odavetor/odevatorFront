@@ -1,0 +1,7 @@
+# Положить в /etc/sudoers.d/velvet (через `sudo visudo -f /etc/sudoers.d/velvet`)
+#
+# Разрешает юзеру `velvet` делать ОДНУ команду без пароля — рестарт своего сервиса.
+# Никаких других sudo-прав. Минимально безопасно.
+
+velvet ALL=(root) NOPASSWD: /usr/bin/systemctl restart velvet-frontend
+velvet ALL=(root) NOPASSWD: /usr/bin/journalctl -u velvet-frontend *
