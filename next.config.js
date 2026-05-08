@@ -24,9 +24,13 @@ const nextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
     // Любой бэк-CDN добавь сюда. Picsum используется в hero/моках для dev.
+    // Прод-домен нужен для админ-загрузок: бэк отдаёт URL вида
+    // https://unfulfilled-dreams.com/{catalog,uploads}/...
     remotePatterns: [
       { protocol: 'https', hostname: 'picsum.photos' },
       { protocol: 'https', hostname: 'fastly.picsum.photos' },
+      { protocol: 'https', hostname: 'unfulfilled-dreams.com' },
+      { protocol: 'https', hostname: 'www.unfulfilled-dreams.com' },
     ],
   },
 }
