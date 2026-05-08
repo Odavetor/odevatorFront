@@ -47,10 +47,17 @@ export default function GeneratePage() {
   const [photoCategories, setPhotoCategories] = useState<FilterCategory[]>(PHOTO_FILTER_CATEGORIES)
   const [videoScenarios, setVideoScenarios] = useState<VideoScenario[]>(VIDEO_SCENARIOS)
 
-  // Photo: активная категория + выбранный вариант (по умолчанию первая категория, первый вариант)
+  // Бэк /generate/photo требует 4 slug'а сразу (clothing/body/pose/background).
+  // Храним выбор по каждой категории отдельно.
+  const buildInitialSelections = (cats: FilterCategory[]): Record<string, string> => {
+    const m: Record<string, string> = {}
+    for (const c of cats) if (c.options[0]) m[c.id] = c.options[0].id
+    return m
+  }
+
   const [activeCategoryId, setActiveCategoryId] = useState<string>(photoCategories[0]?.id ?? '')
-  const [selectedOption, setSelectedOption] = useState<FilterOption | null>(
-    photoCategories[0]?.options[0] ?? null,
+  const [selectedByCategory, setSelectedByCategory] = useState<Record<string, string>>(
+    buildInitialSelections(photoCategories),
   )
 
   useEffect(() => {
@@ -60,9 +67,14 @@ export default function GeneratePage() {
         if (cancelled || !d.categories?.length) return
         setPhotoCategories(d.categories)
         setActiveCategoryId((prev) => (d.categories.find((c) => c.id === prev) ? prev : d.categories[0].id))
-        setSelectedOption((prev) => {
-          if (prev && d.categories.some((c) => c.options.some((o) => o.id === prev.id))) return prev
-          return d.categories[0].options[0] ?? null
+        setSelectedByCategory((prev) => {
+          const next = { ...buildInitialSelections(d.categories) }
+          // сохраняем валидный выбор юзера
+          for (const c of d.categories) {
+            const prevSlug = prev[c.id]
+            if (prevSlug && c.options.some((o) => o.id === prevSlug)) next[c.id] = prevSlug
+          }
+          return next
         })
       })
       .catch(() => {})
@@ -74,6 +86,14 @@ export default function GeneratePage() {
       .catch(() => {})
     return () => { cancelled = true }
   }, [])
+
+  // Текущая опция активной категории — для превью.
+  const activeCat = photoCategories.find((c) => c.id === activeCategoryId) ?? photoCategories[0]
+  const selectedOption: FilterOption | null = (() => {
+    if (!activeCat) return null
+    const slug = selectedByCategory[activeCat.id]
+    return activeCat.options.find((o) => o.id === slug) ?? activeCat.options[0] ?? null
+  })()
 
   // Video
   const [scenario, setScenario] = useState<string | null>(null)
@@ -89,7 +109,7 @@ export default function GeneratePage() {
   const videoCost = VIDEO_SLOT_COST[duration]
   const currentCost = mode === 'Фото' ? photoCost : videoCost
 
-  const activeCategory = photoCategories.find((c) => c.id === activeCategoryId) ?? photoCategories[0]
+  const activeCategory = activeCat
 
   const handleFile = useCallback((f: File) => {
     setFile(f)
@@ -106,15 +126,18 @@ export default function GeneratePage() {
   function handleCategoryChange(id: string) {
     haptic('light')
     setActiveCategoryId(id)
-    // при смене категории автоматически выбираем её первый вариант — превью всегда видно
-    const cat = photoCategories.find((c) => c.id === id)
-    if (cat && cat.options[0]) setSelectedOption(cat.options[0])
+    // при смене категории, если для неё ещё ничего не выбрано — берём первый вариант
+    setSelectedByCategory((prev) => {
+      if (prev[id]) return prev
+      const cat = photoCategories.find((c) => c.id === id)
+      if (!cat?.options[0]) return prev
+      return { ...prev, [id]: cat.options[0].id }
+    })
   }
 
   function handleOptionSelect(opt: FilterOption) {
-    // повторный тап не снимает выбор — превью всегда показывается
-    setSelectedOption(opt)
     haptic('light')
+    setSelectedByCategory((prev) => ({ ...prev, [activeCategoryId]: opt.id }))
   }
 
   function handleConsentChange(index: number, val: boolean) {
@@ -133,6 +156,14 @@ export default function GeneratePage() {
     return null
   }
 
+  // Бэк ResolvePhotoChoices ждёт slug'и для clothing/body/pose/background.
+  // Если в каталоге какой-то категории нет — посылаем пустую строку и получим понятную ошибку с бэка.
+  function pickSlug(catSlug: string): string {
+    if (selectedByCategory[catSlug]) return selectedByCategory[catSlug]
+    const cat = photoCategories.find((c) => c.id === catSlug)
+    return cat?.options[0]?.id ?? ''
+  }
+
   async function generate() {
     if (!file || !selectedOption) return
     const user = getUser()
@@ -147,8 +178,11 @@ export default function GeneratePage() {
 
       const { uid } = await startPhotoGeneration({
         file_url: fileUrl,
-        filter_category: activeCategoryId,
-        filter_option: selectedOption.id,
+        clothing: pickSlug('clothing'),
+        body: pickSlug('body'),
+        pose: pickSlug('pose'),
+        background: pickSlug('background'),
+        num_images: 1,
       })
 
       setGenState({ phase: 'processing', progress: 60 })
@@ -185,10 +219,11 @@ export default function GeneratePage() {
       const { url: fileUrl } = await uploadUserPhoto(videoFile)
       setGenState({ phase: 'uploading', progress: 35 })
 
+      // Бэк сам берёт duration_sec / slots из video_scenarios по slug.
+      void dur
       const { uid } = await startVideoGeneration({
         file_url: fileUrl,
         scenario,
-        duration: dur,
       })
 
       setGenState({ phase: 'processing', progress: 60 })
@@ -272,9 +307,11 @@ export default function GeneratePage() {
               onClick={() => {
                 haptic('light')
                 setMode(m)
-                if (m === 'Фото' && !selectedOption) {
+                if (m === 'Фото' && !selectedByCategory[activeCategoryId]) {
                   const cat = photoCategories.find((c) => c.id === activeCategoryId)
-                  if (cat && cat.options[0]) setSelectedOption(cat.options[0])
+                  if (cat?.options[0]) {
+                    setSelectedByCategory((prev) => ({ ...prev, [activeCategoryId]: cat.options[0].id }))
+                  }
                 }
               }}
               className="relative px-5 py-1.5 text-sm font-medium rounded-full"

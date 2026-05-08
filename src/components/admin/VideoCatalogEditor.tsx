@@ -2,33 +2,34 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, PencilSimple, Trash, X, FloppyDisk } from '@phosphor-icons/react'
-import {
-  fetchVideoCatalog,
-  createVideoScenario,
-  updateVideoScenario,
-  deleteVideoScenario,
-} from '@/lib/catalog'
+import { PencilSimple, X, FloppyDisk, Info } from '@phosphor-icons/react'
+import { fetchVideoCatalog, updateVideoScenario } from '@/lib/catalog'
 import type { VideoScenario } from '@/data/generate-options'
-import { haptic, hapticNotify } from '@/lib/telegram'
+import { hapticNotify } from '@/lib/telegram'
 import ImageUploader from './ImageUploader'
 
+// На бэке нет создания/удаления сценариев — только PATCH существующего.
+
 interface ScenarioDraft {
-  slug: string
   label: string
   description: string
-  thumbnail: string | null
-  durationSec: number
+  prompt_text: string
+  thumbnail_url: string | null
+  duration_sec: number
   slots: number
+  sort_order: number
 }
 
-const EMPTY_DRAFT: ScenarioDraft = {
-  slug: '',
-  label: '',
-  description: '',
-  thumbnail: null,
-  durationSec: 5,
-  slots: 2,
+function draftFrom(s: VideoScenario): ScenarioDraft {
+  return {
+    label: s.label,
+    description: s.description,
+    prompt_text: s.prompt_text ?? '',
+    thumbnail_url: s.thumbnail,
+    duration_sec: s.durationSec,
+    slots: s.slots,
+    sort_order: s.sort_order ?? 0,
+  }
 }
 
 export default function VideoCatalogEditor() {
@@ -36,8 +37,7 @@ export default function VideoCatalogEditor() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState<VideoScenario | null>(null)
-  const [showForm, setShowForm] = useState(false)
-  const [draft, setDraft] = useState<ScenarioDraft>(EMPTY_DRAFT)
+  const [draft, setDraft] = useState<ScenarioDraft | null>(null)
 
   async function reload() {
     setLoading(true)
@@ -56,79 +56,42 @@ export default function VideoCatalogEditor() {
     reload()
   }, [])
 
-  function startNew() {
-    setEditing(null)
-    setDraft(EMPTY_DRAFT)
-    setShowForm(true)
-  }
-
   function startEdit(s: VideoScenario) {
     setEditing(s)
-    setDraft({
-      slug: s.id,
-      label: s.label,
-      description: s.description,
-      thumbnail: s.thumbnail,
-      durationSec: s.durationSec,
-      slots: s.slots,
-    })
-    setShowForm(true)
+    setDraft(draftFrom(s))
   }
 
   function close() {
-    setShowForm(false)
     setEditing(null)
-    setDraft(EMPTY_DRAFT)
+    setDraft(null)
   }
 
   async function handleSave() {
-    if (!draft.label.trim() || !draft.thumbnail) {
-      hapticNotify('warning')
-      setError('Заполните название и превью')
+    if (!editing || !draft) return
+    if (typeof editing.numericId !== 'number') {
+      hapticNotify('error')
+      setError('Сценарий без numericId — нельзя сохранить.')
       return
     }
+    if (!draft.label.trim() || !draft.thumbnail_url) {
+      hapticNotify('warning'); setError('Заполните название и превью'); return
+    }
     try {
-      if (editing) {
-        await updateVideoScenario(editing.id, {
-          label: draft.label.trim(),
-          description: draft.description.trim(),
-          thumbnail: draft.thumbnail,
-          durationSec: draft.durationSec,
-          slots: draft.slots,
-        })
-      } else {
-        if (!draft.slug.trim()) {
-          hapticNotify('warning')
-          setError('Slug обязателен')
-          return
-        }
-        await createVideoScenario({
-          slug: draft.slug.trim(),
-          label: draft.label.trim(),
-          description: draft.description.trim(),
-          thumbnail: draft.thumbnail,
-          durationSec: draft.durationSec,
-          slots: draft.slots,
-        })
-      }
+      await updateVideoScenario(editing.numericId, {
+        label: draft.label.trim(),
+        description: draft.description.trim(),
+        prompt_text: draft.prompt_text.trim(),
+        thumbnail_url: draft.thumbnail_url,
+        duration_sec: draft.duration_sec,
+        slots: draft.slots,
+        sort_order: draft.sort_order,
+      })
       hapticNotify('success')
       close()
       await reload()
     } catch (e) {
       hapticNotify('error')
       setError(e instanceof Error ? e.message : 'Не удалось сохранить')
-    }
-  }
-
-  async function handleDelete(s: VideoScenario) {
-    if (!confirm(`Удалить сценарий «${s.label}»?`)) return
-    try {
-      await deleteVideoScenario(s.id)
-      hapticNotify('success')
-      await reload()
-    } catch (e) {
-      hapticNotify('error')
-      setError(e instanceof Error ? e.message : 'Не удалось удалить')
     }
   }
 
@@ -142,13 +105,16 @@ export default function VideoCatalogEditor() {
         </div>
       )}
 
-      <button
-        onClick={() => { haptic(); startNew() }}
-        className="rounded-2xl py-3 px-4 text-sm font-medium flex items-center justify-center gap-2"
-        style={{ background: 'var(--rose-dim)', border: '1px solid var(--border-rose)', color: 'var(--rose)' }}
+      <div
+        className="rounded-2xl px-3.5 py-3 flex items-start gap-2.5"
+        style={{ background: 'rgba(201,150,106,0.08)', border: '1px solid rgba(201,150,106,0.22)' }}
       >
-        <Plus size={14} weight="bold" /> Новый сценарий
-      </button>
+        <Info size={14} weight="fill" color="var(--gold)" className="flex-shrink-0 mt-0.5" />
+        <div className="text-[12px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>
+          Сценарии засеяны в БД миграцией <code style={{ color: '#fff' }}>008_catalog.sql</code>. На бэке нельзя
+          создавать или удалять — только редактировать существующие.
+        </div>
+      </div>
 
       {loading && <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Загрузка…</p>}
 
@@ -168,18 +134,11 @@ export default function VideoCatalogEditor() {
             <div className="px-2.5 py-2 flex flex-col gap-1">
               <div className="flex items-center justify-between gap-1">
                 <span className="text-xs font-medium truncate" style={{ color: 'rgba(255,255,255,0.85)' }}>{s.label}</span>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <button onClick={() => startEdit(s)}
-                    className="w-6 h-6 rounded-md flex items-center justify-center"
-                    style={{ background: 'rgba(255,255,255,0.06)' }}>
-                    <PencilSimple size={11} color="rgba(255,255,255,0.6)" />
-                  </button>
-                  <button onClick={() => handleDelete(s)}
-                    className="w-6 h-6 rounded-md flex items-center justify-center"
-                    style={{ background: 'rgba(180,30,60,0.15)' }}>
-                    <Trash size={11} color="#ff8aa0" />
-                  </button>
-                </div>
+                <button onClick={() => startEdit(s)}
+                  className="w-6 h-6 rounded-md flex items-center justify-center"
+                  style={{ background: 'rgba(255,255,255,0.06)' }}>
+                  <PencilSimple size={11} color="rgba(255,255,255,0.6)" />
+                </button>
               </div>
               <p className="text-[10px] line-clamp-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
                 {s.description}
@@ -195,9 +154,8 @@ export default function VideoCatalogEditor() {
         </p>
       )}
 
-      {/* Form modal */}
       <AnimatePresence>
-        {showForm && (
+        {editing && draft && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[60] flex items-end justify-center"
@@ -213,7 +171,7 @@ export default function VideoCatalogEditor() {
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold" style={{ color: 'white' }}>
-                  {editing ? 'Редактировать сценарий' : 'Новый сценарий'}
+                  Редактировать «{editing.label}»
                 </h3>
                 <button onClick={close}
                   className="w-8 h-8 rounded-full flex items-center justify-center"
@@ -222,71 +180,57 @@ export default function VideoCatalogEditor() {
                 </button>
               </div>
 
-              {!editing && (
-                <input
-                  value={draft.slug}
-                  onChange={(e) => setDraft((d) => ({ ...d, slug: e.target.value }))}
-                  placeholder="slug (напр. dance)"
-                  className="rounded-lg px-3 py-2 text-sm"
-                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
-                />
-              )}
               <input
                 value={draft.label}
-                onChange={(e) => setDraft((d) => ({ ...d, label: e.target.value }))}
-                placeholder="Название (напр. Танец)"
+                onChange={(e) => setDraft((d) => d && ({ ...d, label: e.target.value }))}
+                placeholder="Название"
                 className="rounded-lg px-3 py-2 text-sm"
                 style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
               />
               <textarea
                 value={draft.description}
-                onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
+                onChange={(e) => setDraft((d) => d && ({ ...d, description: e.target.value }))}
                 placeholder="Описание"
                 rows={2}
+                className="rounded-lg px-3 py-2 text-sm resize-none"
+                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+              />
+              <textarea
+                value={draft.prompt_text}
+                onChange={(e) => setDraft((d) => d && ({ ...d, prompt_text: e.target.value }))}
+                placeholder="Промпт для AI"
+                rows={3}
                 className="rounded-lg px-3 py-2 text-sm resize-none"
                 style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
               />
 
               <ImageUploader
                 label="Превью карточки"
-                value={draft.thumbnail}
-                onChange={(url) => setDraft((d) => ({ ...d, thumbnail: url }))}
+                value={draft.thumbnail_url}
+                onChange={(url) => setDraft((d) => d && ({ ...d, thumbnail_url: url }))}
                 aspectRatio="1.45 / 1"
               />
 
               <div className="grid grid-cols-2 gap-2.5">
                 <label className="flex flex-col gap-1.5">
                   <span className="text-[11px] uppercase tracking-[0.14em]" style={{ color: 'rgba(255,255,255,0.45)' }}>Длительность (сек)</span>
-                  <input
-                    type="number"
-                    min={1}
-                    value={draft.durationSec}
-                    onChange={(e) => setDraft((d) => ({ ...d, durationSec: Number(e.target.value) || 0 }))}
+                  <input type="number" min={1} value={draft.duration_sec}
+                    onChange={(e) => setDraft((d) => d && ({ ...d, duration_sec: Number(e.target.value) || 0 }))}
                     className="rounded-lg px-3 py-2 text-sm"
-                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
-                  />
+                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }} />
                 </label>
                 <label className="flex flex-col gap-1.5">
                   <span className="text-[11px] uppercase tracking-[0.14em]" style={{ color: 'rgba(255,255,255,0.45)' }}>Слотов</span>
-                  <input
-                    type="number"
-                    min={1}
-                    value={draft.slots}
-                    onChange={(e) => setDraft((d) => ({ ...d, slots: Number(e.target.value) || 0 }))}
+                  <input type="number" min={1} value={draft.slots}
+                    onChange={(e) => setDraft((d) => d && ({ ...d, slots: Number(e.target.value) || 0 }))}
                     className="rounded-lg px-3 py-2 text-sm"
-                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
-                  />
+                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }} />
                 </label>
               </div>
 
-              <button
-                onClick={handleSave}
+              <button onClick={handleSave}
                 className="w-full rounded-2xl py-3 font-semibold text-sm flex items-center justify-center gap-2"
-                style={{
-                  background: 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)',
-                  color: 'white',
-                }}
-              >
+                style={{ background: 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)', color: 'white' }}>
                 <FloppyDisk size={16} weight="fill" /> Сохранить
               </button>
             </motion.div>

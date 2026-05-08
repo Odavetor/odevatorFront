@@ -116,20 +116,32 @@ export interface PagedResponse<T> {
 }
 
 // ===== uploads (public) =====
+// Бэк отдаёт {public_url, sha256, size_bytes}. uploadUserPhoto мапит в {url}.
 export interface UploadResponse {
   url: string
 }
+export interface BackUploadResponse {
+  public_url: string
+  sha256: string
+  size_bytes: number
+}
 
-// ===== generate (filter-based, новый бэк-эндпоинт) =====
+// ===== generate =====
+// Бэк (POST /api/v1/generate/photo) ждёт 4 slug'а и опционально num_images (1..2).
+// См. features/generate/handler.go: photoReq{ FileURL, Clothing, Body, Pose, Background, NumImages }
 export interface StartPhotoGenerationRequest {
   file_url: string
-  filter_category: string
-  filter_option: string
+  clothing: string
+  body: string
+  pose: string
+  background: string
+  num_images?: number
 }
+// Бэк (POST /api/v1/generate/video) ждёт только file_url и scenario slug.
+// duration берётся из каталога (video_scenarios.duration_sec).
 export interface StartVideoGenerationRequest {
   file_url: string
   scenario: string
-  duration: number // 5, 8, 10
 }
 export interface StartGenerationResponse {
   uid: string

@@ -2,33 +2,34 @@ const PIC = (seed: string, w = 280, h = 400) =>
   `https://picsum.photos/seed/${seed}/${w}/${h}`
 
 export interface FilterOption {
-  id: string
+  id: string                 // = slug в БД, передаётся в /generate/photo
+  numericId?: number         // числовой PK из БД, нужен для PATCH /admin/catalog/photo/options/{id}
   label: string
-  beforeExample: string
-  afterExample: string
-  // Параметры генерации (опциональны на фронте — приходят из админки/бэка):
-  // - prompt_text  — что подсунуть AI-провайдеру
-  // - ai_model_type — модель провайдера (2 или 3, см. бэк-валидацию)
-  // - width / height — размеры результата (1..1024)
+  beforeExample: string      // мап с бэкового before_image_url
+  afterExample: string       // мап с бэкового after_image_url
   prompt_text?: string
   ai_model_type?: 2 | 3
   width?: number
   height?: number
+  sort_order?: number
 }
 
 export interface FilterCategory {
-  id: string
+  id: string                 // = slug категории
   label: string
   options: FilterOption[]
 }
 
 export interface VideoScenario {
-  id: string
+  id: string                 // = slug сценария
+  numericId?: number         // числовой PK для PATCH /admin/catalog/video/scenarios/{id}
   label: string
   description: string
-  thumbnail: string
-  durationSec: number
+  thumbnail: string          // мап с thumbnail_url
+  durationSec: number        // мап с duration_sec
   slots: number
+  prompt_text?: string
+  sort_order?: number
 }
 
 export const PHOTO_FILTER_CATEGORIES: FilterCategory[] = [

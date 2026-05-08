@@ -2,6 +2,7 @@
 
 import { api, apiUpload } from '../api-client'
 import type {
+  BackUploadResponse,
   PollGenerationResponse,
   StartGenerationResponse,
   StartPhotoGenerationRequest,
@@ -11,11 +12,12 @@ import type {
 
 // Public upload — пользователь загружает свой исходник, получает URL для последующего job-init.
 // Бэк: POST /api/v1/uploads (multipart/form-data, поле "file"), Bearer JWT.
-// См. TZ §13.
-export function uploadUserPhoto(file: File): Promise<UploadResponse> {
+// Ответ бэка: {public_url, sha256, size_bytes} → мапим в {url}.
+export async function uploadUserPhoto(file: File): Promise<UploadResponse> {
   const fd = new FormData()
   fd.append('file', file)
-  return apiUpload<UploadResponse>('/api/v1/uploads', fd)
+  const r = await apiUpload<BackUploadResponse>('/api/v1/uploads', fd)
+  return { url: r.public_url }
 }
 
 // Старт фото-генерации с фильтрами.

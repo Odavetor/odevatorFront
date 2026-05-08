@@ -82,13 +82,25 @@ export default function HeroEditor() {
       setError('Заполни название и обе превью')
       return
     }
+    if (typeof opt.numericId !== 'number') {
+      hapticNotify('error')
+      setError('Эта опция — локальный фолбэк, на бэке её нет. Поднимите бэкенд.')
+      return
+    }
     setSaving(true)
     setError(null)
     try {
-      await updatePhotoOption(opt.id, {
+      // Бэк PATCH /admin/catalog/photo/options/{id} перезаписывает все поля,
+      // partial-апдейтов нет → передаём весь объект.
+      await updatePhotoOption(opt.numericId, {
         label: draft.label.trim(),
         before_image_url: draft.before,
         after_image_url: draft.after,
+        prompt_text: opt.prompt_text ?? '',
+        ai_model_type: opt.ai_model_type ?? 3,
+        width: opt.width ?? 768,
+        height: opt.height ?? 1024,
+        sort_order: opt.sort_order ?? 0,
       })
       hapticNotify('success')
       cancelEdit()
