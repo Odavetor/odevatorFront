@@ -115,6 +115,20 @@ export default function PhotoCatalogEditor() {
   }
 
   // Reorder: PATCH перезаписывает всё → шлём полный объект с новым sort_order.
+  // FilterOption гарантирует non-null URL'ы (мапер catalog.ts заполняет их из БД, NOT NULL).
+  function payloadFrom(o: FilterOption, sortOrder: number) {
+    return {
+      label: o.label,
+      before_image_url: o.beforeExample,
+      after_image_url: o.afterExample,
+      prompt_text: o.prompt_text ?? '',
+      ai_model_type: o.ai_model_type ?? 3,
+      width: o.width ?? 768,
+      height: o.height ?? 1024,
+      sort_order: sortOrder,
+    } as const
+  }
+
   async function reorderOption(opt: FilterOption, direction: -1 | 1) {
     if (!activeCat) return
     if (typeof opt.numericId !== 'number') return
@@ -122,11 +136,9 @@ export default function PhotoCatalogEditor() {
     const swap = activeCat.options[idx + direction]
     if (!swap || typeof swap.numericId !== 'number') return
     try {
-      const a = draftFrom(opt)
-      const b = draftFrom(swap)
       await Promise.all([
-        updatePhotoOption(opt.numericId, { ...a, sort_order: swap.sort_order ?? (idx + direction) * 10 }),
-        updatePhotoOption(swap.numericId, { ...b, sort_order: opt.sort_order ?? idx * 10 }),
+        updatePhotoOption(opt.numericId, payloadFrom(opt, swap.sort_order ?? (idx + direction) * 10)),
+        updatePhotoOption(swap.numericId, payloadFrom(swap, opt.sort_order ?? idx * 10)),
       ])
       haptic('light')
       await reload()
