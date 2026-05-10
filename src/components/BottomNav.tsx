@@ -12,6 +12,7 @@ import {
   UserCircle,
 } from '@phosphor-icons/react'
 import { hapticSelect } from '@/lib/telegram'
+import { useContent } from '@/lib/content'
 
 interface NavItem {
   href: string
@@ -19,18 +20,18 @@ interface NavItem {
   label: string
 }
 
-const LEFT: NavItem[] = [
-  { href: '/', icon: House, label: 'Главная' },
-  { href: '/history', icon: ClockCounterClockwise, label: 'История' },
-]
-const RIGHT: NavItem[] = [
-  { href: '/shop', icon: ShoppingBag, label: 'Магазин' },
-  { href: '/profile', icon: UserCircle, label: 'Профиль' },
-]
-const FAB: NavItem = { href: '/generate', icon: Sparkle, label: 'Создать' }
-
 function BottomNavBase() {
   const pathname = usePathname()
+
+  const LEFT: NavItem[] = [
+    { href: '/', icon: House, label: useContent('nav.home') },
+    { href: '/history', icon: ClockCounterClockwise, label: useContent('nav.history') },
+  ]
+  const RIGHT: NavItem[] = [
+    { href: '/shop', icon: ShoppingBag, label: useContent('nav.shop') },
+    { href: '/profile', icon: UserCircle, label: useContent('nav.profile') },
+  ]
+  const FAB: NavItem = { href: '/generate', icon: Sparkle, label: useContent('nav.generate') }
   const fabActive = pathname === FAB.href
 
   return (
@@ -169,18 +170,6 @@ function CenterFab({ item, active }: { item: NavItem; active: boolean }) {
           aria-hidden
           className="absolute inset-[-4px] rounded-full pointer-events-none"
           style={{ background: 'var(--bg)', zIndex: -1 }}
-        />
-
-        {/* Внутренний подсвет сверху — для refraction edge feel */}
-        <span
-          aria-hidden
-          className="absolute top-1 left-3 right-3 pointer-events-none"
-          style={{
-            height: 1,
-            background:
-              'linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent)',
-            borderRadius: 999,
-          }}
         />
 
         <Icon size={22} weight="fill" color="#fff" />

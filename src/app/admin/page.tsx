@@ -10,15 +10,19 @@ import HeroEditor from '@/components/admin/HeroEditor'
 import PhotoCatalogEditor from '@/components/admin/PhotoCatalogEditor'
 import VideoCatalogEditor from '@/components/admin/VideoCatalogEditor'
 import TextsEditor from '@/components/admin/TextsEditor'
+import PricingEditor from '@/components/admin/PricingEditor'
+import { useContent } from '@/lib/content'
 
-type Tab = 'Главная' | 'Фото' | 'Видео' | 'Тексты'
-const TABS: Tab[] = ['Главная', 'Фото', 'Видео', 'Тексты']
+type Tab = 'Главная' | 'Фото' | 'Видео' | 'Цены' | 'Тексты'
+const TABS: Tab[] = ['Главная', 'Фото', 'Видео', 'Цены', 'Тексты']
 
 export default function AdminPage() {
   const router = useRouter()
   const { tgUser, isAdmin } = useUser()
   const [tab, setTab] = useState<Tab>('Главная')
   const [readyChecked, setReadyChecked] = useState(false)
+  const titleAdmin = useContent('page.title.admin')
+  const subtitleAdmin = useContent('page.title.admin_subtitle')
 
   // Гейтинг — после загрузки tgUser, если не админ, кикаем на главную.
   useEffect(() => {
@@ -63,9 +67,9 @@ export default function AdminPage() {
             <ArrowLeft size={18} color="rgba(255,255,255,0.6)" />
           </button>
           <div>
-            <h1 className="text-white font-semibold text-lg leading-tight">Админка</h1>
+            <h1 className="text-white font-semibold text-lg leading-tight">{titleAdmin}</h1>
             <p className="text-[11px] uppercase tracking-[0.14em]" style={{ color: 'rgba(255,255,255,0.35)' }}>
-              Управление каталогом
+              {subtitleAdmin}
             </p>
           </div>
         </div>
@@ -112,6 +116,7 @@ export default function AdminPage() {
         {tab === 'Главная' && <HeroEditor />}
         {tab === 'Фото' && <PhotoCatalogEditor />}
         {tab === 'Видео' && <VideoCatalogEditor />}
+        {tab === 'Цены' && <PricingEditor />}
         {tab === 'Тексты' && <TextsEditor />}
       </div>
     </div>

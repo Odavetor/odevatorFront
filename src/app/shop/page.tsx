@@ -25,6 +25,7 @@ import {
   type PaymentMethodId,
 } from '@/lib/api/types'
 import { useRouter } from 'next/navigation'
+import { useContent } from '@/lib/content'
 
 type Step = 'select' | 'pending' | 'success'
 type Tier = 'standard' | 'weekly_promo'
@@ -36,21 +37,45 @@ const FALLBACK_OPTIONS: GenerationPackOption[] = [
   { quantity: 50, price_minor: 179900, currency: 'RUB' },
 ]
 
-const METHODS: Array<{
+interface PaymentMethodSpec {
   id: PaymentMethodId
   label: string
   sub: string
   icon: React.ElementType
-}> = [
-  { id: PAYMENT_METHOD.SBP, label: 'СБП', sub: 'Российские банки · мгновенно', icon: Bank },
-  { id: PAYMENT_METHOD.CRYPTO, label: 'Криптовалюта', sub: 'USDT · до 5 минут', icon: CurrencyEth },
-]
+}
 
 const fmtRub = (minor: number) => Math.round(minor / 100).toLocaleString('ru')
 
 export default function ShopPage() {
   const router = useRouter()
   const { wallet, refreshBalance } = useUser()
+
+  const titleKicker = useContent('page.title.shop_kicker')
+  const titleShop = useContent('page.title.shop')
+  const stepPack = useContent('shop.step.pack')
+  const stepMethod = useContent('shop.step.method')
+  const buttonChoosePack = useContent('shop.button.choose_pack')
+  const buttonChooseMethod = useContent('shop.button.choose_method')
+  const buttonCreating = useContent('shop.button.creating')
+  const pendingTitle = useContent('shop.pending.title')
+  const pendingSubtitle = useContent('shop.pending.subtitle')
+  const pendingReopen = useContent('shop.pending.reopen')
+  const pendingConfirm = useContent('shop.pending.confirm')
+  const pendingChecking = useContent('shop.pending.checking')
+  const successTitle = useContent('shop.success.title')
+  const tierStandardLabel = useContent('shop.tier.standard')
+  const tierPromoLabel = useContent('shop.tier.promo')
+  const popularBadge = useContent('shop.popular_badge')
+  const buttonCancel = useContent('button.cancel')
+  const buttonBuyMore = useContent('button.buy_more')
+  const buttonCreatePhoto = useContent('button.create_photo')
+  const errorPaymentInit = useContent('error.payment_init')
+  const errorPaymentNoLink = useContent('error.payment_no_link')
+
+  const METHODS: PaymentMethodSpec[] = [
+    { id: PAYMENT_METHOD.SBP, label: 'СБП', sub: 'Российские банки · мгновенно', icon: Bank },
+    { id: PAYMENT_METHOD.CRYPTO, label: 'Криптовалюта', sub: 'USDT · до 5 минут', icon: CurrencyEth },
+  ]
 
   const [step, setStep] = useState<Step>('select')
   const [tier, setTier] = useState<Tier>('standard')
@@ -109,13 +134,13 @@ export default function ShopPage() {
         paymentMethod: selectedMethod,
       })
       const url = r.redirect ?? r.return ?? null
-      if (!url) throw new Error('Не получили ссылку на оплату')
+      if (!url) throw new Error(errorPaymentNoLink)
       setRedirectUrl(url)
       setStep('pending')
       openLink(url)
     } catch (e) {
       hapticNotify('error')
-      setError(e instanceof Error ? e.message : 'Ошибка инициализации оплаты')
+      setError(e instanceof Error ? e.message : errorPaymentInit)
     } finally {
       setLoading(false)
     }
@@ -176,13 +201,13 @@ export default function ShopPage() {
               className="font-mono uppercase mb-1"
               style={{ fontSize: 10, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.4)' }}
             >
-              Магазин
+              {titleKicker}
             </p>
             <h1
               className="font-display"
               style={{ fontSize: 30, fontWeight: 500, lineHeight: 0.95, color: 'var(--text)' }}
             >
-              Купи генерации
+              {titleShop}
             </h1>
           </div>
         </div>
@@ -257,7 +282,7 @@ export default function ShopPage() {
                               : 'rgba(255,255,255,0.4)',
                         }}
                       >
-                        {t === 'standard' ? 'Стандарт' : 'Промо · −22%'}
+                        {t === 'standard' ? tierStandardLabel : tierPromoLabel}
                       </span>
                     </button>
                   ))}
@@ -274,7 +299,7 @@ export default function ShopPage() {
                     color: 'rgba(255,255,255,0.45)',
                   }}
                 >
-                  1 · Размер пакета
+                  {stepPack}
                 </p>
                 <div className="flex flex-col gap-2">
                   {options.map((opt, i) => {
@@ -373,7 +398,7 @@ export default function ShopPage() {
                               boxShadow: '0 2px 12px rgba(224,63,106,0.32)',
                             }}
                           >
-                            популярно
+                            {popularBadge}
                           </span>
                         )}
                       </motion.button>
@@ -392,7 +417,7 @@ export default function ShopPage() {
                     color: 'rgba(255,255,255,0.45)',
                   }}
                 >
-                  2 · Способ оплаты
+                  {stepMethod}
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   {METHODS.map((m) => {
@@ -490,12 +515,12 @@ export default function ShopPage() {
                 }}
               >
                 {loading
-                  ? 'Создаём счёт…'
+                  ? buttonCreating
                   : selectedOption && selectedMethod
                   ? `Оплатить ${fmtRub(selectedOption.price_minor)} ₽`
                   : selectedOption
-                  ? 'Выберите способ оплаты'
-                  : 'Выберите пакет'}
+                  ? buttonChooseMethod
+                  : buttonChoosePack}
                 {selectedOption && selectedMethod && !loading && <ArrowRight size={16} weight="bold" />}
               </motion.button>
             </motion.div>
@@ -538,10 +563,10 @@ export default function ShopPage() {
                     className="font-display mb-1.5"
                     style={{ fontSize: 22, lineHeight: 1.1, color: 'var(--text)' }}
                   >
-                    Ждём оплату
+                    {pendingTitle}
                   </p>
                   <p className="text-[12px]" style={{ color: 'rgba(255,255,255,0.55)' }}>
-                    Оплатите счёт и нажмите «Я оплатил»
+                    {pendingSubtitle}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 mt-1">
@@ -579,7 +604,7 @@ export default function ShopPage() {
                         'inset 0 1px 0 rgba(255,255,255,0.18), 0 6px 24px rgba(224,63,106,0.28)',
                     }}
                   >
-                    Открыть счёт ещё раз
+                    {pendingReopen}
                     <ArrowRight size={15} weight="bold" />
                   </button>
                 )}
@@ -595,7 +620,7 @@ export default function ShopPage() {
                     opacity: loading ? 0.6 : 1,
                   }}
                 >
-                  {loading ? 'Проверяем…' : 'Я оплатил'}
+                  {loading ? pendingChecking : pendingConfirm}
                 </button>
 
                 <button
@@ -603,7 +628,7 @@ export default function ShopPage() {
                   className="text-cream-700 text-xs py-2"
                   style={{ color: 'rgba(255,255,255,0.45)' }}
                 >
-                  Отмена
+                  {buttonCancel}
                 </button>
               </div>
             </motion.div>
@@ -633,7 +658,7 @@ export default function ShopPage() {
                   className="font-display mb-2"
                   style={{ fontSize: 32, lineHeight: 1, color: 'var(--text)' }}
                 >
-                  Оплачено
+                  {successTitle}
                 </p>
                 <p className="text-[13px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
                   +{selectedOption.quantity} {selectedOption.quantity === 1 ? 'генерация' : selectedOption.quantity < 5 ? 'генерации' : 'генераций'}
@@ -654,7 +679,7 @@ export default function ShopPage() {
                       'inset 0 1px 0 rgba(255,255,255,0.18), 0 6px 24px rgba(224,63,106,0.28)',
                   }}
                 >
-                  Создать фото
+                  {buttonCreatePhoto}
                   <ArrowRight size={16} weight="bold" />
                 </button>
                 <button
@@ -665,7 +690,7 @@ export default function ShopPage() {
                     color: 'rgba(255,255,255,0.55)',
                   }}
                 >
-                  Купить ещё
+                  {buttonBuyMore}
                 </button>
               </div>
             </motion.div>

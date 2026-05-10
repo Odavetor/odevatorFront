@@ -16,11 +16,13 @@ import Link from 'next/link'
 import BottomNav from '@/components/BottomNav'
 import { useUser } from '@/components/TelegramProvider'
 import { haptic, hapticNotify } from '@/lib/telegram'
+import { useContent } from '@/lib/content'
 
 const fmtRub = (minor: number) => Math.round(minor / 100).toLocaleString('ru')
 
 export default function ProfilePage() {
   const { tgUser, me, wallet, isAdmin } = useUser()
+  const titleProfile = useContent('page.title.profile')
 
   const memberSince = me?.created_at
     ? new Date(me.created_at).toLocaleDateString('ru', { month: 'long', year: 'numeric' })
@@ -61,7 +63,7 @@ export default function ProfilePage() {
               color: 'var(--text)',
             }}
           >
-            Профиль
+            {titleProfile}
           </h1>
         </div>
         {isAdmin && (

@@ -189,7 +189,7 @@ export default function GeneratePage() {
 
       const resultUrl = await pollUntilDone(uid)
       if (!resultUrl) {
-        setGenState({ phase: 'error', progress: 0, error: 'Превышено время ожидания' })
+        setGenState({ phase: 'error', progress: 0, error: errorTimeout })
         return
       }
 
@@ -202,7 +202,7 @@ export default function GeneratePage() {
         hapticNotify('warning')
         return
       }
-      const msg = e instanceof Error ? e.message : 'Ошибка обработки'
+      const msg = e instanceof Error ? e.message : errorGenerationFailed
       setGenState({ phase: 'error', progress: 0, error: msg })
     }
   }
@@ -230,7 +230,7 @@ export default function GeneratePage() {
 
       const resultUrl = await pollUntilDone(uid)
       if (!resultUrl) {
-        setGenState({ phase: 'error', progress: 0, error: 'Превышено время ожидания' })
+        setGenState({ phase: 'error', progress: 0, error: errorTimeout })
         return
       }
 
@@ -243,7 +243,7 @@ export default function GeneratePage() {
         hapticNotify('warning')
         return
       }
-      const msg = e instanceof Error ? e.message : 'Ошибка обработки'
+      const msg = e instanceof Error ? e.message : errorGenerationFailed
       setGenState({ phase: 'error', progress: 0, error: msg })
     }
   }
@@ -265,6 +265,15 @@ export default function GeneratePage() {
   const subtitleText = useContent('generate.subtitle')
   const hintNoFile = useContent('generate.hint.no_file')
   const hintNoConsent = useContent('generate.hint.no_consent')
+  const disclaimerText = useContent('generate.disclaimer').trim()
+  const titleGenerate = useContent('page.title.generate')
+  const noCreditsText = useContent('generate.no_credits')
+  const buttonBuy = useContent('button.buy')
+  const buttonRunAi = useContent('button.run_ai')
+  const buttonProcessing = useContent('button.processing')
+  const buttonNewRun = useContent('button.new_run')
+  const errorTimeout = useContent('error.timeout')
+  const errorGenerationFailed = useContent('error.generation_failed')
 
   return (
     <div className="flex flex-col min-h-[100dvh]">
@@ -285,7 +294,7 @@ export default function GeneratePage() {
             <ArrowLeft size={18} color="rgba(255,255,255,0.6)" />
           </button>
           <div>
-            <h1 className="text-white font-semibold text-lg leading-tight">Создать</h1>
+            <h1 className="text-white font-semibold text-lg leading-tight">{titleGenerate}</h1>
             <p className="text-gr-2xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
               {subtitleText}
             </p>
@@ -345,13 +354,13 @@ export default function GeneratePage() {
               className="rounded-2xl p-4 flex items-center justify-between gap-3"
               style={{ background: 'rgba(180,30,60,0.12)', border: '1px solid rgba(180,30,60,0.22)' }}
             >
-              <p className="text-red-300 text-sm">Нет доступных слотов</p>
+              <p className="text-red-300 text-sm">{noCreditsText}</p>
               <button
                 onClick={() => router.push('/shop')}
                 className="text-xs font-medium px-3 py-1.5 rounded-lg flex-shrink-0"
                 style={{ background: 'var(--rose-dim)', color: 'var(--rose)' }}
               >
-                Купить
+                {buttonBuy}
               </button>
             </motion.div>
           )}
@@ -382,7 +391,7 @@ export default function GeneratePage() {
               color: 'rgba(255,255,255,0.55)',
             }}
           >
-            Новая обработка
+            {buttonNewRun}
           </button>
         )}
 
@@ -505,6 +514,19 @@ export default function GeneratePage() {
           >
             <div className="h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
 
+            {disclaimerText && (
+              <div
+                className="rounded-2xl px-4 py-3 text-[12px] leading-relaxed whitespace-pre-wrap"
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.07)',
+                  color: 'rgba(255,255,255,0.6)',
+                }}
+              >
+                {disclaimerText}
+              </div>
+            )}
+
             <ConsentGate checked={consent} onChange={handleConsentChange} />
 
             <motion.button
@@ -538,7 +560,7 @@ export default function GeneratePage() {
                 <VideoCamera size={18} weight="fill" />
               )}
 
-              <span>{busy ? 'Обработка…' : 'Запустить ИИ'}</span>
+              <span>{busy ? buttonProcessing : buttonRunAi}</span>
 
               {canGenerate && (
                 <div

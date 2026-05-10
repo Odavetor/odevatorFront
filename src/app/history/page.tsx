@@ -56,6 +56,11 @@ export default function HistoryPage() {
   const [hasMore, setHasMore] = useState(false)
   const sentinelRef = useRef<HTMLDivElement | null>(null)
   const disclaimerText = useContent('history.disclaimer')
+  const titleHistory = useContent('page.title.history')
+  const autoRemoveText = useContent('history.autoremove')
+  const endText = useContent('history.end')
+  const buttonCreate = useContent('button.create')
+  const buttonCreateMore = useContent('button.create_more')
 
   const load = useCallback(
     async (p: number, beforeId?: number) => {
@@ -136,7 +141,7 @@ export default function HistoryPage() {
               color: 'var(--text)',
             }}
           >
-            История
+            {titleHistory}
           </h1>
         </div>
         <Link
@@ -150,7 +155,7 @@ export default function HistoryPage() {
           }}
         >
           <Sparkle size={11} weight="fill" />
-          Создать
+          {buttonCreate}
         </Link>
       </motion.header>
 
@@ -184,7 +189,7 @@ export default function HistoryPage() {
                   color: 'rgba(255,255,255,0.32)',
                 }}
               >
-                72 часа · авто-удаление
+                {autoRemoveText}
               </span>
             )}
           </motion.div>
@@ -261,7 +266,7 @@ export default function HistoryPage() {
                 color: 'rgba(255,255,255,0.35)',
               }}
             >
-              Это всё
+              {endText}
             </p>
             <Link
               href="/generate"
@@ -269,7 +274,7 @@ export default function HistoryPage() {
               className="inline-flex items-center gap-1.5 text-xs font-medium pb-1"
               style={{ color: 'var(--rose)', borderBottom: '1px solid var(--rose)' }}
             >
-              Создать ещё
+              {buttonCreateMore}
               <ArrowRight size={11} weight="bold" />
             </Link>
           </div>

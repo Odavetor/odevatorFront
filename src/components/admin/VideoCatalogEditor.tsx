@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { PencilSimple, X, FloppyDisk, Info } from '@phosphor-icons/react'
-import { fetchVideoCatalog, updateVideoScenario } from '@/lib/catalog'
+import { PencilSimple, X, FloppyDisk, Plus, Trash } from '@phosphor-icons/react'
+import {
+  fetchVideoCatalog,
+  updateVideoScenario,
+  createVideoScenario,
+  deleteVideoScenario,
+} from '@/lib/catalog'
 import type { VideoScenario } from '@/data/generate-options'
-import { hapticNotify } from '@/lib/telegram'
+import { hapticNotify, haptic } from '@/lib/telegram'
 import ImageUploader from './ImageUploader'
-
-// На бэке нет создания/удаления сценариев — только PATCH существующего.
 
 interface ScenarioDraft {
   label: string
@@ -18,7 +21,24 @@ interface ScenarioDraft {
   duration_sec: number
   slots: number
   sort_order: number
+  description_full: string
+  price_minor: string  // строка для удобного ввода; '' = глобальная цена
+  // только при создании
+  slug?: string
 }
+
+const emptyDraft = (sortOrder: number): ScenarioDraft => ({
+  label: '',
+  description: '',
+  prompt_text: '',
+  thumbnail_url: null,
+  duration_sec: 5,
+  slots: 2,
+  sort_order: sortOrder,
+  description_full: '',
+  price_minor: '',
+  slug: '',
+})
 
 function draftFrom(s: VideoScenario): ScenarioDraft {
   return {
@@ -29,6 +49,8 @@ function draftFrom(s: VideoScenario): ScenarioDraft {
     duration_sec: s.durationSec,
     slots: s.slots,
     sort_order: s.sort_order ?? 0,
+    description_full: s.description_full ?? '',
+    price_minor: s.price_minor != null ? String(s.price_minor) : '',
   }
 }
 
@@ -37,6 +59,7 @@ export default function VideoCatalogEditor() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState<VideoScenario | null>(null)
+  const [creating, setCreating] = useState(false)
   const [draft, setDraft] = useState<ScenarioDraft | null>(null)
 
   async function reload() {
@@ -58,40 +81,73 @@ export default function VideoCatalogEditor() {
 
   function startEdit(s: VideoScenario) {
     setEditing(s)
+    setCreating(false)
     setDraft(draftFrom(s))
+  }
+
+  function startCreate() {
+    const nextSort = (scenarios[scenarios.length - 1]?.sort_order ?? 0) + 10
+    setEditing(null)
+    setCreating(true)
+    setDraft(emptyDraft(nextSort))
   }
 
   function close() {
     setEditing(null)
+    setCreating(false)
     setDraft(null)
   }
 
   async function handleSave() {
-    if (!editing || !draft) return
-    if (typeof editing.numericId !== 'number') {
-      hapticNotify('error')
-      setError('Сценарий без numericId — нельзя сохранить.')
-      return
-    }
+    if (!draft) return
     if (!draft.label.trim() || !draft.thumbnail_url) {
       hapticNotify('warning'); setError('Заполните название и превью'); return
     }
+    if (creating && !draft.slug?.trim()) {
+      hapticNotify('warning'); setError('Заполните slug'); return
+    }
+    if (draft.price_minor.trim() !== '' && (Number.isNaN(Number(draft.price_minor)) || Number(draft.price_minor) < 0)) {
+      hapticNotify('warning'); setError('Цена должна быть числом ≥ 0 или пустой (= глобальная)'); return
+    }
+
+    const basePayload = {
+      label: draft.label.trim(),
+      description: draft.description.trim(),
+      prompt_text: draft.prompt_text.trim(),
+      thumbnail_url: draft.thumbnail_url,
+      duration_sec: draft.duration_sec,
+      slots: draft.slots,
+      sort_order: draft.sort_order,
+      description_full: draft.description_full.trim(),
+      price_minor: draft.price_minor.trim() === '' ? null : Number(draft.price_minor),
+    }
+
     try {
-      await updateVideoScenario(editing.numericId, {
-        label: draft.label.trim(),
-        description: draft.description.trim(),
-        prompt_text: draft.prompt_text.trim(),
-        thumbnail_url: draft.thumbnail_url,
-        duration_sec: draft.duration_sec,
-        slots: draft.slots,
-        sort_order: draft.sort_order,
-      })
+      if (creating) {
+        await createVideoScenario({ ...basePayload, slug: draft.slug!.trim() })
+      } else {
+        if (!editing || typeof editing.numericId !== 'number') throw new Error('Сценарий без numericId')
+        await updateVideoScenario(editing.numericId, basePayload)
+      }
       hapticNotify('success')
       close()
       await reload()
     } catch (e) {
       hapticNotify('error')
       setError(e instanceof Error ? e.message : 'Не удалось сохранить')
+    }
+  }
+
+  async function handleDelete(s: VideoScenario) {
+    if (typeof s.numericId !== 'number') return
+    if (!confirm(`Удалить сценарий «${s.label}»? Soft-delete, можно восстановить в БД.`)) return
+    try {
+      await deleteVideoScenario(s.numericId)
+      hapticNotify('success')
+      await reload()
+    } catch (e) {
+      hapticNotify('error')
+      setError(e instanceof Error ? e.message : 'Не удалось удалить')
     }
   }
 
@@ -105,15 +161,24 @@ export default function VideoCatalogEditor() {
         </div>
       )}
 
-      <div
-        className="rounded-2xl px-3.5 py-3 flex items-start gap-2.5"
-        style={{ background: 'rgba(201,150,106,0.08)', border: '1px solid rgba(201,150,106,0.22)' }}
-      >
-        <Info size={14} weight="fill" color="var(--gold)" className="flex-shrink-0 mt-0.5" />
-        <div className="text-[12px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>
-          Сценарии засеяны в БД миграцией <code style={{ color: '#fff' }}>008_catalog.sql</code>. На бэке нельзя
-          создавать или удалять — только редактировать существующие.
-        </div>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
+          Видео-сценарии
+        </h3>
+        <button
+          onClick={() => { haptic('light'); startCreate() }}
+          className="rounded-full flex items-center gap-1.5 flex-shrink-0"
+          style={{
+            padding: '7px 12px',
+            background: 'rgba(95,210,150,0.10)',
+            border: '1px solid rgba(95,210,150,0.28)',
+            color: '#5fd296',
+            fontSize: 12,
+            fontWeight: 500,
+          }}
+        >
+          <Plus size={12} weight="bold" /> Создать
+        </button>
       </div>
 
       {loading && <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Загрузка…</p>}
@@ -134,18 +199,50 @@ export default function VideoCatalogEditor() {
             <div className="px-2.5 py-2 flex flex-col gap-1">
               <div className="flex items-center justify-between gap-1">
                 <span className="text-xs font-medium truncate" style={{ color: 'rgba(255,255,255,0.85)' }}>{s.label}</span>
-                <button onClick={() => startEdit(s)}
-                  className="w-6 h-6 rounded-md flex items-center justify-center"
-                  style={{ background: 'rgba(255,255,255,0.06)' }}>
-                  <PencilSimple size={11} color="rgba(255,255,255,0.6)" />
-                </button>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button onClick={() => startEdit(s)}
+                    title="Редактировать"
+                    className="w-6 h-6 rounded-md flex items-center justify-center"
+                    style={{ background: 'rgba(255,255,255,0.06)' }}>
+                    <PencilSimple size={11} color="rgba(255,255,255,0.6)" />
+                  </button>
+                  <button onClick={() => handleDelete(s)}
+                    title="Удалить"
+                    className="w-6 h-6 rounded-md flex items-center justify-center"
+                    style={{ background: 'rgba(180,30,60,0.12)' }}>
+                    <Trash size={10} color="#ff9aae" />
+                  </button>
+                </div>
               </div>
               <p className="text-[10px] line-clamp-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
                 {s.description}
               </p>
+              {s.price_minor != null && (
+                <span
+                  className="self-start font-mono text-[10px] px-1.5 py-0.5 rounded mt-0.5"
+                  style={{
+                    background: 'rgba(201,150,106,0.12)',
+                    color: 'var(--gold)',
+                    border: '1px solid rgba(201,150,106,0.28)',
+                  }}>
+                  {(s.price_minor / 100).toFixed(2)} ₽
+                </span>
+              )}
             </div>
           </div>
         ))}
+
+        <button
+          onClick={() => { haptic('light'); startCreate() }}
+          className="rounded-xl aspect-[1.45/1] flex flex-col items-center justify-center gap-1"
+          style={{
+            background: 'rgba(95,210,150,0.06)',
+            border: '1px dashed rgba(95,210,150,0.32)',
+            color: '#5fd296',
+          }}>
+          <Plus size={18} weight="bold" />
+          <span className="text-xs font-medium">Сценарий</span>
+        </button>
       </div>
 
       {scenarios.length === 0 && !loading && (
@@ -155,7 +252,7 @@ export default function VideoCatalogEditor() {
       )}
 
       <AnimatePresence>
-        {editing && draft && (
+        {draft && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[60] flex items-end justify-center"
@@ -171,7 +268,7 @@ export default function VideoCatalogEditor() {
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold" style={{ color: 'white' }}>
-                  Редактировать «{editing.label}»
+                  {creating ? 'Новый сценарий' : `Редактировать «${editing?.label ?? ''}»`}
                 </h3>
                 <button onClick={close}
                   className="w-8 h-8 rounded-full flex items-center justify-center"
@@ -179,6 +276,16 @@ export default function VideoCatalogEditor() {
                   <X size={14} color="white" />
                 </button>
               </div>
+
+              {creating && (
+                <input
+                  value={draft.slug ?? ''}
+                  onChange={(e) => setDraft((d) => d && ({ ...d, slug: e.target.value }))}
+                  placeholder="slug (латиница, без пробелов)"
+                  className="rounded-lg px-3 py-2 text-sm font-mono"
+                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                />
+              )}
 
               <input
                 value={draft.label}
@@ -190,8 +297,16 @@ export default function VideoCatalogEditor() {
               <textarea
                 value={draft.description}
                 onChange={(e) => setDraft((d) => d && ({ ...d, description: e.target.value }))}
-                placeholder="Описание"
+                placeholder="Краткое описание (на карточке)"
                 rows={2}
+                className="rounded-lg px-3 py-2 text-sm resize-none"
+                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+              />
+              <textarea
+                value={draft.description_full}
+                onChange={(e) => setDraft((d) => d && ({ ...d, description_full: e.target.value }))}
+                placeholder="Полное описание (опционально, видно при выборе)"
+                rows={3}
                 className="rounded-lg px-3 py-2 text-sm resize-none"
                 style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
               />
@@ -227,6 +342,20 @@ export default function VideoCatalogEditor() {
                     style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }} />
                 </label>
               </div>
+
+              <label className="flex flex-col gap-1">
+                <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                  Цена в копейках (пусто = глобальная)
+                </span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={draft.price_minor}
+                  onChange={(e) => setDraft((d) => d && ({ ...d, price_minor: e.target.value }))}
+                  placeholder="напр. 9900 = 99 ₽"
+                  className="rounded-lg px-3 py-1.5 text-sm font-mono"
+                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }} />
+              </label>
 
               <button onClick={handleSave}
                 className="w-full rounded-2xl py-3 font-semibold text-sm flex items-center justify-center gap-2"

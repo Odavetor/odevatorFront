@@ -2,14 +2,21 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { PencilSimple, X, FloppyDisk, ArrowUp, ArrowDown, Star, Info } from '@phosphor-icons/react'
-import { fetchPhotoCatalog, updatePhotoOption } from '@/lib/catalog'
+import {
+  PencilSimple, X, FloppyDisk, ArrowUp, ArrowDown, Star, Plus, Trash,
+} from '@phosphor-icons/react'
+import {
+  fetchPhotoCatalog,
+  updatePhotoOption,
+  createPhotoOption,
+  deletePhotoOption,
+  createPhotoCategory,
+  updatePhotoCategory,
+  deletePhotoCategory,
+} from '@/lib/catalog'
 import type { FilterCategory, FilterOption } from '@/data/generate-options'
 import { haptic, hapticNotify } from '@/lib/telegram'
 import ImageUploader from './ImageUploader'
-
-// На бэке нет CRUD категорий и нет создания/удаления опций — есть только PATCH существующей.
-// Этот редактор работает только с тем, что засеяно миграцией 008_catalog.sql.
 
 interface OptionDraft {
   label: string
@@ -20,7 +27,34 @@ interface OptionDraft {
   width: number
   height: number
   sort_order: number
+  description: string
+  price_minor: string  // строка для удобного ввода; '' = глобальная цена
+  // только для create:
+  slug?: string
 }
+
+interface CategoryDraft {
+  label: string
+  slug: string
+  sort_order: number
+  description: string
+  // numericId: undefined → новая категория
+  numericId?: number
+}
+
+const emptyOptionDraft = (sortOrder: number): OptionDraft => ({
+  label: '',
+  before_image_url: null,
+  after_image_url: null,
+  prompt_text: '',
+  ai_model_type: 3,
+  width: 768,
+  height: 1024,
+  sort_order: sortOrder,
+  description: '',
+  price_minor: '',
+  slug: '',
+})
 
 function draftFrom(opt: FilterOption): OptionDraft {
   return {
@@ -32,6 +66,8 @@ function draftFrom(opt: FilterOption): OptionDraft {
     width: opt.width ?? 768,
     height: opt.height ?? 1024,
     sort_order: opt.sort_order ?? 0,
+    description: opt.description ?? '',
+    price_minor: opt.price_minor != null ? String(opt.price_minor) : '',
   }
 }
 
@@ -41,8 +77,13 @@ export default function PhotoCatalogEditor() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Option modal: либо редактируем существующую (editingOption set), либо создаём новую (creatingOption=true)
   const [editingOption, setEditingOption] = useState<FilterOption | null>(null)
+  const [creatingOption, setCreatingOption] = useState(false)
   const [optionDraft, setOptionDraft] = useState<OptionDraft | null>(null)
+
+  // Category modal: либо редактируем (numericId set), либо создаём новую
+  const [categoryDraft, setCategoryDraft] = useState<CategoryDraft | null>(null)
 
   async function reload() {
     setLoading(true)
@@ -50,7 +91,7 @@ export default function PhotoCatalogEditor() {
     try {
       const data = await fetchPhotoCatalog()
       setCategories(data.categories)
-      if (!activeCatId && data.categories.length > 0) {
+      if ((!activeCatId || !data.categories.find((c) => c.id === activeCatId)) && data.categories.length > 0) {
         setActiveCatId(data.categories[0].id)
       }
     } catch (e) {
@@ -67,44 +108,76 @@ export default function PhotoCatalogEditor() {
 
   const activeCat = categories.find((c) => c.id === activeCatId) ?? null
 
+  // ===== Option modal =====
+
   function startEditOption(opt: FilterOption) {
     setEditingOption(opt)
+    setCreatingOption(false)
     setOptionDraft(draftFrom(opt))
+  }
+
+  function startCreateOption() {
+    if (!activeCat || typeof activeCat.numericId !== 'number') {
+      hapticNotify('error')
+      setError('Категория без numericId — сначала сохраните её')
+      return
+    }
+    const nextSort = (activeCat.options[activeCat.options.length - 1]?.sort_order ?? 0) + 10
+    setEditingOption(null)
+    setCreatingOption(true)
+    setOptionDraft(emptyOptionDraft(nextSort))
   }
 
   function closeOptionForm() {
     setEditingOption(null)
+    setCreatingOption(false)
     setOptionDraft(null)
   }
 
+  function validateOption(d: OptionDraft, isCreate: boolean): string | null {
+    if (!d.label.trim() || !d.before_image_url || !d.after_image_url) return 'Заполните название и обе превью'
+    if (!d.prompt_text.trim()) return 'Заполните промпт для AI'
+    if (d.width < 1 || d.width > 1024 || d.height < 1 || d.height > 1024) return 'Width и height должны быть в 1–1024'
+    if (isCreate && !d.slug?.trim()) return 'Заполните slug'
+    if (d.price_minor.trim() !== '' && (Number.isNaN(Number(d.price_minor)) || Number(d.price_minor) < 0)) {
+      return 'Цена должна быть числом ≥ 0 или пустой (= глобальная)'
+    }
+    return null
+  }
+
   async function handleSaveOption() {
-    if (!editingOption || !optionDraft) return
-    if (typeof editingOption.numericId !== 'number') {
-      hapticNotify('error')
-      setError('Опция без numericId — нельзя сохранить (локальный фолбэк?).')
-      return
-    }
+    if (!optionDraft) return
+    const err = validateOption(optionDraft, creatingOption)
+    if (err) { hapticNotify('warning'); setError(err); return }
+
     const d = optionDraft
-    if (!d.label.trim() || !d.before_image_url || !d.after_image_url) {
-      hapticNotify('warning'); setError('Заполните название и обе превью'); return
+    const basePayload = {
+      label: d.label.trim(),
+      before_image_url: d.before_image_url!,
+      after_image_url: d.after_image_url!,
+      prompt_text: d.prompt_text.trim(),
+      ai_model_type: d.ai_model_type,
+      width: d.width,
+      height: d.height,
+      sort_order: d.sort_order,
+      description: d.description.trim(),
+      price_minor: d.price_minor.trim() === '' ? null : Number(d.price_minor),
     }
-    if (!d.prompt_text.trim()) {
-      hapticNotify('warning'); setError('Заполните промпт для AI'); return
-    }
-    if (d.width < 1 || d.width > 1024 || d.height < 1 || d.height > 1024) {
-      hapticNotify('warning'); setError('Width и height должны быть в 1–1024'); return
-    }
+
     try {
-      await updatePhotoOption(editingOption.numericId, {
-        label: d.label.trim(),
-        before_image_url: d.before_image_url,
-        after_image_url: d.after_image_url,
-        prompt_text: d.prompt_text.trim(),
-        ai_model_type: d.ai_model_type,
-        width: d.width,
-        height: d.height,
-        sort_order: d.sort_order,
-      })
+      if (creatingOption) {
+        if (!activeCat?.numericId) throw new Error('Нет numericId категории')
+        await createPhotoOption({
+          ...basePayload,
+          category_id: activeCat.numericId,
+          slug: d.slug!.trim(),
+        })
+      } else {
+        if (!editingOption || typeof editingOption.numericId !== 'number') {
+          throw new Error('Опция без numericId')
+        }
+        await updatePhotoOption(editingOption.numericId, basePayload)
+      }
       hapticNotify('success')
       closeOptionForm()
       await reload()
@@ -114,8 +187,85 @@ export default function PhotoCatalogEditor() {
     }
   }
 
-  // Reorder: PATCH перезаписывает всё → шлём полный объект с новым sort_order.
-  // FilterOption гарантирует non-null URL'ы (мапер catalog.ts заполняет их из БД, NOT NULL).
+  async function handleDeleteOption(opt: FilterOption) {
+    if (typeof opt.numericId !== 'number') return
+    if (!confirm(`Удалить «${opt.label}»? Это действие можно откатить только в БД.`)) return
+    try {
+      await deletePhotoOption(opt.numericId)
+      hapticNotify('success')
+      await reload()
+    } catch (e) {
+      hapticNotify('error')
+      setError(e instanceof Error ? e.message : 'Не удалось удалить')
+    }
+  }
+
+  // ===== Category CRUD =====
+
+  function startCreateCategory() {
+    const nextSort = (categories[categories.length - 1]?.sort_order ?? 0) + 10
+    setCategoryDraft({ slug: '', label: '', sort_order: nextSort, description: '' })
+  }
+
+  function startEditCategory(cat: FilterCategory) {
+    if (typeof cat.numericId !== 'number') {
+      hapticNotify('error')
+      setError('Категория без numericId — нельзя редактировать')
+      return
+    }
+    setCategoryDraft({
+      numericId: cat.numericId,
+      slug: cat.id,
+      label: cat.label,
+      sort_order: cat.sort_order ?? 0,
+      description: cat.description ?? '',
+    })
+  }
+
+  async function handleSaveCategory() {
+    if (!categoryDraft) return
+    const d = categoryDraft
+    if (!d.label.trim()) { hapticNotify('warning'); setError('Заполните название категории'); return }
+    if (!d.numericId && !d.slug.trim()) { hapticNotify('warning'); setError('Заполните slug'); return }
+    try {
+      if (d.numericId) {
+        await updatePhotoCategory(d.numericId, {
+          label: d.label.trim(),
+          sort_order: d.sort_order,
+          description: d.description.trim(),
+        })
+      } else {
+        await createPhotoCategory({
+          slug: d.slug.trim(),
+          label: d.label.trim(),
+          sort_order: d.sort_order,
+          description: d.description.trim(),
+        })
+      }
+      hapticNotify('success')
+      setCategoryDraft(null)
+      await reload()
+    } catch (e) {
+      hapticNotify('error')
+      setError(e instanceof Error ? e.message : 'Не удалось сохранить категорию')
+    }
+  }
+
+  async function handleDeleteCategory(cat: FilterCategory) {
+    if (typeof cat.numericId !== 'number') return
+    if (!confirm(`Удалить категорию «${cat.label}» и все её варианты? Soft-delete, можно восстановить в БД.`)) return
+    try {
+      await deletePhotoCategory(cat.numericId)
+      hapticNotify('success')
+      if (activeCatId === cat.id) setActiveCatId(null)
+      await reload()
+    } catch (e) {
+      hapticNotify('error')
+      setError(e instanceof Error ? e.message : 'Не удалось удалить категорию')
+    }
+  }
+
+  // Reorder опций — отправляем PATCH с полным объектом и новым sort_order.
   function payloadFrom(o: FilterOption, sortOrder: number) {
     return {
       label: o.label,
@@ -126,6 +276,8 @@ export default function PhotoCatalogEditor() {
       width: o.width ?? 768,
       height: o.height ?? 1024,
       sort_order: sortOrder,
+      description: o.description ?? '',
+      price_minor: o.price_minor ?? null,
     } as const
   }
 
@@ -158,37 +310,43 @@ export default function PhotoCatalogEditor() {
         </div>
       )}
 
-      <div
-        className="rounded-2xl px-3.5 py-3 flex items-start gap-2.5"
-        style={{ background: 'rgba(201,150,106,0.08)', border: '1px solid rgba(201,150,106,0.22)' }}
-      >
-        <Info size={14} weight="fill" color="var(--gold)" className="flex-shrink-0 mt-0.5" />
-        <div className="text-[12px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>
-          Категории и список вариантов фиксируются в БД (миграция <code style={{ color: '#fff' }}>008_catalog.sql</code>).
-          Здесь можно только редактировать существующие.
+      {/* Categories tabs + add button */}
+      <div className="flex items-center gap-2">
+        <div className="flex gap-2 overflow-x-auto flex-1" style={{ scrollbarWidth: 'none' }}>
+          {categories.map((cat) => {
+            const active = cat.id === activeCatId
+            return (
+              <button
+                key={cat.id}
+                onClick={() => { haptic('light'); setActiveCatId(cat.id) }}
+                className="rounded-full text-sm font-medium flex-shrink-0"
+                style={{
+                  padding: '7px 14px',
+                  background: active ? 'var(--rose-dim)' : 'rgba(255,255,255,0.04)',
+                  boxShadow: active ? 'inset 0 0 0 1.5px var(--rose)' : 'inset 0 0 0 1px var(--border-2)',
+                  color: active ? 'var(--rose)' : 'rgba(255,255,255,0.55)',
+                }}
+              >
+                {cat.label}
+              </button>
+            )
+          })}
         </div>
-      </div>
-
-      {/* Categories tabs */}
-      <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-        {categories.map((cat) => {
-          const active = cat.id === activeCatId
-          return (
-            <button
-              key={cat.id}
-              onClick={() => { haptic('light'); setActiveCatId(cat.id) }}
-              className="rounded-full text-sm font-medium flex-shrink-0"
-              style={{
-                padding: '7px 14px',
-                background: active ? 'var(--rose-dim)' : 'rgba(255,255,255,0.04)',
-                boxShadow: active ? 'inset 0 0 0 1.5px var(--rose)' : 'inset 0 0 0 1px var(--border-2)',
-                color: active ? 'var(--rose)' : 'rgba(255,255,255,0.55)',
-              }}
-            >
-              {cat.label}
-            </button>
-          )
-        })}
+        <button
+          onClick={() => { haptic('light'); startCreateCategory() }}
+          className="rounded-full flex items-center gap-1.5 flex-shrink-0"
+          title="Создать категорию"
+          style={{
+            padding: '7px 12px',
+            background: 'rgba(95,210,150,0.10)',
+            border: '1px solid rgba(95,210,150,0.28)',
+            color: '#5fd296',
+            fontSize: 12,
+            fontWeight: 500,
+          }}
+        >
+          <Plus size={12} weight="bold" /> Категория
+        </button>
       </div>
 
       {loading && <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Загрузка…</p>}
@@ -196,7 +354,7 @@ export default function PhotoCatalogEditor() {
       {activeCat && (
         <div className="flex flex-col gap-3">
           <div className="flex items-start justify-between gap-3">
-            <div>
+            <div className="flex-1 min-w-0">
               <h3 className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
                 Варианты в «{activeCat.label}»
               </h3>
@@ -205,6 +363,22 @@ export default function PhotoCatalogEditor() {
                 <Star size={10} weight="fill" color="var(--gold)" />
                 Первый вариант показывается на главной как пример
               </p>
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button
+                onClick={() => startEditCategory(activeCat)}
+                title="Редактировать категорию"
+                className="w-7 h-7 rounded-md flex items-center justify-center"
+                style={{ background: 'rgba(255,255,255,0.06)' }}>
+                <PencilSimple size={11} color="rgba(255,255,255,0.6)" />
+              </button>
+              <button
+                onClick={() => handleDeleteCategory(activeCat)}
+                title="Удалить категорию"
+                className="w-7 h-7 rounded-md flex items-center justify-center"
+                style={{ background: 'rgba(180,30,60,0.12)' }}>
+                <Trash size={11} color="#ff9aae" />
+              </button>
             </div>
           </div>
 
@@ -266,24 +440,61 @@ export default function PhotoCatalogEditor() {
                         style={{ background: 'rgba(255,255,255,0.06)' }}>
                         <PencilSimple size={10} color="rgba(255,255,255,0.6)" />
                       </button>
+                      <button onClick={() => handleDeleteOption(opt)} title="Удалить"
+                        className="w-6 h-6 rounded-md flex items-center justify-center"
+                        style={{ background: 'rgba(180,30,60,0.12)' }}>
+                        <Trash size={10} color="#ff9aae" />
+                      </button>
                     </div>
                   </div>
+                  {opt.price_minor != null && (
+                    <div className="px-2.5 pb-2 -mt-1">
+                      <span
+                        className="font-mono text-[10px] px-1.5 py-0.5 rounded"
+                        style={{
+                          background: 'rgba(201,150,106,0.12)',
+                          color: 'var(--gold)',
+                          border: '1px solid rgba(201,150,106,0.28)',
+                        }}>
+                        {(opt.price_minor / 100).toFixed(2)} ₽
+                      </span>
+                    </div>
+                  )}
                 </motion.div>
               )
             })}
+
+            {/* Add option tile */}
+            <button
+              onClick={() => { haptic('light'); startCreateOption() }}
+              className="rounded-xl aspect-[1.6/1] flex flex-col items-center justify-center gap-1 col-span-2"
+              style={{
+                background: 'rgba(95,210,150,0.06)',
+                border: '1px dashed rgba(95,210,150,0.32)',
+                color: '#5fd296',
+              }}>
+              <Plus size={18} weight="bold" />
+              <span className="text-xs font-medium">Добавить вариант</span>
+            </button>
           </div>
 
           {activeCat.options.length === 0 && (
-            <p className="text-xs text-center py-6" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <p className="text-xs text-center py-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
               Пока нет вариантов
             </p>
           )}
         </div>
       )}
 
-      {/* Edit modal */}
+      {!activeCat && !loading && categories.length === 0 && (
+        <p className="text-xs text-center py-6" style={{ color: 'rgba(255,255,255,0.4)' }}>
+          Нет категорий — создайте первую через кнопку выше
+        </p>
+      )}
+
+      {/* Option modal (create/edit) */}
       <AnimatePresence>
-        {editingOption && optionDraft && (
+        {optionDraft && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[60] flex items-end justify-center"
@@ -299,7 +510,7 @@ export default function PhotoCatalogEditor() {
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold" style={{ color: 'white' }}>
-                  Редактировать «{editingOption.label}»
+                  {creatingOption ? 'Новый вариант' : `Редактировать «${editingOption?.label ?? ''}»`}
                 </h3>
                 <button onClick={closeOptionForm}
                   className="w-8 h-8 rounded-full flex items-center justify-center"
@@ -308,11 +519,30 @@ export default function PhotoCatalogEditor() {
                 </button>
               </div>
 
+              {creatingOption && (
+                <input
+                  value={optionDraft.slug ?? ''}
+                  onChange={(e) => setOptionDraft((d) => d && ({ ...d, slug: e.target.value }))}
+                  placeholder="slug (латиница, без пробелов)"
+                  className="rounded-lg px-3 py-2 text-sm font-mono"
+                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                />
+              )}
+
               <input
                 value={optionDraft.label}
                 onChange={(e) => setOptionDraft((d) => d && ({ ...d, label: e.target.value }))}
                 placeholder="Название"
                 className="rounded-lg px-3 py-2 text-sm"
+                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+              />
+
+              <textarea
+                value={optionDraft.description}
+                onChange={(e) => setOptionDraft((d) => d && ({ ...d, description: e.target.value }))}
+                placeholder="Описание (опционально)"
+                rows={2}
+                className="rounded-lg px-3 py-2 text-sm resize-none"
                 style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
               />
 
@@ -382,9 +612,95 @@ export default function PhotoCatalogEditor() {
                       style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }} />
                   </label>
                 </div>
+
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                    Цена в копейках (пусто = глобальная)
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={optionDraft.price_minor}
+                    onChange={(e) => setOptionDraft((d) => d && ({ ...d, price_minor: e.target.value }))}
+                    placeholder="напр. 4900 = 49 ₽"
+                    className="rounded-lg px-3 py-1.5 text-sm font-mono"
+                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }} />
+                </label>
               </div>
 
               <button onClick={handleSaveOption}
+                className="w-full rounded-2xl py-3 font-semibold text-sm flex items-center justify-center gap-2"
+                style={{ background: 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)', color: 'white' }}>
+                <FloppyDisk size={16} weight="fill" /> Сохранить
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Category modal */}
+      <AnimatePresence>
+        {categoryDraft && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-end justify-center"
+            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}
+            onClick={() => setCategoryDraft(null)}
+          >
+            <motion.div
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 320 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-[430px] rounded-t-3xl p-5 flex flex-col gap-3"
+              style={{ background: '#15141a', border: '1px solid rgba(255,255,255,0.08)', maxHeight: '90dvh', overflowY: 'auto' }}
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold" style={{ color: 'white' }}>
+                  {categoryDraft.numericId ? 'Редактировать категорию' : 'Новая категория'}
+                </h3>
+                <button onClick={() => setCategoryDraft(null)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ background: 'rgba(255,255,255,0.06)' }}>
+                  <X size={14} color="white" />
+                </button>
+              </div>
+
+              {!categoryDraft.numericId && (
+                <input
+                  value={categoryDraft.slug}
+                  onChange={(e) => setCategoryDraft((d) => d && ({ ...d, slug: e.target.value }))}
+                  placeholder="slug (латиница, без пробелов)"
+                  className="rounded-lg px-3 py-2 text-sm font-mono"
+                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                />
+              )}
+
+              <input
+                value={categoryDraft.label}
+                onChange={(e) => setCategoryDraft((d) => d && ({ ...d, label: e.target.value }))}
+                placeholder="Название (видно пользователю)"
+                className="rounded-lg px-3 py-2 text-sm"
+                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+              />
+
+              <textarea
+                value={categoryDraft.description}
+                onChange={(e) => setCategoryDraft((d) => d && ({ ...d, description: e.target.value }))}
+                placeholder="Описание (опционально)"
+                rows={2}
+                className="rounded-lg px-3 py-2 text-sm resize-none"
+                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+              />
+
+              <label className="flex flex-col gap-1">
+                <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.55)' }}>Sort order</span>
+                <input type="number" value={categoryDraft.sort_order}
+                  onChange={(e) => setCategoryDraft((d) => d && ({ ...d, sort_order: Number(e.target.value) || 0 }))}
+                  className="rounded-lg px-3 py-1.5 text-sm font-mono"
+                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }} />
+              </label>
+
+              <button onClick={handleSaveCategory}
                 className="w-full rounded-2xl py-3 font-semibold text-sm flex items-center justify-center gap-2"
                 style={{ background: 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)', color: 'white' }}>
                 <FloppyDisk size={16} weight="fill" /> Сохранить

@@ -12,11 +12,16 @@ export interface FilterOption {
   width?: number
   height?: number
   sort_order?: number
+  description?: string
+  price_minor?: number | null  // null → используется глобальная цена
 }
 
 export interface FilterCategory {
   id: string                 // = slug категории
+  numericId?: number         // числовой PK для PATCH/DELETE /admin/catalog/photo/{id}
   label: string
+  sort_order?: number
+  description?: string
   options: FilterOption[]
 }
 
@@ -30,6 +35,8 @@ export interface VideoScenario {
   slots: number
   prompt_text?: string
   sort_order?: number
+  description_full?: string
+  price_minor?: number | null
 }
 
 export const PHOTO_FILTER_CATEGORIES: FilterCategory[] = [

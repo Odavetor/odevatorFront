@@ -14,6 +14,35 @@ export interface TextSpec {
 }
 
 export const TEXT_REGISTRY: TextSpec[] = [
+  // — Заголовки страниц —
+  { key: 'page.title.generate',  group: 'Заголовки', defaultValue: 'Создать' },
+  { key: 'page.title.history',   group: 'Заголовки', defaultValue: 'История' },
+  { key: 'page.title.shop',      group: 'Заголовки', defaultValue: 'Купи генерации' },
+  { key: 'page.title.shop_kicker', group: 'Заголовки', defaultValue: 'Магазин', hint: 'Маленькая надпись над «Купи генерации»' },
+  { key: 'page.title.profile',   group: 'Заголовки', defaultValue: 'Профиль' },
+  { key: 'page.title.admin',     group: 'Заголовки', defaultValue: 'Админка' },
+  { key: 'page.title.admin_subtitle', group: 'Заголовки', defaultValue: 'Управление каталогом' },
+
+  // — Нижняя навигация —
+  { key: 'nav.home',     group: 'Навигация', defaultValue: 'Главная' },
+  { key: 'nav.history',  group: 'Навигация', defaultValue: 'История' },
+  { key: 'nav.shop',     group: 'Навигация', defaultValue: 'Магазин' },
+  { key: 'nav.profile',  group: 'Навигация', defaultValue: 'Профиль' },
+  { key: 'nav.generate', group: 'Навигация', defaultValue: 'Создать' },
+
+  // — Кнопки —
+  { key: 'button.buy',          group: 'Кнопки', defaultValue: 'Купить' },
+  { key: 'button.buy_more',     group: 'Кнопки', defaultValue: 'Купить ещё' },
+  { key: 'button.create',       group: 'Кнопки', defaultValue: 'Создать' },
+  { key: 'button.create_more',  group: 'Кнопки', defaultValue: 'Создать ещё' },
+  { key: 'button.create_photo', group: 'Кнопки', defaultValue: 'Создать фото' },
+  { key: 'button.cancel',       group: 'Кнопки', defaultValue: 'Отмена' },
+  { key: 'button.save',         group: 'Кнопки', defaultValue: 'Сохранить' },
+  { key: 'button.delete',       group: 'Кнопки', defaultValue: 'Удалить' },
+  { key: 'button.run_ai',       group: 'Кнопки', defaultValue: 'Запустить ИИ' },
+  { key: 'button.processing',   group: 'Кнопки', defaultValue: 'Обработка…' },
+  { key: 'button.new_run',      group: 'Кнопки', defaultValue: 'Новая обработка' },
+
   // — Главная —
   {
     key: 'home.empty.title',
@@ -43,6 +72,18 @@ export const TEXT_REGISTRY: TextSpec[] = [
     group: 'Создать',
     defaultValue: 'Подтвердите все пункты выше',
   },
+  {
+    key: 'generate.disclaimer',
+    group: 'Создать',
+    defaultValue: '',
+    hint: 'Дисклеймер над согласиями. Если пусто — блок скрыт.',
+    multiline: true,
+  },
+  {
+    key: 'generate.no_credits',
+    group: 'Создать',
+    defaultValue: 'Нет доступных слотов',
+  },
 
   // — Согласия —
   {
@@ -68,6 +109,110 @@ export const TEXT_REGISTRY: TextSpec[] = [
     key: 'history.disclaimer',
     group: 'История',
     defaultValue: 'Хранятся 3 дня',
+  },
+  {
+    key: 'history.autoremove',
+    group: 'История',
+    defaultValue: '72 часа · авто-удаление',
+  },
+  {
+    key: 'history.end',
+    group: 'История',
+    defaultValue: 'Это всё',
+  },
+
+  // — Магазин —
+  {
+    key: 'shop.step.pack',
+    group: 'Магазин',
+    defaultValue: '1 · Размер пакета',
+  },
+  {
+    key: 'shop.step.method',
+    group: 'Магазин',
+    defaultValue: '2 · Способ оплаты',
+  },
+  {
+    key: 'shop.button.choose_pack',
+    group: 'Магазин',
+    defaultValue: 'Выберите пакет',
+  },
+  {
+    key: 'shop.button.choose_method',
+    group: 'Магазин',
+    defaultValue: 'Выберите способ оплаты',
+  },
+  {
+    key: 'shop.button.creating',
+    group: 'Магазин',
+    defaultValue: 'Создаём счёт…',
+  },
+  {
+    key: 'shop.pending.title',
+    group: 'Магазин',
+    defaultValue: 'Ждём оплату',
+  },
+  {
+    key: 'shop.pending.subtitle',
+    group: 'Магазин',
+    defaultValue: 'Оплатите счёт и нажмите «Я оплатил»',
+  },
+  {
+    key: 'shop.pending.reopen',
+    group: 'Магазин',
+    defaultValue: 'Открыть счёт ещё раз',
+  },
+  {
+    key: 'shop.pending.confirm',
+    group: 'Магазин',
+    defaultValue: 'Я оплатил',
+  },
+  {
+    key: 'shop.pending.checking',
+    group: 'Магазин',
+    defaultValue: 'Проверяем…',
+  },
+  {
+    key: 'shop.success.title',
+    group: 'Магазин',
+    defaultValue: 'Оплачено',
+  },
+  {
+    key: 'shop.tier.standard',
+    group: 'Магазин',
+    defaultValue: 'Стандарт',
+  },
+  {
+    key: 'shop.tier.promo',
+    group: 'Магазин',
+    defaultValue: 'Промо · −22%',
+  },
+  {
+    key: 'shop.popular_badge',
+    group: 'Магазин',
+    defaultValue: 'популярно',
+  },
+
+  // — Ошибки —
+  {
+    key: 'error.generation_failed',
+    group: 'Ошибки',
+    defaultValue: 'Ошибка обработки',
+  },
+  {
+    key: 'error.timeout',
+    group: 'Ошибки',
+    defaultValue: 'Превышено время ожидания',
+  },
+  {
+    key: 'error.payment_init',
+    group: 'Ошибки',
+    defaultValue: 'Ошибка инициализации оплаты',
+  },
+  {
+    key: 'error.payment_no_link',
+    group: 'Ошибки',
+    defaultValue: 'Не получили ссылку на оплату',
   },
 ]
 
