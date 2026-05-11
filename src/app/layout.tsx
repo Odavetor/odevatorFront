@@ -3,6 +3,7 @@ import { Playfair_Display, Onest, JetBrains_Mono } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import { TelegramProvider } from '@/components/TelegramProvider'
+import { TelegramOnlyGate } from '@/components/TelegramOnlyGate'
 import DevToggle from '@/components/DevToggle'
 
 const playfair = Playfair_Display({
@@ -32,6 +33,12 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'Velvet AI',
   description: 'Преобразование образа с помощью ИИ',
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: { index: false, follow: false, noimageindex: true },
+  },
 }
 
 export const viewport: Viewport = {
@@ -53,10 +60,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           src="https://telegram.org/js/telegram-web-app.js"
           strategy="beforeInteractive"
         />
-        <TelegramProvider>
-          {children}
-          <DevToggle />
-        </TelegramProvider>
+        <TelegramOnlyGate>
+          <TelegramProvider>
+            {children}
+            <DevToggle />
+          </TelegramProvider>
+        </TelegramOnlyGate>
       </body>
     </html>
   )
