@@ -25,11 +25,12 @@ function RecentGalleryBase({ items }: Props) {
       <section className="mt-10 px-5">
         <div className="mb-3 flex items-baseline justify-between">
           <h2
-            className="font-mono uppercase"
+            className="font-sans"
             style={{
-              fontSize: 10,
-              letterSpacing: '0.2em',
-              color: 'rgba(255,255,255,0.45)',
+              fontSize: 20,
+              fontWeight: 800,
+              letterSpacing: '-0.025em',
+              color: 'var(--text)',
             }}
           >
             Последние работы
@@ -82,11 +83,12 @@ function RecentGalleryBase({ items }: Props) {
     <section className="mt-10 px-5">
       <div className="mb-3 flex items-baseline justify-between">
         <h2
-          className="font-mono uppercase"
+          className="font-sans"
           style={{
-            fontSize: 10,
-            letterSpacing: '0.2em',
-            color: 'rgba(255,255,255,0.45)',
+            fontSize: 20,
+            fontWeight: 800,
+            letterSpacing: '-0.025em',
+            color: 'var(--text)',
           }}
         >
           Последние работы
@@ -94,8 +96,13 @@ function RecentGalleryBase({ items }: Props) {
         <Link
           href="/history"
           onClick={() => haptic('light')}
-          className="inline-flex items-center gap-1 text-[11px] font-medium"
-          style={{ color: 'var(--rose)' }}
+          className="inline-flex items-center gap-1 no-tap-highlight"
+          style={{
+            color: 'var(--rose)',
+            fontSize: 13,
+            fontWeight: 700,
+            letterSpacing: '-0.01em',
+          }}
         >
           Вся история
           <ArrowRight size={11} weight="bold" />
@@ -133,13 +140,16 @@ function RecentGalleryBase({ items }: Props) {
               />
               {item.expires_in_hours !== undefined && item.expires_in_hours <= 12 && (
                 <span
-                  className="absolute top-2 right-2 px-1.5 py-0.5 rounded font-mono"
+                  className="absolute top-2 right-2 px-2 py-0.5 rounded-md font-sans tabular-nums"
                   style={{
-                    background: 'rgba(13,11,16,0.78)',
-                    color: 'var(--gold)',
-                    fontSize: 9,
-                    letterSpacing: '0.12em',
-                    border: '1px solid rgba(201,150,106,0.28)',
+                    background: 'rgba(13,11,16,0.7)',
+                    color: 'var(--rose)',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: '-0.005em',
+                    border: '1px solid var(--border-rose)',
+                    backdropFilter: 'blur(10px) saturate(160%)',
+                    WebkitBackdropFilter: 'blur(10px) saturate(160%)',
                   }}
                 >
                   {item.expires_in_hours}ч

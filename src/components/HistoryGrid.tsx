@@ -91,21 +91,22 @@ function ImageCard({ item }: { item: HistoryItem }) {
             backdropFilter: 'blur(6px)',
             WebkitBackdropFilter: 'blur(6px)',
             border: expiringSoon
-              ? '1px solid rgba(201,150,106,0.32)'
+              ? '1px solid var(--border-rose)'
               : '1px solid rgba(255,255,255,0.06)',
           }}
         >
           <ClockCounterClockwise
-            size={9}
-            color={expiringSoon ? 'var(--gold)' : 'rgba(255,255,255,0.55)'}
+            size={10}
+            color={expiringSoon ? 'var(--rose)' : 'rgba(255,255,255,0.55)'}
             weight="fill"
           />
           <span
-            className="font-mono"
+            className="font-sans tabular-nums"
             style={{
-              fontSize: 9,
-              letterSpacing: '0.04em',
-              color: expiringSoon ? 'var(--gold)' : 'rgba(255,255,255,0.7)',
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: '-0.005em',
+              color: expiringSoon ? 'var(--rose)' : 'rgba(255,255,255,0.85)',
             }}
           >
             {left}

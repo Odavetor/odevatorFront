@@ -1,0 +1,1 @@
+export { CountUpNumber } from './CountUpNumber'

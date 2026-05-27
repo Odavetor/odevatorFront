@@ -2,9 +2,10 @@ import type { Metadata, Viewport } from 'next'
 import { Playfair_Display, Onest, JetBrains_Mono } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
-import { TelegramProvider } from '@/components/TelegramProvider'
-import { TelegramOnlyGate } from '@/components/TelegramOnlyGate'
-import DevToggle from '@/components/DevToggle'
+import { TelegramProvider } from '@entities/user'
+import { TelegramOnlyGate } from '@widgets/telegram-only-gate'
+import { DevToggle } from '@widgets/dev-toggle'
+import { AuroraBg } from '@widgets/aurora-bg'
 
 const playfair = Playfair_Display({
   subsets: ['latin', 'cyrillic'],
@@ -60,12 +61,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           src="https://telegram.org/js/telegram-web-app.js"
           strategy="beforeInteractive"
         />
-        <TelegramOnlyGate>
-          <TelegramProvider>
-            {children}
-            <DevToggle />
-          </TelegramProvider>
-        </TelegramOnlyGate>
+        <AuroraBg />
+        <div style={{ position: 'relative', zIndex: 1, minHeight: '100dvh' }}>
+          <TelegramOnlyGate>
+            <TelegramProvider>
+              {children}
+              <DevToggle />
+            </TelegramProvider>
+          </TelegramOnlyGate>
+        </div>
       </body>
     </html>
   )

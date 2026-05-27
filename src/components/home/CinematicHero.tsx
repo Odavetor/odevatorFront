@@ -4,7 +4,7 @@ import { memo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
-import { ArrowRight, Lightning, Sparkle } from '@phosphor-icons/react'
+import { ArrowRight, Lightning } from '@phosphor-icons/react'
 import { haptic } from '@/lib/telegram'
 import type { HeroSample } from '@/data/hero-samples'
 
@@ -141,29 +141,31 @@ function CinematicHeroBase({
           </motion.div>
         </AnimatePresence>
 
-        {/* до badge — top-left */}
         <div
-          className="absolute top-3 left-3 px-2 py-0.5 rounded font-mono uppercase z-20"
+          className="absolute top-3 left-3 px-2.5 py-1 rounded-md z-20"
           style={{
-            background: 'rgba(255,255,255,0.95)',
-            color: 'rgba(13,11,16,0.92)',
-            fontSize: 9,
-            letterSpacing: '0.22em',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
+            background: 'rgba(13,11,16,0.62)',
+            color: 'rgba(255,255,255,0.9)',
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: '-0.005em',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.1)',
           }}
         >
           до
         </div>
 
-        {/* после badge — top-right */}
         <div
-          className="absolute top-3 right-3 px-2 py-0.5 rounded font-mono uppercase z-20"
+          className="absolute top-3 right-3 px-2.5 py-1 rounded-md z-20"
           style={{
             background: 'var(--rose)',
             color: '#fff',
-            fontSize: 9,
-            letterSpacing: '0.22em',
-            boxShadow: '0 2px 14px rgba(224,63,106,0.5)',
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: '-0.005em',
+            boxShadow: '0 4px 18px rgba(224,63,106,0.55)',
           }}
         >
           после
@@ -230,108 +232,95 @@ function CinematicHeroBase({
         />
       </div>
 
-      {/* Active filter chip — burst out из диптиха, центр-низ */}
-      <div className="relative flex justify-center px-5 z-20" style={{ marginTop: -26 }}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={sample.id + '-chip'}
-            initial={{ opacity: 0, y: 12, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.92 }}
-            transition={{ type: 'spring', stiffness: 360, damping: 26 }}
-            className="flex items-center gap-2.5 rounded-full pl-2 pr-3.5 py-1.5"
-            style={{
-              background: 'linear-gradient(180deg, rgba(28,24,36,0.95) 0%, rgba(15,13,18,0.96) 100%)',
-              border: '1px solid var(--border-rose)',
-              backdropFilter: 'blur(20px) saturate(140%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(140%)',
-              boxShadow:
-                '0 10px 28px rgba(224,63,106,0.34), 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08)',
-            }}
-          >
-            <span
-              className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: 'var(--rose-dim)', border: '1px solid var(--border-rose)' }}
-            >
-              <Sparkle size={12} weight="fill" color="var(--rose)" />
-            </span>
-            <div className="flex flex-col leading-none gap-0.5">
-              <span
-                className="font-mono uppercase"
-                style={{ fontSize: 9, letterSpacing: '0.22em', color: 'var(--rose)' }}
-              >
-                {sample.category}
-              </span>
-              <span
-                className="font-medium"
-                style={{ fontSize: 14, color: '#fff', letterSpacing: '-0.01em' }}
-              >
-                {sample.label}
-              </span>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-      {/* Headline + sub */}
-      <div className="relative px-5 pt-6">
+      {/* Headline */}
+      <div className="relative px-5 pt-5">
         <h1
-          className="font-display"
+          className="font-sans"
           style={{
-            fontSize: 42,
-            fontWeight: 500,
-            lineHeight: 0.97,
-            letterSpacing: '-0.022em',
+            fontSize: 36,
+            fontWeight: 800,
+            lineHeight: 1.0,
+            letterSpacing: '-0.028em',
             color: 'var(--text)',
           }}
         >
-          Меняй стиль,
+          Сними одежду
           <br />
-          тело, позу и фон
+          с любого{' '}
+          <span style={{ color: 'var(--rose)' }}>фото</span>
         </h1>
 
         <p
-          className="mt-3 text-[13px] leading-relaxed max-w-[32ch]"
-          style={{ color: 'rgba(255,255,255,0.55)' }}
+          className="mt-3 text-[14px] leading-snug max-w-[36ch]"
+          style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}
         >
-          Загрузи фото, выбери фильтр —
+          Купальник, бельё, топлес, без одежды.
           <br />
-          ИИ выдаст результат за 30 секунд.
+          Результат за 10 секунд.
         </p>
       </div>
 
-      {/* CTA + pagination */}
+      {/* CTA + dots */}
       <div className="px-5 mt-5 flex items-center justify-between gap-3">
         <Link
           href={ctaHref}
           onClick={() => haptic('medium')}
-          className="relative inline-flex items-center gap-2 rounded-full pl-4 pr-1.5 py-1.5 active:scale-[0.98]"
+          className="relative inline-flex items-center gap-2 rounded-2xl pl-5 pr-2.5 py-3 active:scale-[0.97]"
           style={{
             background: 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)',
-            boxShadow:
-              'inset 0 1px 0 rgba(255,255,255,0.18), 0 8px 28px rgba(224,63,106,0.34)',
+            boxShadow: 'var(--shadow-neon-cta)',
             transition: 'transform 0.18s ease',
             WebkitTapHighlightColor: 'transparent',
           }}
         >
-          <span className="text-sm font-medium" style={{ color: '#fff' }}>
-            {ctaLabel}
+          <span
+            className="font-sans"
+            style={{
+              fontSize: 15,
+              fontWeight: 700,
+              letterSpacing: '-0.01em',
+              color: '#fff',
+            }}
+          >
+            {hasCredits ? 'Создать фото' : 'Попробовать бесплатно'}
           </span>
           <span
-            className="flex items-center gap-1 rounded-full px-2 py-1 ml-1"
-            style={{ background: 'rgba(255,255,255,0.18)' }}
+            className="flex items-center gap-1 rounded-xl px-2 py-1 ml-1"
+            style={{ background: 'rgba(0,0,0,0.22)' }}
           >
             {hasCredits ? (
               <>
-                <Lightning size={11} weight="fill" color="#FFD58A" />
-                <span className="font-mono" style={{ fontSize: 11, color: '#fff' }}>
+                <Lightning size={11} weight="fill" color="#fff" />
+                <span
+                  className="font-sans tabular-nums"
+                  style={{ fontSize: 12, color: '#fff', fontWeight: 700 }}
+                >
                   {slotsCount}
                 </span>
               </>
             ) : (
-              <ArrowRight size={11} weight="bold" color="#fff" />
+              <motion.span
+                animate={{ x: [0, 4, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                className="inline-flex"
+              >
+                <ArrowRight size={12} weight="bold" color="#fff" />
+              </motion.span>
             )}
           </span>
+          {!hasCredits && (
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 rounded-2xl animate-glow-breathe"
+              style={{
+                background:
+                  'radial-gradient(circle at 50% 50%, rgba(224,63,106,0.55), transparent 65%)',
+                filter: 'blur(22px)',
+                opacity: 0.6,
+                zIndex: -1,
+              }}
+            />
+          )}
         </Link>
 
         <div className="flex items-center gap-1.5">
@@ -343,18 +332,33 @@ function CinematicHeroBase({
                 onSelectIndex(i)
               }}
               aria-label={s.category}
-              className="rounded-full"
+              className="rounded-full no-tap-highlight"
               style={{
-                width: i === activeIndex ? 22 : 5,
-                height: 5,
+                width: i === activeIndex ? 22 : 6,
+                height: 6,
                 background: i === activeIndex ? 'var(--rose)' : 'var(--border-2)',
-                transition: 'width 0.32s cubic-bezier(0.16,1,0.3,1), background 0.32s ease',
-                WebkitTapHighlightColor: 'transparent',
+                transition: 'width 0.32s var(--ease-glide), background 0.32s ease',
               }}
             />
           ))}
         </div>
       </div>
+
+      {!hasCredits && (
+        <div className="px-5 mt-2.5">
+          <p
+            className="font-sans text-center"
+            style={{
+              fontSize: 12,
+              fontWeight: 500,
+              color: 'rgba(255,255,255,0.5)',
+            }}
+          >
+            <span style={{ color: 'var(--splash-green)' }}>● </span>
+            Первое фото — бесплатно. Дальше от <strong style={{ color: '#fff', fontWeight: 700 }}>49₽</strong>.
+          </p>
+        </div>
+      )}
     </section>
   )
 }

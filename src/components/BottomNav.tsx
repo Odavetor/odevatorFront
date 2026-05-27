@@ -56,12 +56,12 @@ function BottomNavBase() {
           className="relative rounded-full"
           style={{
             background:
-              'linear-gradient(180deg, rgba(28,24,36,0.78) 0%, rgba(15,13,18,0.92) 100%)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            backdropFilter: 'blur(28px) saturate(140%)',
-            WebkitBackdropFilter: 'blur(28px) saturate(140%)',
+              'linear-gradient(180deg, rgba(28,24,36,0.62) 0%, rgba(15,13,18,0.75) 100%)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            backdropFilter: 'blur(22px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(22px) saturate(160%)',
             boxShadow:
-              'inset 0 1px 0 rgba(255,255,255,0.06), 0 12px 36px rgba(0,0,0,0.45)',
+              'inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(255,255,255,0.04), 0 14px 40px rgba(0,0,0,0.5)',
           }}
         >
           <div
@@ -124,11 +124,12 @@ function SideItem({ item, active }: { item: NavItem; active: boolean }) {
         />
       </motion.div>
       <span
-        className="font-mono uppercase leading-none"
+        className="font-sans leading-none"
         style={{
-          fontSize: 8,
-          letterSpacing: '0.16em',
-          color: active ? 'var(--rose)' : 'rgba(255,255,255,0.34)',
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: '-0.005em',
+          color: active ? 'var(--rose)' : 'rgba(255,255,255,0.42)',
           transition: 'color 0.2s ease',
         }}
       >
@@ -201,10 +202,11 @@ function CenterFab({ item, active }: { item: NavItem; active: boolean }) {
       </motion.div>
 
       <span
-        className="font-mono uppercase leading-none"
+        className="font-sans leading-none"
         style={{
-          fontSize: 8,
-          letterSpacing: '0.16em',
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: '-0.005em',
           color: active ? 'var(--rose)' : 'rgba(255,255,255,0.55)',
           transition: 'color 0.2s ease',
         }}

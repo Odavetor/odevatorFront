@@ -3,31 +3,70 @@
 @tailwind utilities;
 
 :root {
-  /* Surfaces */
   --bg: #0D0D0F;
   --s1: #111116;
   --s2: #18181F;
   --s3: #1F1F28;
   --s4: #2A2A35;
 
-  /* Single accent — rose */
   --rose: #E03F6A;
   --rose-deep: #C9294A;
   --rose-dim: rgba(224, 63, 106, 0.12);
   --rose-soft: rgba(224, 63, 106, 0.06);
+  --rose-mist: rgba(224, 63, 106, 0.08);
 
-  /* Editorial gold for premium hints (used sparingly) */
   --gold: #C9966A;
+  --gold-deep: #B07D52;
+  --gold-dim: rgba(201, 150, 106, 0.14);
+  --gold-glow: rgba(201, 150, 106, 0.18);
+  --gold-rule: rgba(201, 150, 106, 0.35);
 
-  /* Text ladder */
+  --champagne-warm: rgba(221, 169, 106, 0.22);
+
+  --splash-violet: #7B5CF6;
+  --splash-violet-bg: rgba(123, 92, 246, 0.14);
+  --splash-cyan: #3FD4E0;
+  --splash-cyan-bg: rgba(63, 212, 224, 0.14);
+  --splash-orange: #FF8A4C;
+  --splash-orange-bg: rgba(255, 138, 76, 0.14);
+  --splash-green: #5FD296;
+  --splash-green-bg: rgba(95, 210, 150, 0.14);
+
+  --shadow-neon-cta:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 0 28px rgba(224, 63, 106, 0.55),
+    0 18px 44px -10px rgba(224, 63, 106, 0.6);
+
   --text: #F5EEF0;
   --text-2: #C4889E;
   --text-3: #7A4A5E;
 
-  /* Border tokens — only 3 levels */
-  --border-1: rgba(255, 255, 255, 0.06);   /* dividers, hairlines */
-  --border-2: rgba(255, 255, 255, 0.10);   /* surfaces, buttons */
-  --border-rose: rgba(224, 63, 106, 0.22); /* accent borders */
+  --border-1: rgba(255, 255, 255, 0.06);
+  --border-2: rgba(255, 255, 255, 0.10);
+  --border-rose: rgba(224, 63, 106, 0.22);
+  --border-gold: rgba(201, 150, 106, 0.32);
+
+  --ink-veil: rgba(13, 13, 15, 0.72);
+  --ink-veil-soft: rgba(13, 13, 15, 0.32);
+
+  --shadow-premium:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 2px 8px rgba(0, 0, 0, 0.5),
+    0 18px 60px -12px rgba(180, 30, 60, 0.18);
+
+  --shadow-premium-gold:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 2px 8px rgba(0, 0, 0, 0.5),
+    0 18px 60px -12px rgba(201, 150, 106, 0.22);
+
+  --shadow-engrave:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.3);
+
+  --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-tactile: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-glide: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 *,
@@ -43,7 +82,7 @@ html {
 
 body {
   min-height: 100%;
-  background: var(--bg);
+  background-color: var(--bg);
   color: var(--text);
   font-family: var(--font-onest), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -55,31 +94,17 @@ body {
   position: relative;
 }
 
-/* Grain overlay — under modals/lightbox */
 body::after {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.045'/%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 1;
-  opacity: 0.6;
+  opacity: 0.55;
   mix-blend-mode: overlay;
 }
 
-/* Static atmospheric glow — bottom right, deep red */
-body::before {
-  content: '';
-  position: fixed;
-  bottom: -30%;
-  right: -20%;
-  width: 75vw;
-  height: 75vw;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(224, 63, 106, 0.06) 0%, rgba(180, 20, 60, 0.04) 45%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
 
 ::-webkit-scrollbar {
   width: 0;
@@ -102,22 +127,90 @@ body::before {
     border: 1px solid var(--border-2);
   }
 
+  .surface-premium {
+    background:
+      linear-gradient(180deg, rgba(31, 25, 41, 0.78) 0%, rgba(15, 13, 18, 0.92) 100%);
+    border: 1px solid var(--border-2);
+    box-shadow: var(--shadow-premium);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+  }
+
+  .surface-gold {
+    background:
+      linear-gradient(135deg, rgba(201, 150, 106, 0.1) 0%, rgba(31, 25, 41, 0.6) 100%);
+    border: 1px solid var(--border-gold);
+    box-shadow: var(--shadow-premium-gold);
+  }
+
   .rose-ring {
     box-shadow: inset 0 0 0 1.5px var(--rose);
   }
 
   .skeleton {
-    background: linear-gradient(
-      90deg,
-      var(--s2) 0%,
-      var(--s3) 50%,
-      var(--s2) 100%
-    );
+    background: linear-gradient(90deg, var(--s2) 0%, var(--s3) 50%, var(--s2) 100%);
     background-size: 200% 100%;
     animation: shimmer 2.2s linear infinite;
   }
 
   .font-display {
-    font-family: var(--font-playfair), Georgia, serif;
+    font-family: var(--font-onest), system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+  }
+
+  .hairline-gold {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-rule), transparent);
+  }
+
+  .hairline-rose {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(224, 63, 106, 0.45), transparent);
+  }
+
+  .hairline-soft {
+    height: 1px;
+    background: var(--border-1);
+  }
+
+  .text-kicker {
+    font-family: var(--font-jetbrains), ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.42);
+  }
+
+  .text-kicker-gold {
+    font-family: var(--font-jetbrains), ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  .text-kicker-rose {
+    font-family: var(--font-jetbrains), ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--rose);
+  }
+
+  .no-tap-highlight {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer utilities {
+  .ease-editorial {
+    transition-timing-function: var(--ease-editorial);
+  }
+  .ease-tactile {
+    transition-timing-function: var(--ease-tactile);
+  }
+  .ease-glide {
+    transition-timing-function: var(--ease-glide);
   }
 }

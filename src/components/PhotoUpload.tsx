@@ -79,8 +79,11 @@ export default function PhotoUpload({ onFile, preview, onClear, compact }: Props
         onDrop={onDrop}
         className="flex items-center gap-3 rounded-2xl px-3 py-2.5 w-full text-left"
         style={{
-          background: dragging ? 'var(--rose-soft)' : 'rgba(31,25,41,0.6)',
+          background: dragging ? 'var(--rose-soft)' : 'rgba(255,255,255,0.04)',
           border: `1px dashed ${dragging ? 'var(--rose)' : 'var(--border-rose)'}`,
+          backdropFilter: 'blur(24px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
           transition: 'all 0.2s ease',
           WebkitTapHighlightColor: 'transparent',
         }}

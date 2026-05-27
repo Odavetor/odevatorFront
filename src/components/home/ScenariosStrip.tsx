@@ -30,30 +30,41 @@ function ScenariosStripBase() {
     <section className="mt-10">
       <div className="px-5 mb-4 flex items-end justify-between">
         <div>
-          <p
-            className="font-mono uppercase mb-1.5 inline-flex items-center gap-1.5"
-            style={{ fontSize: 10, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.45)' }}
-          >
-            <VideoCamera size={11} weight="fill" color="var(--rose)" />
-            видео · 5–10 сек
-          </p>
           <h2
-            className="font-display"
+            className="font-sans inline-flex items-center gap-2"
             style={{
-              fontSize: 28,
-              lineHeight: 1,
-              letterSpacing: '-0.018em',
+              fontSize: 24,
+              fontWeight: 800,
+              letterSpacing: '-0.025em',
+              lineHeight: 1.05,
               color: 'var(--text)',
             }}
           >
+            <VideoCamera size={20} weight="fill" color="var(--rose)" />
             Сценарии
           </h2>
+          <p
+            className="font-sans mt-1"
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              color: 'rgba(255,255,255,0.45)',
+            }}
+          >
+            видео 5–10 секунд
+          </p>
         </div>
         <Link
           href="/generate"
           onClick={() => haptic('light')}
-          className="inline-flex items-center gap-1 text-[12px] font-medium pb-1"
-          style={{ color: 'var(--rose)', borderBottom: '1px solid var(--rose)' }}
+          className="inline-flex items-center gap-1 pb-1 no-tap-highlight"
+          style={{
+            color: 'var(--rose)',
+            borderBottom: '1px solid var(--rose)',
+            fontSize: 13,
+            fontWeight: 700,
+            letterSpacing: '-0.01em',
+          }}
         >
           Все {scenarios.length}
           <ArrowRight size={11} weight="bold" />
@@ -107,35 +118,42 @@ function ScenariosStripBase() {
 
                 {/* Slot cost — top right */}
                 <div
-                  className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded font-mono"
+                  className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded-md font-sans tabular-nums"
                   style={{
                     background: 'rgba(13,11,16,0.78)',
                     color: '#fff',
-                    fontSize: 10,
-                    letterSpacing: '0.04em',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: '-0.005em',
                     border: '1px solid rgba(255,255,255,0.08)',
                   }}
                 >
-                  <Lightning size={9} weight="fill" color="#FFD58A" />
+                  <Lightning size={10} weight="fill" color="#fff" />
                   {s.slots}
                 </div>
 
                 <div className="absolute left-2.5 right-2.5 bottom-2">
                   <p
-                    className="font-medium leading-tight"
-                    style={{ fontSize: 13, color: '#fff' }}
+                    className="font-sans"
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 700,
+                      letterSpacing: '-0.015em',
+                      color: '#fff',
+                      lineHeight: 1.05,
+                    }}
                   >
                     {s.label}
                   </p>
                   <p
-                    className="font-mono uppercase mt-0.5"
+                    className="font-sans tabular-nums mt-0.5"
                     style={{
-                      fontSize: 9,
-                      letterSpacing: '0.16em',
-                      color: 'rgba(255,255,255,0.55)',
+                      fontSize: 11,
+                      fontWeight: 500,
+                      color: 'rgba(255,255,255,0.6)',
                     }}
                   >
-                    {s.durationSec}с
+                    {s.durationSec} сек
                   </p>
                 </div>
               </div>

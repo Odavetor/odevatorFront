@@ -51,29 +51,40 @@ function StyleBentoBase() {
     <section className="mt-10 px-5">
       <div className="mb-4 flex items-end justify-between">
         <div>
-          <p
-            className="font-mono uppercase mb-1.5"
-            style={{ fontSize: 10, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.45)' }}
-          >
-            4 категории · {totalStyles} стилей
-          </p>
           <h2
-            className="font-display"
+            className="font-sans"
             style={{
-              fontSize: 28,
-              lineHeight: 1,
-              letterSpacing: '-0.018em',
+              fontSize: 24,
+              fontWeight: 800,
+              letterSpacing: '-0.025em',
+              lineHeight: 1.05,
               color: 'var(--text)',
             }}
           >
             Что можно сделать
           </h2>
+          <p
+            className="font-sans mt-1"
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              color: 'rgba(255,255,255,0.45)',
+            }}
+          >
+            {totalStyles} стилей в 4 категориях
+          </p>
         </div>
         <Link
           href="/generate"
           onClick={() => haptic('light')}
-          className="inline-flex items-center gap-1 text-[12px] font-medium pb-1"
-          style={{ color: 'var(--rose)', borderBottom: '1px solid var(--rose)' }}
+          className="inline-flex items-center gap-1 pb-1 no-tap-highlight"
+          style={{
+            color: 'var(--rose)',
+            borderBottom: '1px solid var(--rose)',
+            fontSize: 13,
+            fontWeight: 700,
+            letterSpacing: '-0.01em',
+          }}
         >
           К фильтрам
           <ArrowRight size={11} weight="bold" />
@@ -122,22 +133,24 @@ function StyleBentoBase() {
 
               <div className="absolute left-3.5 right-3.5 bottom-3.5">
                 <p
-                  className="font-display mb-0.5"
+                  className="font-sans"
                   style={{
-                    fontSize: 22,
-                    lineHeight: 1,
-                    letterSpacing: '-0.01em',
+                    fontSize: 20,
+                    fontWeight: 800,
+                    letterSpacing: '-0.022em',
+                    lineHeight: 1.05,
                     color: '#fff',
                   }}
                 >
                   {c.label}
                 </p>
                 <p
-                  className="font-mono uppercase"
+                  className="font-sans tabular-nums"
                   style={{
-                    fontSize: 9,
-                    letterSpacing: '0.18em',
+                    fontSize: 11,
+                    fontWeight: 600,
                     color: 'rgba(255,255,255,0.55)',
+                    marginTop: 2,
                   }}
                 >
                   {c.count} {c.count === 1 ? 'стиль' : c.count < 5 ? 'стиля' : 'стилей'}
