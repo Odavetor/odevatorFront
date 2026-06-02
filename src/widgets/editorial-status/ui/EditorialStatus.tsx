@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, DownloadSimple, WarningCircle } from '@phosphor-icons/react'
 import { hapticNotify } from '@/lib/telegram'
@@ -192,8 +193,13 @@ function DoneState({
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.18 }}
           className="absolute inset-0"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={resultUrl} alt="" className="w-full h-full object-cover" />
+          <Image
+            src={resultUrl}
+            alt=""
+            fill
+            sizes="(max-width: 430px) 100vw, 430px"
+            className="object-cover"
+          />
           <div
             className="absolute inset-0 pointer-events-none"
             style={{

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { fetchHistory, type HistoryItem } from '@entities/generation'
 import {
-  fetchPhotoCatalog,
+  getPhotoCatalogCached,
   PHOTO_FILTER_CATEGORIES,
   HERO_SAMPLES,
   type FilterCategory,
@@ -63,7 +63,7 @@ export function HomeView() {
 
   useEffect(() => {
     let cancelled = false
-    fetchPhotoCatalog()
+    getPhotoCatalogCached()
       .then((d) => {
         if (cancelled || !d.categories?.length) return
         setPhotoCategories(d.categories)

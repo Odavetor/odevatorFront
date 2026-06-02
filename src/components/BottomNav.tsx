@@ -56,10 +56,8 @@ function BottomNavBase() {
           className="relative rounded-full"
           style={{
             background:
-              'linear-gradient(180deg, rgba(28,24,36,0.62) 0%, rgba(15,13,18,0.75) 100%)',
+              'linear-gradient(180deg, rgba(28,24,36,0.96) 0%, rgba(15,13,18,0.98) 100%)',
             border: '1px solid rgba(255,255,255,0.12)',
-            backdropFilter: 'blur(22px) saturate(160%)',
-            WebkitBackdropFilter: 'blur(22px) saturate(160%)',
             boxShadow:
               'inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(255,255,255,0.04), 0 14px 40px rgba(0,0,0,0.5)',
           }}
@@ -175,27 +173,18 @@ function CenterFab({ item, active }: { item: NavItem; active: boolean }) {
 
         <Icon size={22} weight="fill" color="#fff" />
 
-        {/* Pulsing ring когда мы на /generate */}
+        {/* Pulsing ring когда мы на /generate — CSS keyframe, без JS RAF */}
         {active && (
           <>
-            <motion.span
+            <span
               aria-hidden
-              className="absolute rounded-full pointer-events-none"
+              className="absolute rounded-full pointer-events-none fab-ring"
               style={{ inset: -3, border: '1.5px solid var(--rose)' }}
-              animate={{ scale: [1, 1.22, 1.22], opacity: [0.6, 0, 0] }}
-              transition={{ duration: 2.2, repeat: Infinity, ease: 'easeOut' }}
             />
-            <motion.span
+            <span
               aria-hidden
-              className="absolute rounded-full pointer-events-none"
-              style={{ inset: -3, border: '1.5px solid var(--rose)' }}
-              animate={{ scale: [1, 1.22, 1.22], opacity: [0.6, 0, 0] }}
-              transition={{
-                duration: 2.2,
-                repeat: Infinity,
-                ease: 'easeOut',
-                delay: 1.1,
-              }}
+              className="absolute rounded-full pointer-events-none fab-ring"
+              style={{ inset: -3, border: '1.5px solid var(--rose)', animationDelay: '1.1s' }}
             />
           </>
         )}

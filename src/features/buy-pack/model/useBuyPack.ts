@@ -146,8 +146,8 @@ export function useBuyPack(): UseBuyPackResult {
     setLoading(true)
     haptic('light')
     try {
-      await refreshBalance()
-      const after = wallet?.prepaid_generations_remaining ?? 0
+      const fresh = await refreshBalance()
+      const after = fresh?.prepaid_generations_remaining ?? 0
       if (after > walletAtInit) {
         hapticNotify('success')
         setStep('success')
@@ -158,7 +158,7 @@ export function useBuyPack(): UseBuyPackResult {
     } finally {
       setLoading(false)
     }
-  }, [selectedOption, refreshBalance, wallet?.prepaid_generations_remaining, walletAtInit])
+  }, [selectedOption, refreshBalance, walletAtInit])
 
   const reset = useCallback(() => {
     setStep('select')

@@ -1,14 +1,6 @@
 'use client'
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
   expand,
   getTelegramUser,
@@ -24,7 +16,6 @@ import {
 import type { MeResponse, WalletResponse } from '@shared/api'
 import { getMe } from '@entities/user/api/users'
 import { getWallet } from '@entities/user/api/wallet'
-import { isAdminTelegramId } from '@entities/user/lib/admin'
 import type { TelegramUser, UserData } from '@entities/user/types'
 
 interface UserContextValue {
@@ -35,7 +26,7 @@ interface UserContextValue {
   loading: boolean
   isAdmin: boolean
   devViewAs: DevViewAs
-  refreshBalance: () => Promise<void>
+  refreshBalance: () => Promise<WalletResponse | null>
   refreshMe: () => Promise<void>
 }
 
@@ -68,7 +59,7 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
   const [devViewAs, setDevViewAs] = useState<DevViewAs>(null)
 
   const meInFlight = useRef<Promise<void> | null>(null)
-  const walletInFlight = useRef<Promise<void> | null>(null)
+  const walletInFlight = useRef<Promise<WalletResponse | null> | null>(null)
 
   const useMock = isMockEnabled()
 
@@ -90,18 +81,25 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
     return p
   }, [useMock])
 
-  const refreshBalance = useCallback(async () => {
+  const refreshBalance = useCallback(async (): Promise<WalletResponse | null> => {
     if (walletInFlight.current) return walletInFlight.current
     if (useMock) {
       setWallet(MOCK_WALLET)
       setUserData(MOCK_USER_DATA as UserData)
       setLoading(false)
-      return
+      return MOCK_WALLET
     }
     const p = getWallet()
-      .then((w) => setWallet(w))
-      .catch(() => {
-        if (IS_DEV) setWallet((prev) => prev ?? MOCK_WALLET)
+      .then((w) => {
+        setWallet(w)
+        return w
+      })
+      .catch((): WalletResponse | null => {
+        if (IS_DEV) {
+          setWallet((prev) => prev ?? MOCK_WALLET)
+          return MOCK_WALLET
+        }
+        return null
       })
       .finally(() => {
         walletInFlight.current = null
@@ -141,9 +139,10 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const realIsAdmin = useMemo(() => {
-    if (me?.is_admin) return true
-    return isAdminTelegramId(tgUser?.id)
-  }, [me?.is_admin, tgUser?.id])
+    // Admin status comes only from the verified backend response (JWT-authenticated
+    // /users/me). Never trust window.Telegram.WebApp.initDataUnsafe on the client.
+    return !!me?.is_admin
+  }, [me?.is_admin])
 
   const isAdmin = useMemo(() => {
     if (IS_DEV && devViewAs === 'admin') return true
@@ -166,9 +165,7 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
     [tgUser, userData, me, wallet, loading, isAdmin, devViewAs, refreshBalance, refreshMe],
   )
 
-  return (
-    <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>
-  )
+  return <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>
 }
 
 export function useUser(): UserContextValue {

@@ -82,12 +82,7 @@ function CinematicHeroBase({
           >
             {/* AFTER — full background */}
             <div className="absolute inset-0 overflow-hidden">
-              <motion.div
-                initial={{ scale: 1.02 }}
-                animate={{ scale: 1.1 }}
-                transition={{ duration: 9, ease: 'linear' }}
-                className="absolute inset-0"
-              >
+              <div className="kenburns absolute inset-0">
                 <Image
                   src={sample.after}
                   alt="после"
@@ -95,7 +90,7 @@ function CinematicHeroBase({
                   sizes="(max-width: 430px) 100vw, 430px"
                   className="object-cover"
                 />
-              </motion.div>
+              </div>
               {/* tonal layer на «после» */}
               <div
                 className="absolute inset-0"
@@ -111,11 +106,8 @@ function CinematicHeroBase({
               style={{ width: splitWidth }}
             >
               <div className="absolute inset-y-0 left-0 right-0">
-                <motion.div
-                  initial={{ scale: 1.02 }}
-                  animate={{ scale: 1.1 }}
-                  transition={{ duration: 9, ease: 'linear' }}
-                  className="absolute inset-0"
+                <div
+                  className="kenburns absolute inset-0"
                   style={{
                     width: containerW || '100vw',
                     height: '100%',
@@ -129,7 +121,7 @@ function CinematicHeroBase({
                     sizes="(max-width: 430px) 100vw, 430px"
                     className="object-cover"
                   />
-                </motion.div>
+                </div>
                 <div
                   className="absolute inset-0"
                   style={{
@@ -299,13 +291,9 @@ function CinematicHeroBase({
                 </span>
               </>
             ) : (
-              <motion.span
-                animate={{ x: [0, 4, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-                className="inline-flex"
-              >
+              <span className="arrow-nudge inline-flex">
                 <ArrowRight size={12} weight="bold" color="#fff" />
-              </motion.span>
+              </span>
             )}
           </span>
           {!hasCredits && (

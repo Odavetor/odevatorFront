@@ -116,6 +116,51 @@ body::after {
   color: var(--text);
 }
 
+@keyframes fabRing {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50%,
+  100% {
+    transform: scale(1.22);
+    opacity: 0;
+  }
+}
+
+.fab-ring {
+  animation: fabRing 2.2s ease-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes kenburns {
+  from {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(1.1);
+  }
+}
+
+.kenburns {
+  animation: kenburns 9s linear forwards;
+  will-change: transform;
+}
+
+@keyframes arrowNudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+}
+
+.arrow-nudge {
+  animation: arrowNudge 1.5s ease-in-out infinite;
+}
+
 @layer components {
   .surface {
     background: var(--s2);

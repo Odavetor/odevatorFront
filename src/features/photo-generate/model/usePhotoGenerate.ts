@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import {
-  fetchPhotoCatalog,
+  getPhotoCatalogCached,
   PHOTO_FILTER_CATEGORIES,
   type FilterCategory,
   type FilterOption,
@@ -74,7 +74,7 @@ export function usePhotoGenerate(): UsePhotoGenerateResult {
 
   useEffect(() => {
     let cancelled = false
-    fetchPhotoCatalog()
+    getPhotoCatalogCached()
       .then((d) => {
         if (cancelled || !d.categories?.length) return
         setCategories(d.categories)
@@ -87,13 +87,19 @@ export function usePhotoGenerate(): UsePhotoGenerateResult {
 
   const setFile = useCallback((f: File | null) => {
     setFileState(f)
-    setPreview(f ? URL.createObjectURL(f) : null)
+    setPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return f ? URL.createObjectURL(f) : null
+    })
     setGenState({ phase: 'idle', progress: 0 })
   }, [])
 
   const clearFile = useCallback(() => {
     setFileState(null)
-    setPreview(null)
+    setPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return null
+    })
     setGenState({ phase: 'idle', progress: 0 })
   }, [])
 

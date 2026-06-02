@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowRight } from '@phosphor-icons/react'
 import { haptic } from '@/lib/telegram'
-import { fetchPhotoCatalog } from '@/lib/catalog'
+import { getPhotoCatalogCached } from '@/lib/catalog'
 import { PHOTO_FILTER_CATEGORIES } from '@/data/generate-options'
 import type { FilterCategory } from '@/data/generate-options'
 
@@ -34,7 +34,7 @@ function StyleBentoBase() {
 
   useEffect(() => {
     let cancelled = false
-    fetchPhotoCatalog()
+    getPhotoCatalogCached()
       .then((d) => {
         if (cancelled || !d.categories?.length) return
         setCards(toCards(d.categories))

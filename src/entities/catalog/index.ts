@@ -3,6 +3,7 @@ export { PHOTO_FILTER_CATEGORIES } from './model/photo-defaults'
 export { HERO_SAMPLES } from './model/hero-samples'
 export {
   fetchPhotoCatalog,
+  getPhotoCatalogCached,
   createPhotoCategory,
   updatePhotoCategory,
   deletePhotoCategory,

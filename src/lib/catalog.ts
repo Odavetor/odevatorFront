@@ -2,6 +2,7 @@
 
 export {
   fetchPhotoCatalog,
+  getPhotoCatalogCached,
   createPhotoCategory,
   updatePhotoCategory,
   deletePhotoCategory,

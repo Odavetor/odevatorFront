@@ -113,8 +113,8 @@ const config: Config = {
           '50%': { opacity: '0.5', transform: 'scale(1.04)' },
         },
         glowBreathe: {
-          '0%, 100%': { opacity: '0.35', filter: 'blur(18px)' },
-          '50%': { opacity: '0.65', filter: 'blur(26px)' },
+          '0%, 100%': { opacity: '0.35', filter: 'blur(22px)' },
+          '50%': { opacity: '0.65', filter: 'blur(22px)' },
         },
         float: {
           '0%, 100%': { transform: 'translateY(0px)' },

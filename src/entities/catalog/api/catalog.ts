@@ -74,6 +74,30 @@ export async function fetchPhotoCatalog(): Promise<PhotoCatalogResponse> {
   return { categories: (raw.categories ?? []).map(mapCategory) }
 }
 
+const CATALOG_TTL_MS = 5 * 60 * 1000
+let catalogCache: { data: PhotoCatalogResponse; at: number } | null = null
+let catalogInFlight: Promise<PhotoCatalogResponse> | null = null
+
+// getPhotoCatalogCached dedupes concurrent calls and caches the (static between
+// deploys) catalog for a few minutes, so the home and generate screens share a
+// single network request instead of each refetching.
+export function getPhotoCatalogCached(): Promise<PhotoCatalogResponse> {
+  const now = Date.now()
+  if (catalogCache && now - catalogCache.at < CATALOG_TTL_MS) {
+    return Promise.resolve(catalogCache.data)
+  }
+  if (catalogInFlight) return catalogInFlight
+  catalogInFlight = fetchPhotoCatalog()
+    .then((data) => {
+      catalogCache = { data, at: Date.now() }
+      return data
+    })
+    .finally(() => {
+      catalogInFlight = null
+    })
+  return catalogInFlight
+}
+
 export interface CreateCategoryPayload {
   slug: string
   label: string
