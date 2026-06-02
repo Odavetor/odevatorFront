@@ -1,19 +1,11 @@
 import type { Metadata, Viewport } from 'next'
-import { Playfair_Display, Onest, JetBrains_Mono } from 'next/font/google'
+import { Onest, JetBrains_Mono } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import { TelegramProvider } from '@entities/user'
 import { TelegramOnlyGate } from '@widgets/telegram-only-gate'
 import { DevToggle } from '@widgets/dev-toggle'
 import { AuroraBg } from '@widgets/aurora-bg'
-
-const playfair = Playfair_Display({
-  subsets: ['latin', 'cyrillic'],
-  variable: '--font-playfair',
-  display: 'swap',
-  weight: ['500', '600'],
-  preload: true,
-})
 
 const onest = Onest({
   subsets: ['latin', 'cyrillic'],
@@ -54,7 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="ru"
-      className={`${playfair.variable} ${onest.variable} ${jetbrains.variable}`}
+      className={`${onest.variable} ${jetbrains.variable}`}
     >
       <body>
         <Script
