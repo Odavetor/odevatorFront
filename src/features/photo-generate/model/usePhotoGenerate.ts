@@ -17,6 +17,27 @@ import { ApiError } from '@shared/api'
 import { useUser } from '@entities/user'
 import { haptic, hapticNotify, getTelegramUser as getTgUser } from '@shared/lib'
 
+const MODERATION_MESSAGE =
+  'Фото не прошло проверку. Похоже, на снимке нет взрослого человека или есть несовершеннолетние. Загрузите чёткое фото взрослого человека.'
+
+function friendlyGenerateError(e: unknown, fallback: string): string {
+  if (e instanceof ApiError) {
+    const code =
+      e.body && typeof e.body === 'object' && 'error' in e.body
+        ? String((e.body as { error: unknown }).error)
+        : e.message
+    if (e.status === 422 || code === 'moderation_blocked') return MODERATION_MESSAGE
+    if (e.status === 503) return 'Сервис временно недоступен. Попробуйте чуть позже.'
+    if (e.status === 429) return 'Слишком много запросов. Подождите немного и попробуйте снова.'
+    if (e.status === 400) {
+      if (code.includes('file_url'))
+        return 'Не удалось обработать загруженное фото. Попробуйте другое изображение.'
+      return 'Не получилось начать обработку. Проверьте фото и параметры, затем попробуйте снова.'
+    }
+  }
+  return fallback
+}
+
 export interface UsePhotoGenerateResult {
   categories: FilterCategory[]
   pickedCategoryId: string | null
@@ -138,8 +159,8 @@ export function usePhotoGenerate(): UsePhotoGenerateResult {
           hapticNotify('warning')
           return
         }
-        const msg = e instanceof Error ? e.message : errorFallback
-        setGenState({ phase: 'error', progress: 0, error: msg })
+        hapticNotify('error')
+        setGenState({ phase: 'error', progress: 0, error: friendlyGenerateError(e, errorFallback) })
       }
     },
     [file, pickedOption, pickSlug, pollUntilDone, refreshBalance],
