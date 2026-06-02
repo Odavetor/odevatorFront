@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { CaretRight, Lightning, ShoppingBag } from '@phosphor-icons/react'
+import { CaretRight, Lightning, ShareNetwork, ShoppingBag } from '@phosphor-icons/react'
 import { EASE_EDITORIAL, haptic } from '@shared/lib'
 
 interface Row {
@@ -24,6 +24,12 @@ const ROWS: Row[] = [
     label: 'Покупки',
     sub: 'история оплат',
     icon: ShoppingBag,
+  },
+  {
+    href: '/profile/referrals',
+    label: 'Партнёрка',
+    sub: 'приглашай и зарабатывай',
+    icon: ShareNetwork,
   },
 ]
 
