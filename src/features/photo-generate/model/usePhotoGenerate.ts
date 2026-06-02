@@ -103,15 +103,6 @@ export function usePhotoGenerate(): UsePhotoGenerateResult {
     setPickedOption(opt)
   }, [])
 
-  const pickSlug = useCallback(
-    (catSlug: string): string => {
-      if (pickedCategoryId === catSlug && pickedOption) return pickedOption.id
-      const cat = categories.find((c) => c.id === catSlug)
-      return cat?.options[0]?.id ?? ''
-    },
-    [categories, pickedCategoryId, pickedOption],
-  )
-
   const pollUntilDone = useCallback(async (uid: string): Promise<string | null> => {
     for (let attempt = 0; attempt < 3; attempt++) {
       const res = await pollGeneration(uid, { wait: true, maxWaitSeconds: 120 })
@@ -123,7 +114,7 @@ export function usePhotoGenerate(): UsePhotoGenerateResult {
 
   const generate = useCallback(
     async (errorTimeout: string, errorFallback: string) => {
-      if (!file || !pickedOption) return
+      if (!file || !pickedOption || !pickedCategoryId) return
       const tg = getTgUser()
       if (!tg) return
 
@@ -136,10 +127,8 @@ export function usePhotoGenerate(): UsePhotoGenerateResult {
 
         const { uid } = await startPhotoGeneration({
           file_url: fileUrl,
-          clothing: pickSlug('clothing'),
-          body: pickSlug('body'),
-          pose: pickSlug('pose'),
-          background: pickSlug('background'),
+          category: pickedCategoryId,
+          option: pickedOption.id,
           num_images: 1,
         })
 
@@ -163,7 +152,7 @@ export function usePhotoGenerate(): UsePhotoGenerateResult {
         setGenState({ phase: 'error', progress: 0, error: friendlyGenerateError(e, errorFallback) })
       }
     },
-    [file, pickedOption, pickSlug, pollUntilDone, refreshBalance],
+    [file, pickedOption, pickedCategoryId, pollUntilDone, refreshBalance],
   )
 
   const busy = genState.phase === 'uploading' || genState.phase === 'processing'

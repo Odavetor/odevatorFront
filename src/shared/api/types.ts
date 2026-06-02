@@ -115,10 +115,8 @@ export interface BackUploadResponse {
 
 export interface StartPhotoGenerationRequest {
   file_url: string
-  clothing: string
-  body: string
-  pose: string
-  background: string
+  category: string
+  option: string
   num_images?: number
 }
 export interface StartGenerationResponse {
