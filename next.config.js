@@ -31,6 +31,9 @@ const nextConfig = {
       { protocol: 'https', hostname: 'fastly.picsum.photos' },
       { protocol: 'https', hostname: 'unfulfilled-dreams.com' },
       { protocol: 'https', hostname: 'www.unfulfilled-dreams.com' },
+      // Undress provider result CDN (job results live here, e.g. res.aivio.art)
+      { protocol: 'https', hostname: 'res.aivio.art' },
+      { protocol: 'https', hostname: '**.aivio.art' },
     ],
   },
 }
