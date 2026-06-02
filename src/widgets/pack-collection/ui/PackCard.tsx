@@ -4,18 +4,11 @@ import { motion } from 'framer-motion'
 import { Check, Lightning } from '@phosphor-icons/react'
 import { SparkleBurst } from '@shared/ui'
 import { EASE_GLIDE } from '@shared/lib'
-import {
-  fmtRub,
-  getPackMeta,
-  savingsPercent,
-  unitPriceRub,
-  type SplashColor,
-} from '@entities/pack'
+import { fmtRub, getPackMeta, unitPriceRub, type SplashColor } from '@entities/pack'
 import type { GenerationPackOption } from '@shared/api'
 
 interface PackCardProps {
   option: GenerationPackOption
-  unitBaseMinor: number
   active: boolean
   featured: boolean
   index: number
@@ -58,17 +51,9 @@ const SPLASH_TOKENS: Record<
   },
 }
 
-export function PackCard({
-  option,
-  unitBaseMinor,
-  active,
-  featured,
-  index,
-  onSelect,
-}: PackCardProps) {
+export function PackCard({ option, active, featured, index, onSelect }: PackCardProps) {
   const meta = getPackMeta(option)
   const tokens = SPLASH_TOKENS[meta.splash]
-  const savings = savingsPercent(option, unitBaseMinor)
   const unit = unitPriceRub(option)
 
   return (
@@ -138,24 +123,6 @@ export function PackCard({
               }}
             >
               {meta.title}
-            </span>
-            <span
-              className="font-sans"
-              style={{
-                fontSize: 13,
-                color: 'rgba(255,255,255,0.55)',
-                fontWeight: 500,
-              }}
-            >
-              {meta.sub}
-              {savings > 0 && (
-                <>
-                  <span style={{ opacity: 0.35 }}> · </span>
-                  <span style={{ color: tokens.accent, fontWeight: 600 }}>
-                    −{savings}%
-                  </span>
-                </>
-              )}
             </span>
           </div>
         </div>
