@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
-import { Lightning, Sparkle, ShareNetwork, Wallet } from '@phosphor-icons/react'
+import { Lightning, ShareNetwork, Wallet } from '@phosphor-icons/react'
 import { CountUpNumber, DotPulse } from '@shared/ui'
 import { EASE_EDITORIAL } from '@shared/lib'
 
@@ -10,12 +10,9 @@ interface MemberCardProps {
   firstName: string
   lastName?: string
   handle: string
-  memberSince: string
-  memberNumber: string
   avatarUrl?: string | null
   initials: string
   slots: number
-  lifetimeGenerations: number
   balanceMajor: number
   referralBalanceMajor: number
 }
@@ -26,11 +23,9 @@ export function MemberCard({
   firstName,
   lastName,
   handle,
-  memberSince,
   avatarUrl,
   initials,
   slots,
-  lifetimeGenerations,
   balanceMajor,
   referralBalanceMajor,
 }: MemberCardProps) {
@@ -87,32 +82,31 @@ export function MemberCard({
             {firstName}
             {lastName ? ` ${lastName}` : ''}
           </p>
-          <p
-            className="font-sans truncate"
-            style={{
-              fontSize: 13,
-              fontWeight: 500,
-              color: 'rgba(255,255,255,0.45)',
-              marginTop: 2,
-            }}
-          >
-            {handle} · с {memberSince}
-          </p>
+          {handle && (
+            <p
+              className="font-sans truncate"
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: 'rgba(255,255,255,0.45)',
+                marginTop: 2,
+              }}
+            >
+              {handle}
+            </p>
+          )}
         </div>
       </div>
 
       <div
-        className="grid grid-cols-4 rounded-2xl overflow-hidden"
+        className="grid grid-cols-3 rounded-2xl overflow-hidden"
         style={{
           background: 'rgba(255,255,255,0.03)',
           border: '1px solid var(--border-1)',
         }}
       >
-        <Cell icon={Lightning} label="фото" accent="rose">
+        <Cell icon={Lightning} label="обработок" accent="rose">
           <CountUpNumber to={slots} duration={0.7} />
-        </Cell>
-        <Cell icon={Sparkle} label="всего" divided>
-          <CountUpNumber to={lifetimeGenerations} duration={1.0} />
         </Cell>
         <Cell icon={Wallet} label="баланс" divided>
           <CountUpNumber to={balanceMajor} duration={1.0} format={fmtRub} />

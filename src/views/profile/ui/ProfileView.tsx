@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { IdentificationCard, ShieldCheck } from '@phosphor-icons/react'
+import { ShieldCheck } from '@phosphor-icons/react'
 import { DisplayTitle, Kicker } from '@shared/ui'
 import { MemberCard } from '@widgets/member-card'
 import { EASE_EDITORIAL } from '@shared/lib'
@@ -17,20 +17,12 @@ export function ProfileView() {
   const { tgUser, me, wallet, isAdmin } = useUser()
   const titleProfile = useContent('page.title.profile')
 
-  const memberSince = me?.created_at
-    ? new Date(me.created_at).toLocaleDateString('ru', { month: 'long', year: 'numeric' })
-    : '—'
-
-  const memberNumber = me?.id
-    ? String(me.id).padStart(6, '0')
-    : String(tgUser?.id ?? '000000').slice(-6).padStart(6, '0')
-
   const slots = wallet?.prepaid_generations_remaining ?? 0
   const balanceMinor = wallet?.balance_minor ?? 0
   const refBalanceMinor = wallet?.referral_balance_minor ?? 0
 
   const initials = ((tgUser?.first_name?.[0] ?? '') + (tgUser?.last_name?.[0] ?? '')).toUpperCase() || 'V'
-  const handle = tgUser?.username ? `@${tgUser.username}` : `id ${tgUser?.id ?? '—'}`
+  const handle = tgUser?.username ? `@${tgUser.username}` : ''
 
   return (
     <div className="flex flex-col min-h-[100dvh]">
@@ -65,12 +57,9 @@ export function ProfileView() {
         firstName={tgUser?.first_name ?? 'Гость'}
         lastName={tgUser?.last_name}
         handle={handle}
-        memberSince={memberSince}
-        memberNumber={memberNumber}
         avatarUrl={tgUser?.photo_url}
         initials={initials}
         slots={slots}
-        lifetimeGenerations={me?.lifetime_generations ?? 0}
         balanceMajor={Math.round(balanceMinor / 100)}
         referralBalanceMajor={Math.round(refBalanceMinor / 100)}
       />
@@ -92,15 +81,12 @@ export function ProfileView() {
         className="px-5 mt-8"
       >
         <div className="h-px w-16 mb-4" style={{ background: 'var(--border-2)' }} />
-        <div className="flex items-baseline gap-2">
-          <IdentificationCard size={11} color="rgba(255,255,255,0.3)" />
-          <p
-            className="font-sans tabular-nums"
-            style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)' }}
-          >
-            ID {tgUser?.id ?? '—'} · история 72 часа
-          </p>
-        </div>
+        <p
+          className="font-sans"
+          style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)' }}
+        >
+          история 72 часа
+        </p>
       </motion.section>
 
       <BottomNav />
