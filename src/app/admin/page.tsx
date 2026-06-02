@@ -8,13 +8,12 @@ import { useUser } from '@/components/TelegramProvider'
 import { haptic } from '@/lib/telegram'
 import HeroEditor from '@/components/admin/HeroEditor'
 import PhotoCatalogEditor from '@/components/admin/PhotoCatalogEditor'
-import VideoCatalogEditor from '@/components/admin/VideoCatalogEditor'
 import TextsEditor from '@/components/admin/TextsEditor'
 import PricingEditor from '@/components/admin/PricingEditor'
 import { useContent } from '@/lib/content'
 
-type Tab = 'Главная' | 'Фото' | 'Видео' | 'Цены' | 'Тексты'
-const TABS: Tab[] = ['Главная', 'Фото', 'Видео', 'Цены', 'Тексты']
+type Tab = 'Главная' | 'Фото' | 'Цены' | 'Тексты'
+const TABS: Tab[] = ['Главная', 'Фото', 'Цены', 'Тексты']
 
 export default function AdminPage() {
   const router = useRouter()
@@ -115,7 +114,6 @@ export default function AdminPage() {
 
         {tab === 'Главная' && <HeroEditor />}
         {tab === 'Фото' && <PhotoCatalogEditor />}
-        {tab === 'Видео' && <VideoCatalogEditor />}
         {tab === 'Цены' && <PricingEditor />}
         {tab === 'Тексты' && <TextsEditor />}
       </div>

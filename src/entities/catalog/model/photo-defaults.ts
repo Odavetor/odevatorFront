@@ -1,4 +1,4 @@
-import type { FilterCategory, VideoScenario } from '@entities/catalog/types'
+import type { FilterCategory } from '@entities/catalog/types'
 
 const PIC = (seed: string, w = 280, h = 400) =>
   `https://picsum.photos/seed/${seed}/${w}/${h}`
@@ -53,17 +53,4 @@ export const PHOTO_FILTER_CATEGORIES: FilterCategory[] = [
       { id: 'hotel', label: 'Отель', beforeExample: PIC('vb1'), afterExample: PIC('vbg6') },
     ],
   },
-]
-
-export const VIDEO_SCENARIOS: VideoScenario[] = [
-  { id: 'striptease', label: 'Стриптиз', description: 'Медленное соблазнительное раздевание', thumbnail: PIC('vs1', 320, 220), durationSec: 5, slots: 3 },
-  { id: 'dance', label: 'Танец', description: 'Чувственный танец в ритм', thumbnail: PIC('vs2', 320, 220), durationSec: 5, slots: 2 },
-  { id: 'shower', label: 'Душ', description: 'Раздевание под струями воды', thumbnail: PIC('vs3', 320, 220), durationSec: 8, slots: 4 },
-  { id: 'beach', label: 'Пляж', description: 'Прогулка по берегу моря', thumbnail: PIC('vs4', 320, 220), durationSec: 5, slots: 2 },
-  { id: 'bed', label: 'В постели', description: 'Соблазнительная поза в постели', thumbnail: PIC('vs5', 320, 220), durationSec: 5, slots: 3 },
-  { id: 'yoga', label: 'Йога', description: 'Гибкость и растяжка', thumbnail: PIC('vs6', 320, 220), durationSec: 8, slots: 3 },
-  { id: 'runway', label: 'Подиум', description: 'Дефиле в стиле модели', thumbnail: PIC('vs7', 320, 220), durationSec: 5, slots: 2 },
-  { id: 'pool', label: 'Бассейн', description: 'Игривое плавание в воде', thumbnail: PIC('vs8', 320, 220), durationSec: 8, slots: 4 },
-  { id: 'mirror', label: 'Зеркало', description: 'Чувственная съёмка у зеркала', thumbnail: PIC('vs9', 320, 220), durationSec: 5, slots: 3 },
-  { id: 'fitness', label: 'Фитнес', description: 'Тренировка в спортзале', thumbnail: PIC('vs10', 320, 220), durationSec: 5, slots: 2 },
 ]

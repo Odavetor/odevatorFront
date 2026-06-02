@@ -6,7 +6,6 @@ import type {
   PollGenerationResponse,
   StartGenerationResponse,
   StartPhotoGenerationRequest,
-  StartVideoGenerationRequest,
   UploadResponse,
 } from '@shared/api'
 
@@ -21,15 +20,6 @@ export function startPhotoGeneration(
   payload: StartPhotoGenerationRequest,
 ): Promise<StartGenerationResponse> {
   return api<StartGenerationResponse>('/api/v1/generate/photo', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  })
-}
-
-export function startVideoGeneration(
-  payload: StartVideoGenerationRequest,
-): Promise<StartGenerationResponse> {
-  return api<StartGenerationResponse>('/api/v1/generate/video', {
     method: 'POST',
     body: JSON.stringify(payload),
   })

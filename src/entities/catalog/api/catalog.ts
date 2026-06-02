@@ -1,11 +1,7 @@
 'use client'
 
 import { api, apiUpload } from '@shared/api'
-import type {
-  FilterCategory,
-  FilterOption,
-  VideoScenario,
-} from '@entities/catalog/types'
+import type { FilterCategory, FilterOption } from '@entities/catalog/types'
 
 interface BackPhotoOption {
   id: number
@@ -32,23 +28,6 @@ interface BackPhotoCategory {
 }
 interface BackPhotoCatalog {
   categories: BackPhotoCategory[]
-}
-
-interface BackVideoScenario {
-  id: number
-  slug: string
-  label: string
-  description: string
-  prompt_text: string
-  thumbnail_url: string
-  duration_sec: number
-  slots: number
-  sort_order: number
-  description_full?: string | null
-  price_minor?: number | null
-}
-interface BackVideoCatalog {
-  scenarios: BackVideoScenario[]
 }
 
 interface BackAssetResponse {
@@ -86,37 +65,13 @@ function mapCategory(c: BackPhotoCategory): FilterCategory {
   }
 }
 
-function mapScenario(s: BackVideoScenario): VideoScenario {
-  return {
-    id: s.slug,
-    numericId: s.id,
-    label: s.label,
-    description: s.description,
-    thumbnail: s.thumbnail_url,
-    durationSec: s.duration_sec,
-    slots: s.slots,
-    prompt_text: s.prompt_text,
-    sort_order: s.sort_order,
-    description_full: s.description_full ?? '',
-    price_minor: s.price_minor ?? null,
-  }
-}
-
 export interface PhotoCatalogResponse {
   categories: FilterCategory[]
-}
-export interface VideoCatalogResponse {
-  scenarios: VideoScenario[]
 }
 
 export async function fetchPhotoCatalog(): Promise<PhotoCatalogResponse> {
   const raw = await api<BackPhotoCatalog>('/api/v1/catalog/photo')
   return { categories: (raw.categories ?? []).map(mapCategory) }
-}
-
-export async function fetchVideoCatalog(): Promise<VideoCatalogResponse> {
-  const raw = await api<BackVideoCatalog>('/api/v1/catalog/video')
-  return { scenarios: (raw.scenarios ?? []).map(mapScenario) }
 }
 
 export interface CreateCategoryPayload {
@@ -190,45 +145,6 @@ export function updatePhotoOption(
 
 export function deletePhotoOption(numericId: number): Promise<{ status: string }> {
   return api<{ status: string }>(`/api/v1/admin/catalog/photo/options/${numericId}`, {
-    method: 'DELETE',
-  })
-}
-
-export interface UpdateScenarioPayload {
-  label: string
-  description: string
-  prompt_text: string
-  thumbnail_url: string
-  duration_sec: number
-  slots: number
-  sort_order: number
-  description_full?: string
-  price_minor?: number | null
-}
-
-export interface CreateScenarioPayload extends UpdateScenarioPayload {
-  slug: string
-}
-
-export function createVideoScenario(payload: CreateScenarioPayload): Promise<{ id: number }> {
-  return api<{ id: number }>('/api/v1/admin/catalog/video/scenarios', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  })
-}
-
-export function updateVideoScenario(
-  numericId: number,
-  payload: UpdateScenarioPayload,
-): Promise<{ status: string }> {
-  return api<{ status: string }>(`/api/v1/admin/catalog/video/scenarios/${numericId}`, {
-    method: 'PATCH',
-    body: JSON.stringify(payload),
-  })
-}
-
-export function deleteVideoScenario(numericId: number): Promise<{ status: string }> {
-  return api<{ status: string }>(`/api/v1/admin/catalog/video/scenarios/${numericId}`, {
     method: 'DELETE',
   })
 }

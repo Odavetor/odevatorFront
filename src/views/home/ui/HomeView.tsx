@@ -15,7 +15,6 @@ import { BottomNav } from '@widgets/bottom-nav'
 import { EditorialHeader as HomeHeader } from '@widgets/editorial-header'
 import { CinematicHero } from '@widgets/cinematic-hero'
 import { StyleBento } from '@widgets/style-bento'
-import { ScenariosStrip } from '@widgets/scenarios-strip'
 import { RecentGallery } from '@widgets/recent-gallery'
 
 const ROTATE_MS = 4500
@@ -136,7 +135,6 @@ export function HomeView() {
       />
 
       <StyleBento />
-      <ScenariosStrip />
       <RecentGallery items={recent} />
 
       <div className="h-12" />

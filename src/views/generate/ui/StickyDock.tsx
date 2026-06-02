@@ -1,13 +1,12 @@
 'use client'
 
-import { Lightning, Sparkle, VideoCamera } from '@phosphor-icons/react'
+import { Lightning, Sparkle } from '@phosphor-icons/react'
 import { PremiumButton } from '@shared/ui'
 import { ConsentGate } from '@features/consent-gate'
 import { DisclaimerToggle } from '@widgets/disclaimer-toggle'
 import { useContent } from '@entities/content'
 
 interface Props {
-  mode: 'photo' | 'video'
   consent: boolean[]
   onConsentChange: (i: number, v: boolean) => void
   disclaimerText: string
@@ -19,7 +18,6 @@ interface Props {
 }
 
 export function StickyDock({
-  mode,
   consent,
   onConsentChange,
   disclaimerText,
@@ -60,7 +58,7 @@ export function StickyDock({
         glow={canRun}
         disabled={!canRun}
         onClick={onRun}
-        leading={mode === 'photo' ? <Sparkle size={16} weight="fill" /> : <VideoCamera size={16} weight="fill" />}
+        leading={<Sparkle size={16} weight="fill" />}
         trailing={
           canRun ? (
             <span

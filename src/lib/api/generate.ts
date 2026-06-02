@@ -1,8 +1,3 @@
 'use client'
 
-export {
-  uploadUserPhoto,
-  startPhotoGeneration,
-  startVideoGeneration,
-  pollGeneration,
-} from '@entities/generation'
+export { uploadUserPhoto, startPhotoGeneration, pollGeneration } from '@entities/generation'

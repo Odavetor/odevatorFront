@@ -121,10 +121,6 @@ export interface StartPhotoGenerationRequest {
   background: string
   num_images?: number
 }
-export interface StartVideoGenerationRequest {
-  file_url: string
-  scenario: string
-}
 export interface StartGenerationResponse {
   uid: string
   estimated_time?: number
