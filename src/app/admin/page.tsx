@@ -11,10 +11,11 @@ import PhotoCatalogEditor from '@/components/admin/PhotoCatalogEditor'
 import TextsEditor from '@/components/admin/TextsEditor'
 import PricingEditor from '@/components/admin/PricingEditor'
 import BroadcastEditor from '@/components/admin/BroadcastEditor'
+import StatsDashboard from '@/components/admin/StatsDashboard'
 import { useContent } from '@/lib/content'
 
-type Tab = 'Главная' | 'Фото' | 'Цены' | 'Тексты' | 'Рассылка'
-const TABS: Tab[] = ['Главная', 'Фото', 'Цены', 'Тексты', 'Рассылка']
+type Tab = 'Статистика' | 'Главная' | 'Фото' | 'Цены' | 'Тексты' | 'Рассылка'
+const TABS: Tab[] = ['Статистика', 'Главная', 'Фото', 'Цены', 'Тексты', 'Рассылка']
 
 export default function AdminPage() {
   const router = useRouter()
@@ -137,6 +138,7 @@ export default function AdminPage() {
           ))}
         </div>
 
+        {tab === 'Статистика' && <StatsDashboard />}
         {tab === 'Главная' && <HeroEditor />}
         {tab === 'Фото' && <PhotoCatalogEditor />}
         {tab === 'Цены' && <PricingEditor />}
