@@ -1,7 +1,6 @@
 import type { FilterCategory } from '@entities/catalog/types'
 
-const PIC = (seed: string, w = 280, h = 400) =>
-  `https://picsum.photos/seed/${seed}/${w}/${h}`
+const PIC = (seed: string, w = 280, h = 400) => `https://picsum.photos/seed/${seed}/${w}/${h}`
 
 export const PHOTO_FILTER_CATEGORIES: FilterCategory[] = [
   {

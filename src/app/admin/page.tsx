@@ -42,48 +42,63 @@ export default function AdminPage() {
 
   if (!readyChecked) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center">
-        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>Проверка доступа…</p>
+      <div className="flex min-h-[100dvh] items-center justify-center">
+        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
+          Проверка доступа…
+        </p>
       </div>
     )
   }
   if (!isAdmin) return null
 
   return (
-    <div className="flex flex-col min-h-[100dvh]">
+    <div className="flex min-h-[100dvh] flex-col">
       <motion.header
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="flex items-center justify-between px-5 pt-6 pb-4"
+        className="flex items-center justify-between px-5 pb-4 pt-6"
       >
         <div className="flex items-center gap-3">
           <button
-            onClick={() => { haptic(); router.push('/') }}
-            className="w-9 h-9 rounded-xl flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+            onClick={() => {
+              haptic()
+              router.push('/')
+            }}
+            className="flex h-9 w-9 items-center justify-center rounded-xl"
+            style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
           >
             <ArrowLeft size={18} color="rgba(255,255,255,0.6)" />
           </button>
           <div>
-            <h1 className="text-white font-semibold text-lg leading-tight">{titleAdmin}</h1>
-            <p className="text-[11px] uppercase tracking-[0.14em]" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            <h1 className="text-lg font-semibold leading-tight text-white">{titleAdmin}</h1>
+            <p
+              className="text-[11px] uppercase tracking-[0.14em]"
+              style={{ color: 'rgba(255,255,255,0.35)' }}
+            >
               {subtitleAdmin}
             </p>
           </div>
         </div>
         <div
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
-          style={{ background: 'var(--rose-dim)', border: '1px solid var(--border-rose)', color: 'var(--rose)' }}
+          className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
+          style={{
+            background: 'var(--rose-dim)',
+            border: '1px solid var(--border-rose)',
+            color: 'var(--rose)',
+          }}
         >
           <ShieldCheck size={12} weight="fill" />
           admin
         </div>
       </motion.header>
 
-      <div className="px-5 pb-10 flex flex-col gap-4">
+      <div className="flex flex-col gap-4 px-5 pb-10">
         <div
-          className="flex p-1 rounded-full self-start overflow-x-auto max-w-full"
+          className="flex max-w-full self-start overflow-x-auto rounded-full p-1"
           style={{
             background: 'rgba(255,255,255,0.05)',
             border: '1px solid rgba(255,255,255,0.06)',
@@ -93,19 +108,28 @@ export default function AdminPage() {
           {TABS.map((t) => (
             <button
               key={t}
-              onClick={() => { haptic('light'); setTab(t) }}
-              className="relative px-4 py-1.5 text-sm font-medium rounded-full flex-shrink-0"
+              onClick={() => {
+                haptic('light')
+                setTab(t)
+              }}
+              className="relative flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-medium"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               {tab === t && (
                 <motion.div
                   layoutId="admin-tab"
                   className="absolute inset-0 rounded-full"
-                  style={{ background: 'rgba(255,255,255,0.11)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  style={{
+                    background: 'rgba(255,255,255,0.11)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                  }}
                   transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                 />
               )}
-              <span className="relative z-10" style={{ color: tab === t ? '#fff' : 'rgba(255,255,255,0.4)' }}>
+              <span
+                className="relative z-10"
+                style={{ color: tab === t ? '#fff' : 'rgba(255,255,255,0.4)' }}
+              >
                 {t}
               </span>
             </button>

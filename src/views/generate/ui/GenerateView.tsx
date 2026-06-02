@@ -57,10 +57,10 @@ export function GenerateView() {
   }
 
   return (
-    <div className="flex flex-col min-h-[100dvh]">
+    <div className="flex min-h-[100dvh] flex-col">
       <GenerateHeader title={titleGenerate} subtitle={subtitleText} />
 
-      <div className="flex-1 flex flex-col gap-4 px-5 pb-2">
+      <div className="flex flex-1 flex-col gap-4 px-5 pb-2">
         <AnimatePresence>
           <NoCreditsAlert open={photo.noCredits} />
         </AnimatePresence>

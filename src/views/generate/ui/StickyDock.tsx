@@ -35,7 +35,7 @@ export function StickyDock({
 
   return (
     <div
-      className="px-5 pt-4 pb-2 flex flex-col gap-3"
+      className="flex flex-col gap-3 px-5 pb-2 pt-4"
       style={{
         marginBottom: 'calc(max(env(safe-area-inset-bottom), 8px) + 78px)',
       }}
@@ -62,11 +62,11 @@ export function StickyDock({
         trailing={
           canRun ? (
             <span
-              className="flex items-center gap-1 px-2 py-0.5 rounded-full"
+              className="flex items-center gap-1 rounded-full px-2 py-0.5"
               style={{ background: 'rgba(255,255,255,0.18)' }}
             >
               <Lightning size={11} weight="fill" color="#fff" />
-              <span className="font-sans tabular-nums text-xs">{cost}</span>
+              <span className="font-sans text-xs tabular-nums">{cost}</span>
             </span>
           ) : null
         }

@@ -120,7 +120,7 @@ export function HomeView() {
   const ctaLabel = hasCredits ? 'Создать фото' : 'Купить слоты'
 
   return (
-    <div className="flex flex-col min-h-[100dvh] relative">
+    <div className="relative flex min-h-[100dvh] flex-col">
       <HomeHeader firstName={tgUser?.first_name ?? 'Гость'} />
 
       <CinematicHero
