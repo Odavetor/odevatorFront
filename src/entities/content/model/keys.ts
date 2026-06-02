@@ -62,7 +62,7 @@ export const TEXT_REGISTRY: TextSpec[] = [
   { key: 'shop.pending.checking', group: 'Магазин', defaultValue: 'Проверяем…' },
   { key: 'shop.success.title', group: 'Магазин', defaultValue: 'Оплачено' },
   { key: 'shop.tier.standard', group: 'Магазин', defaultValue: 'Стандарт' },
-  { key: 'shop.tier.promo', group: 'Магазин', defaultValue: 'Промо · −22%' },
+  { key: 'shop.tier.promo', group: 'Магазин', defaultValue: 'Акции' },
   { key: 'shop.popular_badge', group: 'Магазин', defaultValue: 'популярно' },
 
   { key: 'error.generation_failed', group: 'Ошибки', defaultValue: 'Ошибка обработки' },

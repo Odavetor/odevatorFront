@@ -19,10 +19,12 @@ const KNOWN_KEYS: Record<string, string> = {
 
 const TIER_LABELS: Record<string, string> = {
   'standard': 'Стандарт',
-  'weekly_promo': 'Промо · недельное',
+  'weekly_promo': 'Акции',
 }
 
 const fmtRub = (minor: number) => (minor / 100).toFixed(2)
+const minorToRub = (minor: number) => String(minor / 100)
+const rubToMinor = (rub: number) => Math.round(rub * 100)
 
 export default function PricingEditor() {
   const [globals, setGlobals] = useState<PricingConfigItem[]>([])
@@ -42,14 +44,14 @@ export default function PricingEditor() {
       const [g, p] = await Promise.allSettled([fetchPricingConfig(), fetchPackPricing()])
       if (g.status === 'fulfilled') {
         setGlobals(g.value)
-        setDrafts(Object.fromEntries(g.value.map((x) => [x.key, String(x.value_minor)])))
+        setDrafts(Object.fromEntries(g.value.map((x) => [x.key, minorToRub(x.value_minor)])))
       } else {
         setGlobals([])
       }
       if (p.status === 'fulfilled') {
         setPacks(p.value)
         setPackDrafts(Object.fromEntries(
-          p.value.map((x) => [packKey(x), { price: String(x.price_minor), active: x.is_active }]),
+          p.value.map((x) => [packKey(x), { price: minorToRub(x.price_minor), active: x.is_active }]),
         ))
       } else {
         setPacks([])
@@ -75,7 +77,7 @@ export default function PricingEditor() {
     }
     setSavingKey(item.key)
     try {
-      await updatePricingConfig(item.key, num)
+      await updatePricingConfig(item.key, rubToMinor(num))
       haptic('light'); hapticNotify('success')
       await reload()
     } catch (e) {
@@ -96,7 +98,7 @@ export default function PricingEditor() {
     }
     setSavingKey(k)
     try {
-      await updatePackPricing(p.tier, p.quantity, { price_minor: num, is_active: d.active })
+      await updatePackPricing(p.tier, p.quantity, { price_minor: rubToMinor(num), is_active: d.active })
       haptic('light'); hapticNotify('success')
       await reload()
     } catch (e) {
@@ -133,8 +135,9 @@ export default function PricingEditor() {
       >
         <Info size={14} weight="fill" color="var(--gold)" className="flex-shrink-0 mt-0.5" />
         <div className="text-[12px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>
-          Цены в <strong>копейках</strong> (minor units). 4900 = 49 ₽. Глобальные цены — для всех генераций по умолчанию;
-          у конкретной опции/сценария можно задать своё значение, оно перебьёт глобальное.
+          Цены в <strong>рублях</strong> (можно с копейками через точку, напр. <strong>49</strong> или <strong>49.90</strong>).
+          Глобальные цены — для всех генераций по умолчанию; у конкретной опции/сценария можно задать своё значение,
+          оно перебьёт глобальное. Тир «Акции» — отдельные акционные цены, кредиты по ним не сгорают.
         </div>
       </div>
 
@@ -157,8 +160,8 @@ export default function PricingEditor() {
 
         <div className="flex flex-col gap-2">
           {globals.map((item) => {
-            const draftValue = drafts[item.key] ?? String(item.value_minor)
-            const changed = draftValue !== String(item.value_minor)
+            const draftValue = drafts[item.key] ?? minorToRub(item.value_minor)
+            const changed = draftValue !== minorToRub(item.value_minor)
             const known = KNOWN_KEYS[item.key]
             return (
               <div key={item.key}
@@ -180,7 +183,7 @@ export default function PricingEditor() {
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    inputMode="numeric"
+                    inputMode="decimal"
                     value={draftValue}
                     onChange={(e) => setDrafts((prev) => ({ ...prev, [item.key]: e.target.value }))}
                     className="flex-1 rounded-lg px-3 py-1.5 text-sm font-mono"
@@ -229,8 +232,8 @@ export default function PricingEditor() {
             <div className="flex flex-col gap-1.5">
               {packsByTier[tier].map((p) => {
                 const k = packKey(p)
-                const d = packDrafts[k] ?? { price: String(p.price_minor), active: p.is_active }
-                const changed = d.price !== String(p.price_minor) || d.active !== p.is_active
+                const d = packDrafts[k] ?? { price: minorToRub(p.price_minor), active: p.is_active }
+                const changed = d.price !== minorToRub(p.price_minor) || d.active !== p.is_active
                 return (
                   <div key={k}
                     className="rounded-xl px-3 py-2 flex items-center gap-2"
@@ -244,7 +247,7 @@ export default function PricingEditor() {
                     </div>
                     <input
                       type="text"
-                      inputMode="numeric"
+                      inputMode="decimal"
                       value={d.price}
                       onChange={(e) => setPackDrafts((prev) => ({
                         ...prev, [k]: { ...d, price: e.target.value },
@@ -252,7 +255,7 @@ export default function PricingEditor() {
                       className="flex-1 rounded-lg px-2.5 py-1.5 text-sm font-mono"
                       style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }} />
                     <span className="font-mono text-[10px] flex-shrink-0" style={{ color: 'rgba(255,255,255,0.45)', minWidth: 56 }}>
-                      = {fmtRub(Number(d.price) || 0)} ₽
+                      = {(Number(d.price) || 0).toFixed(2)} ₽
                     </span>
                     <button
                       onClick={() => setPackDrafts((prev) => ({ ...prev, [k]: { ...d, active: !d.active } }))}
