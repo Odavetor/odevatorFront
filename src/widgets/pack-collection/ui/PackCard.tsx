@@ -9,6 +9,7 @@ import type { GenerationPackOption } from '@shared/api'
 
 interface PackCardProps {
   option: GenerationPackOption
+  compareAtMinor?: number
   active: boolean
   featured: boolean
   index: number
@@ -51,10 +52,21 @@ const SPLASH_TOKENS: Record<
   },
 }
 
-export function PackCard({ option, active, featured, index, onSelect }: PackCardProps) {
+export function PackCard({
+  option,
+  compareAtMinor,
+  active,
+  featured,
+  index,
+  onSelect,
+}: PackCardProps) {
   const meta = getPackMeta(option)
   const tokens = SPLASH_TOKENS[meta.splash]
   const unit = unitPriceRub(option)
+  const discount =
+    compareAtMinor && compareAtMinor > option.price_minor
+      ? Math.round((1 - option.price_minor / compareAtMinor) * 100)
+      : 0
 
   return (
     <motion.button
@@ -124,10 +136,43 @@ export function PackCard({ option, active, featured, index, onSelect }: PackCard
             >
               {meta.title}
             </span>
+            {discount > 0 && (
+              <span
+                className="font-sans self-start"
+                style={{
+                  marginTop: 3,
+                  padding: '2px 7px',
+                  borderRadius: 999,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: '-0.01em',
+                  color: tokens.accent,
+                  background: tokens.bg,
+                  border: `1px solid ${tokens.ring}`,
+                }}
+              >
+                −{discount}%
+              </span>
+            )}
           </div>
         </div>
 
         <div className="flex flex-col items-end gap-0.5">
+          {discount > 0 && (
+            <span
+              className="font-sans tabular-nums"
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: 'rgba(255,255,255,0.4)',
+                textDecoration: 'line-through',
+                textDecorationColor: 'rgba(255,255,255,0.35)',
+                lineHeight: 1,
+              }}
+            >
+              {fmtRub(compareAtMinor ?? 0)} ₽
+            </span>
+          )}
           <span
             className="font-sans tabular-nums"
             style={{

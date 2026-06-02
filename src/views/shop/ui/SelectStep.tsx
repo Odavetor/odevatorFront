@@ -52,6 +52,7 @@ export function SelectStep({ buy }: Props) {
         selectedQuantity={buy.selectedOption?.quantity ?? null}
         onSelect={buy.selectQuantity}
         tierLabel={stepPack}
+        compareByQty={isPromo ? buy.standardPriceByQty : undefined}
       />
 
       <PaymentMethodGrid

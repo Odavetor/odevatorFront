@@ -46,6 +46,7 @@ export interface UseBuyPackResult {
   tier: Tier
   hasPromo: boolean
   options: GenerationPackOption[]
+  standardPriceByQty: Record<number, number>
   selectedOption: GenerationPackOption | null
   selectedMethod: PaymentMethodId | null
   redirectUrl: string | null
@@ -87,8 +88,16 @@ export function useBuyPack(): UseBuyPackResult {
   }, [])
 
   const tierData = catalog?.tiers.find((t) => t.id === tier)
-  const rawOptions = tierData?.options?.length ? tierData.options : FALLBACK_OPTIONS
-  const options = ensureCoreOptions(rawOptions)
+  const options =
+    tier === 'weekly_promo'
+      ? (tierData?.options ?? [])
+      : ensureCoreOptions(tierData?.options?.length ? tierData.options : FALLBACK_OPTIONS)
+
+  const standardTier = catalog?.tiers.find((t) => t.id === 'standard')
+  const standardOptions = standardTier?.options?.length ? standardTier.options : FALLBACK_OPTIONS
+  const standardPriceByQty: Record<number, number> = {}
+  for (const o of standardOptions) standardPriceByQty[o.quantity] = o.price_minor
+
   const hasPromo = Boolean(catalog?.tiers.find((t) => t.id === 'weekly_promo')?.options?.length)
   const selectedOption = options.find((o) => o.quantity === selectedQty) ?? null
 
@@ -168,6 +177,7 @@ export function useBuyPack(): UseBuyPackResult {
     tier,
     hasPromo,
     options,
+    standardPriceByQty,
     selectedOption,
     selectedMethod,
     redirectUrl,
