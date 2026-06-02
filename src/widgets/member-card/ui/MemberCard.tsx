@@ -39,7 +39,7 @@ export function MemberCard({
       <div className="flex items-center gap-4">
         <div className="relative flex-shrink-0">
           <div
-            className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center"
+            className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl"
             style={{
               background:
                 'linear-gradient(135deg, rgba(224,63,106,0.22) 0%, rgba(180,30,60,0.08) 100%)',
@@ -48,7 +48,7 @@ export function MemberCard({
           >
             {avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+              <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
             ) : (
               <span
                 className="font-sans"
@@ -68,9 +68,9 @@ export function MemberCard({
           </span>
         </div>
 
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <p
-            className="font-sans truncate"
+            className="truncate font-sans"
             style={{
               fontSize: 22,
               fontWeight: 800,
@@ -84,7 +84,7 @@ export function MemberCard({
           </p>
           {handle && (
             <p
-              className="font-sans truncate"
+              className="truncate font-sans"
               style={{
                 fontSize: 13,
                 fontWeight: 500,
@@ -99,7 +99,7 @@ export function MemberCard({
       </div>
 
       <div
-        className="grid grid-cols-3 rounded-2xl overflow-hidden"
+        className="grid grid-cols-3 overflow-hidden rounded-2xl"
         style={{
           background: 'rgba(255,255,255,0.03)',
           border: '1px solid var(--border-1)',
@@ -131,7 +131,7 @@ function Cell({ icon: Icon, label, children, accent = 'muted', divided }: CellPr
   const iconColor = accent === 'rose' ? 'var(--rose)' : 'rgba(255,255,255,0.55)'
   return (
     <div
-      className="px-3 py-3 flex flex-col gap-1.5"
+      className="flex flex-col gap-1.5 px-3 py-3"
       style={{ borderLeft: divided ? '1px solid var(--border-1)' : 'none' }}
     >
       <div className="flex items-center gap-1.5">

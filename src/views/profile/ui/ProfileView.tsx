@@ -21,16 +21,17 @@ export function ProfileView() {
   const balanceMinor = wallet?.balance_minor ?? 0
   const refBalanceMinor = wallet?.referral_balance_minor ?? 0
 
-  const initials = ((tgUser?.first_name?.[0] ?? '') + (tgUser?.last_name?.[0] ?? '')).toUpperCase() || 'V'
+  const initials =
+    ((tgUser?.first_name?.[0] ?? '') + (tgUser?.last_name?.[0] ?? '')).toUpperCase() || 'V'
   const handle = tgUser?.username ? `@${tgUser.username}` : ''
 
   return (
-    <div className="flex flex-col min-h-[100dvh]">
+    <div className="flex min-h-[100dvh] flex-col">
       <motion.header
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE_EDITORIAL }}
-        className="px-5 pt-[max(env(safe-area-inset-top),20px)] pb-5 flex items-start justify-between gap-3"
+        className="flex items-start justify-between gap-3 px-5 pb-5 pt-[max(env(safe-area-inset-top),20px)]"
       >
         <div className="flex flex-col gap-1">
           <Kicker tone="rose">Аккаунт</Kicker>
@@ -40,7 +41,7 @@ export function ProfileView() {
           <Link
             href="/admin"
             onClick={() => haptic('light')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium no-tap-highlight"
+            className="no-tap-highlight flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium"
             style={{
               background: 'var(--rose-dim)',
               border: '1px solid var(--border-rose)',
@@ -78,9 +79,9 @@ export function ProfileView() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.5 }}
-        className="px-5 mt-8"
+        className="mt-8 px-5"
       >
-        <div className="h-px w-16 mb-4" style={{ background: 'var(--border-2)' }} />
+        <div className="mb-4 h-px w-16" style={{ background: 'var(--border-2)' }} />
         <p
           className="font-sans"
           style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)' }}

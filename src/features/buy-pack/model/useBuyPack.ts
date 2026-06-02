@@ -2,11 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { getGenerationPackCatalog, initGenerationPackPayment } from '@entities/pack'
-import type {
-  GenerationPackCatalog,
-  GenerationPackOption,
-  PaymentMethodId,
-} from '@shared/api'
+import type { GenerationPackCatalog, GenerationPackOption, PaymentMethodId } from '@shared/api'
 import { useUser } from '@entities/user'
 import { haptic, hapticNotify, openLink } from '@shared/lib'
 

@@ -63,7 +63,7 @@ export function SelectStep({ buy }: Props) {
 
       {buy.error && (
         <div
-          className="rounded-xl px-3 py-2.5 flex items-start gap-2 text-xs"
+          className="flex items-start gap-2 rounded-xl px-3 py-2.5 text-xs"
           style={{
             background: 'rgba(180,30,60,0.12)',
             border: '1px solid rgba(180,30,60,0.22)',

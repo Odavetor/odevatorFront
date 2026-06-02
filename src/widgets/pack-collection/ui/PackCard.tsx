@@ -76,7 +76,7 @@ export function PackCard({
       transition={{ delay: index * 0.05, duration: 0.4, ease: EASE_GLIDE }}
       whileTap={{ scale: 0.98 }}
       onClick={() => onSelect(option.quantity)}
-      className="relative w-full text-left no-tap-highlight"
+      className="no-tap-highlight relative w-full text-left"
       style={{
         borderRadius: 22,
         padding: featured ? '20px 18px' : '16px 16px',
@@ -97,10 +97,10 @@ export function PackCard({
         transition: 'border-color 0.2s var(--ease-glide), box-shadow 0.2s var(--ease-glide)',
       }}
     >
-      <div className="flex items-center justify-between gap-3 relative">
+      <div className="relative flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div
-            className="flex items-center justify-center flex-shrink-0"
+            className="flex flex-shrink-0 items-center justify-center"
             style={{
               width: featured ? 52 : 44,
               height: featured ? 52 : 44,
@@ -123,7 +123,7 @@ export function PackCard({
             </span>
           </div>
 
-          <div className="flex flex-col gap-0.5 min-w-0">
+          <div className="flex min-w-0 flex-col gap-0.5">
             <span
               className="font-sans"
               style={{
@@ -138,7 +138,7 @@ export function PackCard({
             </span>
             {discount > 0 && (
               <span
-                className="font-sans self-start"
+                className="self-start font-sans"
                 style={{
                   marginTop: 3,
                   padding: '2px 7px',
@@ -222,7 +222,7 @@ export function PackCard({
           {meta.badge}
           <motion.span
             aria-hidden
-            className="absolute inset-0 rounded-[inherit] pointer-events-none"
+            className="pointer-events-none absolute inset-0 rounded-[inherit]"
             animate={{ opacity: [0, 1, 0] }}
             transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
             style={{
@@ -236,7 +236,7 @@ export function PackCard({
       {active && (
         <span
           aria-hidden
-          className="absolute top-3 right-3 inline-flex items-center justify-center rounded-full"
+          className="absolute right-3 top-3 inline-flex items-center justify-center rounded-full"
           style={{
             width: 18,
             height: 18,
@@ -255,7 +255,7 @@ export function PackCard({
           size={12}
           weight="fill"
           color={tokens.accent}
-          className="absolute top-3 right-3 animate-breathe"
+          className="absolute right-3 top-3 animate-breathe"
         />
       )}
     </motion.button>
