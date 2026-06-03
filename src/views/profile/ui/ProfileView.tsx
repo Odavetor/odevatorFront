@@ -12,6 +12,7 @@ import { useContent } from '@entities/content'
 import { haptic } from '@shared/lib'
 import { ReferralCard } from './ReferralCard'
 import { DrillDownList } from './DrillDownList'
+import { ContactsCard } from './ContactsCard'
 
 export function ProfileView() {
   const { tgUser, me, wallet, isAdmin } = useUser()
@@ -74,6 +75,8 @@ export function ProfileView() {
           earnedMinor={refBalanceMinor}
         />
       )}
+
+      <ContactsCard />
 
       <motion.section
         initial={{ opacity: 0 }}

@@ -26,11 +26,33 @@ function toCards(cats: FilterCategory[]): BentoCard[] {
   }))
 }
 
+interface CatalogStats {
+  styles: number
+  categories: number
+}
+
+function toStats(cats: FilterCategory[]): CatalogStats {
+  return {
+    styles: cats.reduce((s, c) => s + c.options.length, 0),
+    categories: cats.length,
+  }
+}
+
+function plural(n: number, forms: [string, string, string]): string {
+  const mod100 = Math.abs(n) % 100
+  const mod10 = mod100 % 10
+  if (mod100 > 10 && mod100 < 20) return forms[2]
+  if (mod10 === 1) return forms[0]
+  if (mod10 > 1 && mod10 < 5) return forms[1]
+  return forms[2]
+}
+
 // Asymmetric heights — zig-zag bento
 const HEIGHTS = ['220px', '170px', '170px', '220px']
 
 function StyleBentoBase() {
   const [cards, setCards] = useState<BentoCard[]>(() => toCards(PHOTO_FILTER_CATEGORIES))
+  const [stats, setStats] = useState<CatalogStats>(() => toStats(PHOTO_FILTER_CATEGORIES))
 
   useEffect(() => {
     let cancelled = false
@@ -38,14 +60,13 @@ function StyleBentoBase() {
       .then((d) => {
         if (cancelled || !d.categories?.length) return
         setCards(toCards(d.categories))
+        setStats(toStats(d.categories))
       })
       .catch(() => {})
     return () => {
       cancelled = true
     }
   }, [])
-
-  const totalStyles = cards.reduce((s, c) => s + c.count, 0)
 
   return (
     <section className="mt-10 px-5">
@@ -64,20 +85,21 @@ function StyleBentoBase() {
             Что можно сделать
           </h2>
           <p
-            className="font-sans mt-1"
+            className="mt-1 font-sans"
             style={{
               fontSize: 13,
               fontWeight: 500,
               color: 'rgba(255,255,255,0.45)',
             }}
           >
-            {totalStyles} стилей в 4 категориях
+            {stats.styles} {plural(stats.styles, ['стиль', 'стиля', 'стилей'])} в{' '}
+            {stats.categories} {plural(stats.categories, ['категории', 'категориях', 'категориях'])}
           </p>
         </div>
         <Link
           href="/generate"
           onClick={() => haptic('light')}
-          className="inline-flex items-center gap-1 pb-1 no-tap-highlight"
+          className="no-tap-highlight inline-flex items-center gap-1 pb-1"
           style={{
             color: 'var(--rose)',
             borderBottom: '1px solid var(--rose)',
@@ -124,14 +146,14 @@ function StyleBentoBase() {
               )}
 
               <div
-                className="absolute inset-0 pointer-events-none"
+                className="pointer-events-none absolute inset-0"
                 style={{
                   background:
                     'linear-gradient(to top, rgba(13,11,16,0.92) 0%, rgba(13,11,16,0.4) 35%, transparent 65%)',
                 }}
               />
 
-              <div className="absolute left-3.5 right-3.5 bottom-3.5">
+              <div className="absolute bottom-3.5 left-3.5 right-3.5">
                 <p
                   className="font-sans"
                   style={{
@@ -159,7 +181,7 @@ function StyleBentoBase() {
 
               <span
                 aria-hidden
-                className="absolute inset-0 rounded-3xl pointer-events-none"
+                className="pointer-events-none absolute inset-0 rounded-3xl"
                 style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)' }}
               />
             </Link>
