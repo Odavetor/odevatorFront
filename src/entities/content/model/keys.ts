@@ -10,7 +10,12 @@ export const TEXT_REGISTRY: TextSpec[] = [
   { key: 'page.title.generate', group: 'Заголовки', defaultValue: 'Создать' },
   { key: 'page.title.history', group: 'Заголовки', defaultValue: 'История' },
   { key: 'page.title.shop', group: 'Заголовки', defaultValue: 'Купи генерации' },
-  { key: 'page.title.shop_kicker', group: 'Заголовки', defaultValue: 'Магазин', hint: 'Маленькая надпись над «Купи генерации»' },
+  {
+    key: 'page.title.shop_kicker',
+    group: 'Заголовки',
+    defaultValue: 'Магазин',
+    hint: 'Маленькая надпись над «Купи генерации»',
+  },
   { key: 'page.title.profile', group: 'Заголовки', defaultValue: 'Профиль' },
   { key: 'page.title.admin', group: 'Заголовки', defaultValue: 'Админка' },
   { key: 'page.title.admin_subtitle', group: 'Заголовки', defaultValue: 'Управление каталогом' },
@@ -34,17 +39,42 @@ export const TEXT_REGISTRY: TextSpec[] = [
   { key: 'button.new_run', group: 'Кнопки', defaultValue: 'Новая обработка' },
 
   { key: 'home.empty.title', group: 'Главная', defaultValue: 'Здесь появятся ваши обработки' },
-  { key: 'home.empty.body', group: 'Главная', defaultValue: 'Хранятся 72 часа. Загрузите первое фото — попробуйте любой фильтр.', multiline: true },
+  {
+    key: 'home.empty.body',
+    group: 'Главная',
+    defaultValue: 'Хранятся 72 часа. Загрузите первое фото — попробуйте любой фильтр.',
+    multiline: true,
+  },
 
   { key: 'generate.subtitle', group: 'Создать', defaultValue: 'ИИ обрабатывает за 10–20 сек' },
   { key: 'generate.hint.no_file', group: 'Создать', defaultValue: 'Загрузите фото чтобы начать' },
-  { key: 'generate.hint.no_consent', group: 'Создать', defaultValue: 'Подтвердите все пункты выше' },
-  { key: 'generate.disclaimer', group: 'Создать', defaultValue: '', hint: 'Дисклеймер над согласиями. Если пусто — блок скрыт.', multiline: true },
+  {
+    key: 'generate.hint.no_consent',
+    group: 'Создать',
+    defaultValue: 'Подтвердите все пункты выше',
+  },
+  {
+    key: 'generate.disclaimer',
+    group: 'Создать',
+    defaultValue: '',
+    hint: 'Дисклеймер над согласиями. Если пусто — блок скрыт.',
+    multiline: true,
+  },
   { key: 'generate.no_credits', group: 'Создать', defaultValue: 'Нет доступных слотов' },
 
   { key: 'consent.adult', group: 'Согласия', defaultValue: 'Мне исполнилось 18 лет' },
-  { key: 'consent.terms', group: 'Согласия', defaultValue: 'Я принимаю условия использования сервиса' },
-  { key: 'consent.rights', group: 'Согласия', defaultValue: 'Я являюсь правообладателем загружаемых материалов и получил согласие изображённых лиц', multiline: true },
+  {
+    key: 'consent.terms',
+    group: 'Согласия',
+    defaultValue: 'Я принимаю условия использования сервиса',
+  },
+  {
+    key: 'consent.rights',
+    group: 'Согласия',
+    defaultValue:
+      'Я являюсь правообладателем загружаемых материалов и получил согласие изображённых лиц',
+    multiline: true,
+  },
 
   { key: 'history.disclaimer', group: 'История', defaultValue: 'Хранятся 3 дня' },
   { key: 'history.autoremove', group: 'История', defaultValue: 'хранится 72 часа' },
@@ -56,7 +86,11 @@ export const TEXT_REGISTRY: TextSpec[] = [
   { key: 'shop.button.choose_method', group: 'Магазин', defaultValue: 'Выберите способ оплаты' },
   { key: 'shop.button.creating', group: 'Магазин', defaultValue: 'Создаём счёт…' },
   { key: 'shop.pending.title', group: 'Магазин', defaultValue: 'Ждём оплату' },
-  { key: 'shop.pending.subtitle', group: 'Магазин', defaultValue: 'Оплатите счёт и нажмите «Я оплатил»' },
+  {
+    key: 'shop.pending.subtitle',
+    group: 'Магазин',
+    defaultValue: 'Оплатите счёт и нажмите «Я оплатил»',
+  },
   { key: 'shop.pending.reopen', group: 'Магазин', defaultValue: 'Открыть счёт ещё раз' },
   { key: 'shop.pending.confirm', group: 'Магазин', defaultValue: 'Я оплатил' },
   { key: 'shop.pending.checking', group: 'Магазин', defaultValue: 'Проверяем…' },
@@ -69,6 +103,21 @@ export const TEXT_REGISTRY: TextSpec[] = [
   { key: 'error.timeout', group: 'Ошибки', defaultValue: 'Превышено время ожидания' },
   { key: 'error.payment_init', group: 'Ошибки', defaultValue: 'Ошибка инициализации оплаты' },
   { key: 'error.payment_no_link', group: 'Ошибки', defaultValue: 'Не получили ссылку на оплату' },
+
+  { key: 'contact.cooperation.label', group: 'Контакты', defaultValue: 'Сотрудничество' },
+  {
+    key: 'contact.cooperation.handle',
+    group: 'Контакты',
+    defaultValue: 'CEO_Of_Adult',
+    hint: 'Telegram-юзернейм без @. Пусто — строка скрыта.',
+  },
+  { key: 'contact.support.label', group: 'Контакты', defaultValue: 'Техподдержка' },
+  {
+    key: 'contact.support.handle',
+    group: 'Контакты',
+    defaultValue: 'Worker_2_IO',
+    hint: 'Telegram-юзернейм без @. Пусто — строка скрыта.',
+  },
 ]
 
 export const DEFAULT_STRINGS: Record<string, string> = Object.fromEntries(
@@ -86,3 +135,29 @@ export interface ContentPayload {
   strings: Record<string, string>
   faq: FaqItem[]
 }
+
+export interface LegalDocMeta {
+  slug: string
+  title: string
+  has_body?: boolean
+  updated_at?: string
+}
+
+export interface LegalDoc {
+  slug: string
+  title: string
+  body: string
+  updated_at?: string
+}
+
+export interface LegalSpec {
+  slug: string
+  title: string
+}
+
+export const LEGAL_REGISTRY: LegalSpec[] = [
+  { slug: 'terms', title: 'Пользовательское соглашение' },
+  { slug: 'privacy', title: 'Политика конфиденциальности' },
+  { slug: 'offer', title: 'Публичная оферта' },
+  { slug: 'refund', title: 'Политика возврата' },
+]

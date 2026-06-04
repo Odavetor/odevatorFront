@@ -8,4 +8,7 @@ export {
   createFaq,
   updateFaq,
   deleteFaq,
+  listLegalDocs,
+  getLegalDoc,
+  updateLegalDoc,
 } from '@entities/content'

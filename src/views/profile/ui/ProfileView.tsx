@@ -13,6 +13,7 @@ import { haptic } from '@shared/lib'
 import { ReferralCard } from './ReferralCard'
 import { DrillDownList } from './DrillDownList'
 import { ContactsCard } from './ContactsCard'
+import { LegalLinks } from './LegalLinks'
 
 export function ProfileView() {
   const { tgUser, me, wallet, isAdmin } = useUser()
@@ -77,6 +78,8 @@ export function ProfileView() {
       )}
 
       <ContactsCard />
+
+      <LegalLinks />
 
       <motion.section
         initial={{ opacity: 0 }}

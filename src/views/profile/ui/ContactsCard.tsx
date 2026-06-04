@@ -3,23 +3,21 @@
 import { motion } from 'framer-motion'
 import { ArrowUpRight, Handshake, Headset } from '@phosphor-icons/react'
 import { haptic, openLink } from '@/lib/telegram'
+import { useContent } from '@entities/content'
 
-interface Contact {
-  label: string
-  handle: string
-  icon: typeof Handshake
-}
-
-const CONTACTS: Contact[] = [
-  { label: 'Сотрудничество', handle: 'CEO_Of_Adult', icon: Handshake },
-  { label: 'Техподдержка', handle: 'Worker_2_IO', icon: Headset },
-]
+const cleanHandle = (h: string) => h.trim().replace(/^@+/, '')
 
 export function ContactsCard() {
+  const cooperation = { label: useContent('contact.cooperation.label'), handle: cleanHandle(useContent('contact.cooperation.handle')), icon: Handshake }
+  const support = { label: useContent('contact.support.label'), handle: cleanHandle(useContent('contact.support.handle')), icon: Headset }
+  const items = [cooperation, support].filter((c) => c.handle !== '')
+
   function open(handle: string) {
     haptic('light')
     openLink(`https://t.me/${handle}`)
   }
+
+  if (items.length === 0) return null
 
   return (
     <motion.section
@@ -50,7 +48,7 @@ export function ContactsCard() {
           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
         }}
       >
-        {CONTACTS.map((c, i) => {
+        {items.map((c, i) => {
           const Icon = c.icon
           return (
             <button

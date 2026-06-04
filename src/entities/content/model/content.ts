@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from 'react'
 import { getAuthToken } from '@shared/api'
-import { DEFAULT_STRINGS, type ContentPayload, type FaqItem } from './keys'
+import { DEFAULT_STRINGS, type ContentPayload, type FaqItem, type LegalDoc, type LegalDocMeta } from './keys'
 
 interface ContentState {
   strings: Record<string, string>
@@ -133,4 +133,34 @@ export async function updateFaq(
 export async function deleteFaq(id: number) {
   await adminFetch(`/api/admin/content/faq/${id}`, { method: 'DELETE' })
   await refreshContent()
+}
+
+export async function listLegalDocs(): Promise<LegalDocMeta[]> {
+  try {
+    const r = await fetch('/api/content/legal', { cache: 'no-store' })
+    if (!r.ok) return []
+    const data = (await r.json()) as { documents?: LegalDocMeta[] }
+    return Array.isArray(data.documents) ? data.documents : []
+  } catch {
+    return []
+  }
+}
+
+export async function getLegalDoc(slug: string): Promise<LegalDoc | null> {
+  try {
+    const r = await fetch(`/api/content/legal/${encodeURIComponent(slug)}`, { cache: 'no-store' })
+    if (!r.ok) return null
+    return (await r.json()) as LegalDoc
+  } catch {
+    return null
+  }
+}
+
+export async function updateLegalDoc(slug: string, payload: { title: string; body: string }) {
+  const data = await adminFetch(`/api/admin/content/legal/${encodeURIComponent(slug)}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+  await refreshContent()
+  return data
 }
