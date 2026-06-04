@@ -160,6 +160,27 @@ export function useBuyPack(): UseBuyPackResult {
     }
   }, [selectedOption, refreshBalance, walletAtInit])
 
+  useEffect(() => {
+    if (step !== 'pending') return
+    let active = true
+    let elapsed = 0
+    const id = setInterval(async () => {
+      if (!active) return
+      elapsed += 3000
+      const fresh = await refreshBalance()
+      if ((fresh?.prepaid_generations_remaining ?? 0) > walletAtInit) {
+        hapticNotify('success')
+        setStep('success')
+        return
+      }
+      if (elapsed >= 180000) clearInterval(id)
+    }, 3000)
+    return () => {
+      active = false
+      clearInterval(id)
+    }
+  }, [step, refreshBalance, walletAtInit])
+
   const reset = useCallback(() => {
     setStep('select')
     setSelectedQty(null)

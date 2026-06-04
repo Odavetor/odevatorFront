@@ -129,6 +129,21 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
   }, [me, wallet, tgUser, useMock])
 
   useEffect(() => {
+    if (useMock) return
+    const onVisible = () => {
+      if (typeof document !== 'undefined' && document.hidden) return
+      refreshBalance()
+      refreshMe()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onVisible)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onVisible)
+    }
+  }, [useMock, refreshBalance, refreshMe])
+
+  useEffect(() => {
     if (!IS_DEV) return
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<DevViewAs>).detail
