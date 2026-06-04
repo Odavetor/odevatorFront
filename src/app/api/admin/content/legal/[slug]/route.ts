@@ -1,20 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
-import { verifyAdmin } from '../../../_auth'
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? '').replace(/\/$/, '')
 
 export async function PUT(req: NextRequest, ctx: { params: Promise<{ slug: string }> }) {
-  const check = await verifyAdmin(req)
-  if (!check.ok) return NextResponse.json({ error: check.error }, { status: check.status })
+  if (!BASE_URL) {
+    return NextResponse.json({ error: 'NEXT_PUBLIC_API_BASE_URL is not set' }, { status: 503 })
+  }
   const { slug } = await ctx.params
+  const auth = req.headers.get('authorization') ?? ''
+  if (!auth) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   const body = await req.text()
 
   const r = await fetch(`${BASE_URL}/api/v1/admin/content/legal/${encodeURIComponent(slug)}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: check.auth,
+      Authorization: auth,
     },
     body,
     cache: 'no-store',
