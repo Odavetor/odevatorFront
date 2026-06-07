@@ -94,6 +94,10 @@ body {
   position: relative;
 }
 
+body.admin-fullwidth {
+  max-width: none;
+}
+
 body::after {
   content: '';
   position: fixed;

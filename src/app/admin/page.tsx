@@ -57,6 +57,11 @@ export default function AdminPage() {
     if (!isAdmin) router.replace('/')
   }, [tgUser, isAdmin, router])
 
+  useEffect(() => {
+    document.body.classList.add('admin-fullwidth')
+    return () => document.body.classList.remove('admin-fullwidth')
+  }, [])
+
   // Кросс-табовая навигация: HeroEditor может попросить открыть «Фото».
   useEffect(() => {
     function onGoto(e: Event) {
