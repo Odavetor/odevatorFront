@@ -18,7 +18,6 @@ const TTL_MS = 72 * HOUR_MS
 function timeLeft(createdAt: string): string {
   const expiry = new Date(createdAt).getTime() + TTL_MS
   const diff = expiry - Date.now()
-  if (diff <= 0) return 'удалено'
   const h = Math.floor(diff / HOUR_MS)
   if (h < 1) return '< 1ч'
   if (h < 24) return `${h}ч`
