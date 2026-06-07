@@ -3,18 +3,21 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { CaretRight, FileText } from '@phosphor-icons/react'
-import { listLegalDocs, type LegalDocMeta } from '@entities/content'
+import { FileText, ArrowUpRight } from '@phosphor-icons/react'
+import { LEGAL_REGISTRY, LEGAL_SLUG, listLegalDocs } from '@entities/content'
 import { haptic } from '@/lib/telegram'
 
 export function LegalLinks() {
-  const [docs, setDocs] = useState<LegalDocMeta[]>([])
+  const fallbackTitle = LEGAL_REGISTRY[0]?.title ?? 'Пользовательское соглашение'
+  const [title, setTitle] = useState(fallbackTitle)
 
   useEffect(() => {
     let cancelled = false
     listLegalDocs()
       .then((all) => {
-        if (!cancelled) setDocs(all.filter((d) => d.has_body))
+        if (cancelled) return
+        const doc = all.find((d) => d.slug === LEGAL_SLUG)
+        if (doc?.title) setTitle(doc.title)
       })
       .catch(() => {})
     return () => {
@@ -22,68 +25,42 @@ export function LegalLinks() {
     }
   }, [])
 
-  if (docs.length === 0) return null
-
   return (
-    <motion.section
+    <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.35, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="mx-5 mt-6"
+      transition={{ delay: 0.4, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="mt-6 px-5"
     >
-      <span
-        className="font-sans"
+      <Link
+        href={`/legal/${LEGAL_SLUG}`}
+        onClick={() => haptic('light')}
+        className="no-tap-highlight group flex items-center gap-3 rounded-2xl px-4 py-3 active:scale-[0.99]"
         style={{
-          fontSize: 12,
-          fontWeight: 700,
-          letterSpacing: '-0.005em',
-          color: 'var(--rose)',
-        }}
-      >
-        Документы
-      </span>
-
-      <div
-        className="mt-2 overflow-hidden"
-        style={{
-          borderRadius: 24,
-          background: 'linear-gradient(135deg, rgba(31,25,41,0.55) 0%, rgba(13,13,15,0.9) 100%)',
+          background: 'rgba(255,255,255,0.025)',
           border: '1px solid var(--border-1)',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
+          transition: 'transform 0.15s var(--ease-glide)',
         }}
       >
-        {docs.map((doc, i) => (
-          <Link
-            key={doc.slug}
-            href={`/legal/${doc.slug}`}
-            onClick={() => haptic('light')}
-            className="no-tap-highlight flex w-full items-center gap-3 px-4 py-3.5 active:scale-[0.99]"
-            style={{
-              borderTop: i === 0 ? 'none' : '1px solid var(--border-1)',
-              transition: 'transform 0.15s var(--ease-glide)',
-            }}
-          >
-            <span
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-1)' }}
-            >
-              <FileText size={16} weight="duotone" color="rgba(255,255,255,0.65)" />
-            </span>
-            <span
-              className="min-w-0 flex-1 truncate font-sans"
-              style={{
-                fontSize: 14,
-                fontWeight: 600,
-                letterSpacing: '-0.01em',
-                color: 'var(--text)',
-              }}
-            >
-              {doc.title}
-            </span>
-            <CaretRight size={15} weight="bold" color="rgba(255,255,255,0.35)" />
-          </Link>
-        ))}
-      </div>
-    </motion.section>
+        <span
+          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl"
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-1)' }}
+        >
+          <FileText size={15} weight="duotone" color="rgba(255,255,255,0.6)" />
+        </span>
+        <span
+          className="min-w-0 flex-1 truncate font-sans"
+          style={{
+            fontSize: 13.5,
+            fontWeight: 600,
+            letterSpacing: '-0.01em',
+            color: 'rgba(255,255,255,0.7)',
+          }}
+        >
+          {title}
+        </span>
+        <ArrowUpRight size={15} weight="bold" color="rgba(255,255,255,0.3)" />
+      </Link>
+    </motion.div>
   )
 }

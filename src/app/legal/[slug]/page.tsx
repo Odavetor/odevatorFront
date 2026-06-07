@@ -83,7 +83,7 @@ export default function LegalPage() {
           </p>
         ) : body ? (
           <p
-            className="font-sans whitespace-pre-wrap"
+            className="whitespace-pre-wrap font-sans"
             style={{
               fontSize: 14,
               lineHeight: 1.7,

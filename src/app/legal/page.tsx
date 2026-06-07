@@ -5,29 +5,32 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowLeft, CaretRight, FileText } from '@phosphor-icons/react'
-import { listLegalDocs, type LegalDocMeta } from '@entities/content'
+import { LEGAL_REGISTRY, listLegalDocs } from '@entities/content'
 import { haptic } from '@/lib/telegram'
 
 export default function LegalIndexPage() {
   const router = useRouter()
-  const [docs, setDocs] = useState<LegalDocMeta[]>([])
-  const [loaded, setLoaded] = useState(false)
+  const [titles, setTitles] = useState<Record<string, string>>({})
 
   useEffect(() => {
     let cancelled = false
     listLegalDocs()
       .then((all) => {
         if (cancelled) return
-        setDocs(all.filter((d) => d.has_body))
-        setLoaded(true)
+        const map: Record<string, string> = {}
+        for (const d of all) if (d.title) map[d.slug] = d.title
+        setTitles(map)
       })
-      .catch(() => {
-        if (!cancelled) setLoaded(true)
-      })
+      .catch(() => {})
     return () => {
       cancelled = true
     }
   }, [])
+
+  const docs = LEGAL_REGISTRY.map((spec) => ({
+    slug: spec.slug,
+    title: titles[spec.slug] ?? spec.title,
+  }))
 
   return (
     <div className="flex min-h-[100dvh] flex-col">
@@ -64,18 +67,12 @@ export default function LegalIndexPage() {
       </motion.header>
 
       <div className="px-5 pb-16">
-        {loaded && docs.length === 0 && (
-          <p className="font-sans" style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)' }}>
-            Документы пока не опубликованы.
-          </p>
-        )}
         <div
           className="overflow-hidden"
           style={{
             borderRadius: 24,
             background: 'linear-gradient(135deg, rgba(31,25,41,0.55) 0%, rgba(13,13,15,0.9) 100%)',
             border: '1px solid var(--border-1)',
-            display: docs.length === 0 ? 'none' : 'block',
           }}
         >
           {docs.map((doc, i) => (

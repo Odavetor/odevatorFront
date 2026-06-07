@@ -79,8 +79,6 @@ export function ProfileView() {
 
       <ContactsCard />
 
-      <LegalLinks />
-
       <motion.section
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -95,6 +93,8 @@ export function ProfileView() {
           история 72 часа
         </p>
       </motion.section>
+
+      <LegalLinks />
 
       <BottomNav />
     </div>

@@ -1,8 +1,10 @@
 'use client'
 
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check } from '@phosphor-icons/react'
-import { useContent } from '@/lib/content'
+import { useContent, LEGAL_SLUG } from '@entities/content'
+import { haptic } from '@/lib/telegram'
 
 interface Props {
   checked: boolean[]
@@ -11,26 +13,26 @@ interface Props {
 
 export default function ConsentGate({ checked, onChange }: Props) {
   const items = [
-    useContent('consent.adult'),
-    useContent('consent.terms'),
-    useContent('consent.rights'),
+    { text: useContent('consent.adult'), href: undefined as string | undefined },
+    { text: useContent('consent.terms'), href: `/legal/${LEGAL_SLUG}` },
+    { text: useContent('consent.rights'), href: undefined as string | undefined },
   ]
+
   return (
     <div className="flex flex-col gap-3">
-      {items.map((text, i) => (
-        <button
-          key={i}
-          onClick={() => onChange(i, !checked[i])}
-          className="flex items-start gap-3 text-left w-full"
-          style={{ WebkitTapHighlightColor: 'transparent' }}
-        >
-          <div
-            className="flex-shrink-0 w-5 h-5 rounded-md flex items-center justify-center mt-0.5"
+      {items.map(({ text, href }, i) => (
+        <div key={i} className="flex items-start gap-3">
+          <button
+            type="button"
+            onClick={() => onChange(i, !checked[i])}
+            className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md"
             style={{
               background: checked[i] ? 'var(--rose)' : 'rgba(255,255,255,0.04)',
               border: checked[i] ? 'none' : '1.5px solid var(--border-2)',
               transition: 'all 0.18s ease',
+              WebkitTapHighlightColor: 'transparent',
             }}
+            aria-pressed={checked[i]}
           >
             <AnimatePresence>
               {checked[i] && (
@@ -44,14 +46,31 @@ export default function ConsentGate({ checked, onChange }: Props) {
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
-          <span
-            className="text-sm leading-relaxed"
-            style={{ color: checked[i] ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.45)' }}
-          >
-            {text}
-          </span>
-        </button>
+          </button>
+
+          {href ? (
+            <Link
+              href={href}
+              onClick={() => haptic('light')}
+              className="no-tap-highlight text-sm leading-relaxed underline decoration-1 underline-offset-2"
+              style={{ color: checked[i] ? 'rgba(255,255,255,0.85)' : 'var(--rose)' }}
+            >
+              {text}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onChange(i, !checked[i])}
+              className="text-left text-sm leading-relaxed"
+              style={{
+                color: checked[i] ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.45)',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              {text}
+            </button>
+          )}
+        </div>
       ))}
     </div>
   )

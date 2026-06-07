@@ -1,5 +1,12 @@
-export type { FaqItem, ContentPayload, TextSpec, LegalDoc, LegalDocMeta, LegalSpec } from './model/keys'
-export { TEXT_REGISTRY, DEFAULT_STRINGS, LEGAL_REGISTRY } from './model/keys'
+export type {
+  FaqItem,
+  ContentPayload,
+  TextSpec,
+  LegalDoc,
+  LegalDocMeta,
+  LegalSpec,
+} from './model/keys'
+export { TEXT_REGISTRY, DEFAULT_STRINGS, LEGAL_REGISTRY, LEGAL_SLUG } from './model/keys'
 export {
   useContent,
   useFaq,

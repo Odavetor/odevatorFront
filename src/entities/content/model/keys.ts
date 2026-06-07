@@ -155,9 +155,8 @@ export interface LegalSpec {
   title: string
 }
 
+export const LEGAL_SLUG = 'terms'
+
 export const LEGAL_REGISTRY: LegalSpec[] = [
-  { slug: 'terms', title: 'Пользовательское соглашение' },
-  { slug: 'privacy', title: 'Политика конфиденциальности' },
-  { slug: 'offer', title: 'Публичная оферта' },
-  { slug: 'refund', title: 'Политика возврата' },
+  { slug: LEGAL_SLUG, title: 'Пользовательское соглашение' },
 ]

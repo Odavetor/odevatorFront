@@ -36,13 +36,7 @@ export default function LegalEditor() {
   )
 }
 
-function LegalRow({
-  spec,
-  onError,
-}: {
-  spec: LegalSpec
-  onError: (m: string | null) => void
-}) {
+function LegalRow({ spec, onError }: { spec: LegalSpec; onError: (m: string | null) => void }) {
   const [title, setTitle] = useState(spec.title)
   const [body, setBody] = useState('')
   const [loaded, setLoaded] = useState<{ title: string; body: string } | null>(null)
@@ -85,7 +79,7 @@ function LegalRow({
 
   return (
     <section
-      className="rounded-2xl p-3 flex flex-col gap-2.5"
+      className="flex flex-col gap-2.5 rounded-2xl p-3"
       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
     >
       <div className="flex items-center justify-between gap-2">
@@ -123,7 +117,7 @@ function LegalRow({
         onChange={(e) => setBody(e.target.value)}
         placeholder="Текст документа…"
         rows={10}
-        className="w-full rounded-lg px-3 py-2 text-[13px] leading-relaxed resize-y"
+        className="w-full resize-y rounded-lg px-3 py-2 text-[13px] leading-relaxed"
         style={{
           background: 'rgba(0,0,0,0.3)',
           border: '1px solid rgba(255,255,255,0.08)',
@@ -137,7 +131,7 @@ function LegalRow({
           save()
         }}
         disabled={!dirty || saving || !title.trim()}
-        className="self-end rounded-lg px-4 py-2 text-sm font-medium flex items-center gap-1.5"
+        className="flex items-center gap-1.5 self-end rounded-lg px-4 py-2 text-sm font-medium"
         style={{
           background: dirty ? 'var(--rose-dim)' : 'rgba(255,255,255,0.04)',
           border: dirty ? '1px solid var(--border-rose)' : '1px solid var(--border-1)',
