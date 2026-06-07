@@ -98,7 +98,7 @@ export default function StatsDashboard() {
 
       {data && (
         <>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
             <KpiCard
               label={`Выручка · ${rangeLabel}`}
               value={fmtMoney(data.revenue.in_range_minor)}
@@ -133,10 +133,15 @@ export default function StatsDashboard() {
               label={`выручка по дням · ${rangeLabel}`}
               fmt={fmtMoney}
             />
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
               <Metric label="Выручка всего" value={data.revenue.total_minor} money />
               <Metric label="Средний чек" value={data.revenue.aov_minor} money sub="AOV" />
-              <Metric label="Доход с платящего" value={data.revenue.arppu_minor} money sub="ARPPU" />
+              <Metric
+                label="Доход с платящего"
+                value={data.revenue.arppu_minor}
+                money
+                sub="ARPPU"
+              />
               <Metric
                 label="Конверсия оплат"
                 value={pct(data.revenue.orders_paid, data.revenue.orders_created)}
@@ -156,7 +161,7 @@ export default function StatsDashboard() {
           </Section>
 
           <Section title="Операции">
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
               <Metric
                 label="Заявки на вывод"
                 value={data.operations.pending_withdrawals}
@@ -182,7 +187,7 @@ export default function StatsDashboard() {
           </Section>
 
           <Section title="Пользователи">
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
               <Metric label="Всего" value={data.users.total} />
               <Metric
                 label={`Активные · ${rangeLabel}`}
@@ -240,7 +245,7 @@ export default function StatsDashboard() {
           </Section>
 
           <Section title="Генерации">
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
               <Metric label="Всего" value={data.generations.total} />
               <Metric label={`За ${rangeLabel}`} value={data.generations.in_range} accent />
               <Metric
@@ -261,7 +266,11 @@ export default function StatsDashboard() {
             </div>
             <Sparkline data={data.generations.series} color="#3FD4E0" label="генерации по дням" />
             {data.generations.top_styles.length > 0 ? (
-              <BarList color="#FF8A4C" items={data.generations.top_styles} title="Популярные виды" />
+              <BarList
+                color="#FF8A4C"
+                items={data.generations.top_styles}
+                title="Популярные виды"
+              />
             ) : (
               <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
                 Популярные виды появятся по мере новых генераций.
@@ -270,7 +279,7 @@ export default function StatsDashboard() {
           </Section>
 
           <Section title="Токены">
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
               <Metric label="Куплено" value={data.monetization.tokens_purchased} />
               <Metric label="Потрачено" value={data.monetization.tokens_consumed} />
               <Metric label="Повторные покупатели" value={data.monetization.repeat_buyers} />
@@ -282,7 +291,7 @@ export default function StatsDashboard() {
           </Section>
 
           <Section title="Рефералы">
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
               <Metric label="Пришли по рефералке" value={data.referral.referred_users} />
               <Metric label="Пришли по трафику" value={data.referral.traffic_users} />
               <Metric label="Выплачено бонусов" value={data.referral.payout_minor} money />
@@ -449,7 +458,11 @@ function Sparkline({
   const area = `0,${h} ${line} ${w},${h}`
   return (
     <div className="flex flex-col gap-1">
-      <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ width: '100%', height: 40 }}>
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        preserveAspectRatio="none"
+        style={{ width: '100%', height: 40 }}
+      >
         <polygon points={area} fill={color} opacity={0.12} />
         <polyline
           points={line}

@@ -14,11 +14,13 @@ import BroadcastEditor from '@/components/admin/BroadcastEditor'
 import StatsDashboard from '@/components/admin/StatsDashboard'
 import WithdrawalsAdmin from '@/components/admin/WithdrawalsAdmin'
 import ReviewsAdmin from '@/components/admin/ReviewsAdmin'
+import CampaignsAdmin from '@/components/admin/CampaignsAdmin'
 import LegalEditor from '@/components/admin/LegalEditor'
 import { useContent } from '@/lib/content'
 
 type Tab =
   | 'Статистика'
+  | 'Ссылки'
   | 'Главная'
   | 'Фото'
   | 'Цены'
@@ -29,6 +31,7 @@ type Tab =
   | 'Отзывы'
 const TABS: Tab[] = [
   'Статистика',
+  'Ссылки',
   'Главная',
   'Фото',
   'Цены',
@@ -81,7 +84,7 @@ export default function AdminPage() {
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="flex items-center justify-between px-5 pb-4 pt-6"
+        className="mx-auto flex w-full max-w-[1280px] items-center justify-between px-5 pb-4 pt-6 md:px-8"
       >
         <div className="flex items-center gap-3">
           <button
@@ -120,9 +123,9 @@ export default function AdminPage() {
         </div>
       </motion.header>
 
-      <div className="flex flex-col gap-4 px-5 pb-10">
+      <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-4 px-5 pb-10 md:flex-row md:items-start md:gap-8 md:px-8">
         <div
-          className="flex max-w-full self-start overflow-x-auto rounded-full p-1"
+          className="flex max-w-full self-start overflow-x-auto rounded-full p-1 md:hidden"
           style={{
             background: 'rgba(255,255,255,0.05)',
             border: '1px solid rgba(255,255,255,0.06)',
@@ -160,15 +163,47 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {tab === 'Статистика' && <StatsDashboard />}
-        {tab === 'Главная' && <HeroEditor />}
-        {tab === 'Фото' && <PhotoCatalogEditor />}
-        {tab === 'Цены' && <PricingEditor />}
-        {tab === 'Тексты' && <TextsEditor />}
-        {tab === 'Документы' && <LegalEditor />}
-        {tab === 'Рассылка' && <BroadcastEditor />}
-        {tab === 'Выводы' && <WithdrawalsAdmin />}
-        {tab === 'Отзывы' && <ReviewsAdmin />}
+        <nav
+          className="sticky top-4 hidden w-52 flex-shrink-0 flex-col gap-1 self-start rounded-2xl p-2 md:flex"
+          style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.07)',
+          }}
+        >
+          {TABS.map((t) => {
+            const active = tab === t
+            return (
+              <button
+                key={t}
+                onClick={() => {
+                  haptic('light')
+                  setTab(t)
+                }}
+                className="rounded-xl px-3.5 py-2.5 text-left text-sm font-medium transition-colors"
+                style={{
+                  background: active ? 'var(--rose-dim)' : 'transparent',
+                  border: active ? '1px solid var(--border-rose)' : '1px solid transparent',
+                  color: active ? 'var(--rose)' : 'rgba(255,255,255,0.5)',
+                }}
+              >
+                {t}
+              </button>
+            )
+          })}
+        </nav>
+
+        <div className="min-w-0 flex-1">
+          {tab === 'Статистика' && <StatsDashboard />}
+          {tab === 'Ссылки' && <CampaignsAdmin />}
+          {tab === 'Главная' && <HeroEditor />}
+          {tab === 'Фото' && <PhotoCatalogEditor />}
+          {tab === 'Цены' && <PricingEditor />}
+          {tab === 'Тексты' && <TextsEditor />}
+          {tab === 'Документы' && <LegalEditor />}
+          {tab === 'Рассылка' && <BroadcastEditor />}
+          {tab === 'Выводы' && <WithdrawalsAdmin />}
+          {tab === 'Отзывы' && <ReviewsAdmin />}
+        </div>
       </div>
     </div>
   )
