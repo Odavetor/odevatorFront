@@ -8,6 +8,7 @@ import { DisplayTitle, Kicker } from '@shared/ui'
 import { EASE_EDITORIAL, haptic, hapticNotify, openLink } from '@shared/lib'
 import { fmtRub } from '@entities/pack'
 import { BottomNav } from '@widgets/bottom-nav'
+import { ReviewForm } from '@features/leave-review'
 import {
   createWithdrawal,
   fetchReferralMe,
@@ -106,7 +107,10 @@ export function ReferralView() {
             router.back()
           }}
           className="no-tap-highlight flex h-9 w-9 items-center justify-center rounded-xl"
-          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+          style={{
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.12)',
+          }}
         >
           <ArrowLeft size={18} color="rgba(255,255,255,0.7)" weight="bold" />
         </button>
@@ -125,12 +129,23 @@ export function ReferralView() {
           <>
             <div
               className="flex flex-col gap-1 rounded-2xl px-4 py-4"
-              style={{ background: 'linear-gradient(135deg, var(--rose-dim) 0%, rgba(15,13,18,0.6) 100%)', border: '1px solid var(--border-rose)' }}
+              style={{
+                background: 'linear-gradient(135deg, var(--rose-dim) 0%, rgba(15,13,18,0.6) 100%)',
+                border: '1px solid var(--border-rose)',
+              }}
             >
               <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
                 Доступно к выводу
               </span>
-              <span className="font-sans tabular-nums" style={{ fontSize: 34, fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--rose)' }}>
+              <span
+                className="font-sans tabular-nums"
+                style={{
+                  fontSize: 34,
+                  fontWeight: 800,
+                  letterSpacing: '-0.03em',
+                  color: 'var(--rose)',
+                }}
+              >
                 {fmtRub(balance)} ₽
               </span>
               <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
@@ -143,7 +158,9 @@ export function ReferralView() {
               <Stat label="Из них платили" value={`${s.invited_paid}`} />
               <Stat label="Всего заработано" value={`${fmtRub(s.total_earned_minor)} ₽`} />
               <Stat label="Выведено" value={`${fmtRub(s.total_withdrawn_minor)} ₽`} />
-              {s.pending_minor > 0 && <Stat label="В заявках (заморожено)" value={`${fmtRub(s.pending_minor)} ₽`} />}
+              {s.pending_minor > 0 && (
+                <Stat label="В заявках (заморожено)" value={`${fmtRub(s.pending_minor)} ₽`} />
+              )}
             </div>
 
             {s.deep_link && (
@@ -152,22 +169,37 @@ export function ReferralView() {
                 <div className="flex items-center gap-2">
                   <div
                     className="flex-1 truncate rounded-xl px-3 py-2.5 font-mono text-[12px]"
-                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)' }}
+                    style={{
+                      background: 'rgba(0,0,0,0.3)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      color: 'rgba(255,255,255,0.7)',
+                    }}
                   >
                     {s.deep_link}
                   </div>
                   <button
                     onClick={copyLink}
                     className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl"
-                    style={{ background: 'var(--rose-dim)', border: '1px solid var(--border-rose)' }}
+                    style={{
+                      background: 'var(--rose-dim)',
+                      border: '1px solid var(--border-rose)',
+                    }}
                   >
-                    {copied ? <Check size={16} color="#5fd296" weight="bold" /> : <Copy size={16} color="var(--rose)" />}
+                    {copied ? (
+                      <Check size={16} color="#5fd296" weight="bold" />
+                    ) : (
+                      <Copy size={16} color="var(--rose)" />
+                    )}
                   </button>
                 </div>
                 <button
                   onClick={share}
                   className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-2)', color: 'rgba(255,255,255,0.85)' }}
+                  style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid var(--border-2)',
+                    color: 'rgba(255,255,255,0.85)',
+                  }}
                 >
                   <ShareNetwork size={15} weight="fill" /> Поделиться в Telegram
                 </button>
@@ -186,8 +218,12 @@ export function ReferralView() {
                 onChange={(e) => setAmount(e.target.value)}
                 inputMode="decimal"
                 placeholder={`Сумма, ₽ (мин. ${Math.round(min / 100)})`}
-                className="w-full rounded-xl px-3 py-2.5 text-sm font-mono"
-                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                className="w-full rounded-xl px-3 py-2.5 font-mono text-sm"
+                style={{
+                  background: 'rgba(0,0,0,0.3)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: 'white',
+                }}
               />
               <textarea
                 value={details}
@@ -195,14 +231,20 @@ export function ReferralView() {
                 rows={2}
                 placeholder="Реквизиты: номер карты / телефон / кошелёк"
                 className="w-full resize-y rounded-xl px-3 py-2.5 text-sm"
-                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                style={{
+                  background: 'rgba(0,0,0,0.3)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: 'white',
+                }}
               />
               <button
                 onClick={submit}
                 disabled={!canWithdraw}
-                className="rounded-xl py-3.5 text-sm font-semibold no-tap-highlight"
+                className="no-tap-highlight rounded-xl py-3.5 text-sm font-semibold"
                 style={{
-                  background: canWithdraw ? 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)' : 'rgba(255,255,255,0.04)',
+                  background: canWithdraw
+                    ? 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)'
+                    : 'rgba(255,255,255,0.04)',
                   color: canWithdraw ? '#fff' : 'rgba(255,255,255,0.3)',
                 }}
               >
@@ -220,6 +262,15 @@ export function ReferralView() {
                 ))}
               </section>
             )}
+
+            <div className="h-px w-full" style={{ background: 'var(--border-1)' }} />
+
+            <ReviewForm
+              kind="referrer"
+              title="Отзыв о партнёрке"
+              subtitle="Как вам условия и выплаты? Оценка видна только команде."
+              placeholder="Что нравится в партнёрской программе, чего не хватает? (необязательно)"
+            />
           </>
         ) : null}
       </div>
@@ -231,11 +282,17 @@ export function ReferralView() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col gap-0.5 rounded-xl px-3 py-2.5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+    <div
+      className="flex flex-col gap-0.5 rounded-xl px-3 py-2.5"
+      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+    >
       <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
         {label}
       </span>
-      <span className="font-sans tabular-nums" style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.022em', color: 'var(--text)' }}>
+      <span
+        className="font-sans tabular-nums"
+        style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.022em', color: 'var(--text)' }}
+      >
         {value}
       </span>
     </div>
@@ -245,9 +302,15 @@ function Stat({ label, value }: { label: string; value: string }) {
 function WithdrawalRow({ w }: { w: Withdrawal }) {
   const meta = STATUS[w.status]
   return (
-    <div className="flex items-center justify-between gap-2 rounded-xl px-3 py-2.5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+    <div
+      className="flex items-center justify-between gap-2 rounded-xl px-3 py-2.5"
+      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+    >
       <div className="flex flex-col gap-0.5">
-        <span className="font-sans tabular-nums" style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>
+        <span
+          className="font-sans tabular-nums"
+          style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}
+        >
           {fmtRub(w.amount_minor)} ₽
         </span>
         <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
@@ -255,7 +318,10 @@ function WithdrawalRow({ w }: { w: Withdrawal }) {
           {w.admin_note ? ` · ${w.admin_note}` : ''}
         </span>
       </div>
-      <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: meta.color }}>
+      <span
+        className="text-[10px] font-semibold uppercase tracking-wider"
+        style={{ color: meta.color }}
+      >
         {meta.label}
       </span>
     </div>

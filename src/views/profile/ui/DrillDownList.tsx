@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { CaretRight, Lightning, ShareNetwork, ShoppingBag } from '@phosphor-icons/react'
+import { CaretRight, Lightning, ShareNetwork, ShoppingBag, Star } from '@phosphor-icons/react'
 import { EASE_EDITORIAL, haptic } from '@shared/lib'
 
 interface Row {
@@ -31,6 +31,12 @@ const ROWS: Row[] = [
     sub: 'приглашай и зарабатывай',
     icon: ShareNetwork,
   },
+  {
+    href: '/profile/review',
+    label: 'Оставить отзыв',
+    sub: 'оцените сервис',
+    icon: Star,
+  },
 ]
 
 export function DrillDownList() {
@@ -39,7 +45,7 @@ export function DrillDownList() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.18, ease: EASE_EDITORIAL }}
-      className="mx-5 mt-4 rounded-2xl overflow-hidden"
+      className="mx-5 mt-4 overflow-hidden rounded-2xl"
       style={{
         background: 'rgba(255,255,255,0.03)',
         border: '1px solid var(--border-1)',
@@ -49,19 +55,14 @@ export function DrillDownList() {
         const Icon = row.icon
         return (
           <div key={row.href}>
-            {i > 0 && (
-              <div
-                className="h-px ml-14"
-                style={{ background: 'var(--border-1)' }}
-              />
-            )}
+            {i > 0 && <div className="ml-14 h-px" style={{ background: 'var(--border-1)' }} />}
             <Link
               href={row.href}
               onClick={() => haptic('light')}
-              className="flex items-center gap-3 px-4 py-3.5 no-tap-highlight active:bg-white/[0.02]"
+              className="no-tap-highlight flex items-center gap-3 px-4 py-3.5 active:bg-white/[0.02]"
             >
               <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
                 style={{
                   background: 'var(--rose-dim)',
                   border: '1px solid var(--border-rose)',
@@ -69,7 +70,7 @@ export function DrillDownList() {
               >
                 <Icon size={16} weight="duotone" color="var(--rose)" />
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0 flex-1">
                 <p
                   className="font-sans"
                   style={{
