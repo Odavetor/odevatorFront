@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Copy, Check, ShareNetwork } from '@phosphor-icons/react'
-import { DisplayTitle, Kicker } from '@shared/ui'
+import { ArrowLeft, Copy, Check, ShareNetwork, TrendUp } from '@phosphor-icons/react'
+import { DisplayTitle, Kicker, CountUpNumber } from '@shared/ui'
 import { EASE_EDITORIAL, haptic, hapticNotify, openLink } from '@shared/lib'
 import { fmtRub } from '@entities/pack'
 import { BottomNav } from '@widgets/bottom-nav'
@@ -16,6 +16,13 @@ import {
   type Withdrawal,
   type WithdrawalStatus,
 } from '@/lib/referral'
+import { EarningsSparkline } from './EarningsSparkline'
+import { Funnel } from './Funnel'
+import { TierBadge } from './TierBadge'
+import { CommissionFeed } from './CommissionFeed'
+import { ReferralPeople } from './ReferralPeople'
+import { PeriodTabs, type Period } from './PeriodTabs'
+import { pct } from '../lib/format'
 
 const STATUS: Record<WithdrawalStatus, { label: string; color: string }> = {
   pending: { label: 'в обработке', color: '#C9966A' },
@@ -23,10 +30,18 @@ const STATUS: Record<WithdrawalStatus, { label: string; color: string }> = {
   rejected: { label: 'отклонено', color: '#ff9aae' },
 }
 
+const PERIOD_LABEL: Record<Period, string> = {
+  today: 'сегодня',
+  '7d': 'за 7 дней',
+  '30d': 'за 30 дней',
+  all: 'за всё время',
+}
+
 export function ReferralView() {
   const router = useRouter()
   const [data, setData] = useState<ReferralMe | null>(null)
   const [loading, setLoading] = useState(true)
+  const [period, setPeriod] = useState<Period>('7d')
   const [amount, setAmount] = useState('')
   const [details, setDetails] = useState('')
   const [busy, setBusy] = useState(false)
@@ -54,6 +69,22 @@ export function ReferralView() {
   const amountMinor = Math.round((Number(amount) || 0) * 100)
   const canWithdraw =
     !busy && amountMinor >= min && amountMinor <= balance && details.trim().length > 0
+
+  const periodEarned = useMemo(() => {
+    if (!s) return 0
+    switch (period) {
+      case 'today':
+        return s.earned_today_minor
+      case '7d':
+        return s.earned_7d_minor
+      case '30d':
+        return s.earned_30d_minor
+      default:
+        return s.total_earned_minor
+    }
+  }, [s, period])
+
+  const sparkDays = period === '30d' || period === 'all' ? 30 : 7
 
   async function copyLink() {
     if (!s?.deep_link) return
@@ -127,41 +158,82 @@ export function ReferralView() {
           </p>
         ) : s ? (
           <>
-            <div
-              className="flex flex-col gap-1 rounded-2xl px-4 py-4"
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, ease: EASE_EDITORIAL }}
+              className="flex flex-col gap-3 rounded-2xl px-4 py-4"
               style={{
                 background: 'linear-gradient(135deg, var(--rose-dim) 0%, rgba(15,13,18,0.6) 100%)',
                 border: '1px solid var(--border-rose)',
               }}
             >
-              <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                Доступно к выводу
-              </span>
-              <span
-                className="font-sans tabular-nums"
-                style={{
-                  fontSize: 34,
-                  fontWeight: 800,
-                  letterSpacing: '-0.03em',
-                  color: 'var(--rose)',
-                }}
-              >
-                {fmtRub(balance)} ₽
-              </span>
-              <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                {s.commission_percent}% с каждой покупки приглашённого
-              </span>
-            </div>
+              <div className="flex items-start justify-between">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                    Доступно к выводу
+                  </span>
+                  <span
+                    className="font-sans tabular-nums"
+                    style={{
+                      fontSize: 34,
+                      fontWeight: 800,
+                      letterSpacing: '-0.03em',
+                      color: 'var(--rose)',
+                      lineHeight: 1,
+                    }}
+                  >
+                    <CountUpNumber
+                      to={balance / 100}
+                      format={(n) => `${fmtRub(Math.round(n) * 100)} ₽`}
+                    />
+                  </span>
+                </div>
+                <div
+                  className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5"
+                  style={{ background: 'rgba(95,210,150,0.12)' }}
+                >
+                  <TrendUp size={13} color="#5FD296" weight="bold" />
+                  <span
+                    className="font-sans text-[13px] font-bold tabular-nums"
+                    style={{ color: '#5FD296' }}
+                  >
+                    {fmtRub(periodEarned)} ₽
+                  </span>
+                </div>
+              </div>
+
+              <EarningsSparkline series={data.earnings_series} days={sparkDays} />
+
+              <div className="flex items-center justify-between">
+                <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  заработано {PERIOD_LABEL[period]}
+                </span>
+                <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  {s.commission_percent}% с покупок
+                </span>
+              </div>
+            </motion.div>
+
+            <PeriodTabs value={period} onChange={setPeriod} />
 
             <div className="grid grid-cols-2 gap-2.5">
               <Stat label="Приглашено" value={`${s.invited}`} />
-              <Stat label="Из них платили" value={`${s.invited_paid}`} />
+              <Stat
+                label="Конверсия в оплату"
+                value={`${pct(s.invited_paid, s.invited)}%`}
+                accent
+              />
               <Stat label="Всего заработано" value={`${fmtRub(s.total_earned_minor)} ₽`} />
               <Stat label="Выведено" value={`${fmtRub(s.total_withdrawn_minor)} ₽`} />
               {s.pending_minor > 0 && (
                 <Stat label="В заявках (заморожено)" value={`${fmtRub(s.pending_minor)} ₽`} />
               )}
             </div>
+
+            <TierBadge tier={data.tier} />
+
+            <Funnel clicks={s.clicks} invited={s.invited} paid={s.invited_paid} />
 
             {s.deep_link && (
               <div className="flex flex-col gap-2">
@@ -205,6 +277,10 @@ export function ReferralView() {
                 </button>
               </div>
             )}
+
+            <CommissionFeed events={data.recent} />
+
+            <ReferralPeople people={data.referrals} />
 
             {error && <Banner tone="error">{error}</Banner>}
             {notice && <Banner tone="ok">{notice}</Banner>}
@@ -280,7 +356,7 @@ export function ReferralView() {
   )
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <div
       className="flex flex-col gap-0.5 rounded-xl px-3 py-2.5"
@@ -291,7 +367,12 @@ function Stat({ label, value }: { label: string; value: string }) {
       </span>
       <span
         className="font-sans tabular-nums"
-        style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.022em', color: 'var(--text)' }}
+        style={{
+          fontSize: 18,
+          fontWeight: 800,
+          letterSpacing: '-0.022em',
+          color: accent ? 'var(--rose)' : 'var(--text)',
+        }}
       >
         {value}
       </span>

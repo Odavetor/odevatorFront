@@ -5,13 +5,47 @@ import { api } from '@shared/api'
 export interface ReferralSummary {
   invited: number
   invited_paid: number
+  clicks: number
+  unique_visitors: number
   balance_minor: number
   total_earned_minor: number
   total_withdrawn_minor: number
   pending_minor: number
+  earned_today_minor: number
+  earned_7d_minor: number
+  earned_30d_minor: number
   commission_percent: number
   min_withdrawal_minor: number
   deep_link: string
+}
+
+export interface EarningsPoint {
+  date: string
+  amount_minor: number
+}
+
+export type CommissionSource = 'purchase' | 'generation'
+
+export interface CommissionEvent {
+  amount_minor: number
+  source: CommissionSource
+  created_at: string
+}
+
+export interface ReferralPerson {
+  user_id: number
+  joined_at: string
+  has_paid: boolean
+  earned_minor: number
+}
+
+export interface ReferralTier {
+  name: string
+  level: number
+  paid_referrals: number
+  next_name: string
+  next_at: number
+  progress: number
 }
 
 export type WithdrawalStatus = 'pending' | 'approved' | 'rejected'
@@ -31,6 +65,10 @@ export interface Withdrawal {
 
 export interface ReferralMe {
   summary: ReferralSummary
+  tier: ReferralTier
+  earnings_series: EarningsPoint[]
+  recent: CommissionEvent[]
+  referrals: ReferralPerson[]
   withdrawals: Withdrawal[]
 }
 
