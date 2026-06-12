@@ -17,10 +17,12 @@ import {
   type WithdrawalStatus,
 } from '@/lib/referral'
 import { EarningsSparkline } from './EarningsSparkline'
+import { EarningsBars } from './EarningsBars'
+import { SignupsBars } from './SignupsBars'
+import { SourceSplit } from './SourceSplit'
 import { Funnel } from './Funnel'
 import { TierBadge } from './TierBadge'
 import { CommissionFeed } from './CommissionFeed'
-import { ReferralPeople } from './ReferralPeople'
 import { PeriodTabs, type Period } from './PeriodTabs'
 import { pct } from '../lib/format'
 
@@ -235,6 +237,17 @@ export function ReferralView() {
 
             <Funnel clicks={s.clicks} invited={s.invited} paid={s.invited_paid} />
 
+            <div
+              className="flex flex-col gap-4 rounded-2xl px-4 py-4"
+              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+            >
+              <EarningsBars series={data.earnings_series} days={sparkDays} />
+              <div className="h-px w-full" style={{ background: 'rgba(255,255,255,0.07)' }} />
+              <SourceSplit purchaseMinor={s.earned_purchase_minor} genMinor={s.earned_gen_minor} />
+              <div className="h-px w-full" style={{ background: 'rgba(255,255,255,0.07)' }} />
+              <SignupsBars series={data.signups_series} />
+            </div>
+
             {s.deep_link && (
               <div className="flex flex-col gap-2">
                 <span className="text-kicker">ваша ссылка</span>
@@ -279,8 +292,6 @@ export function ReferralView() {
             )}
 
             <CommissionFeed events={data.recent} />
-
-            <ReferralPeople people={data.referrals} />
 
             {error && <Banner tone="error">{error}</Banner>}
             {notice && <Banner tone="ok">{notice}</Banner>}

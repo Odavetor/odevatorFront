@@ -15,27 +15,7 @@ export function relativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString('ru', { day: 'numeric', month: 'short' })
 }
 
-export function shortDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('ru', { day: 'numeric', month: 'short' })
-}
-
 export function pct(part: number, whole: number): number {
   if (whole <= 0) return 0
   return Math.round((part / whole) * 100)
-}
-
-const ANON_ADJ = ['Тихий', 'Быстрый', 'Ночной', 'Скрытый', 'Дальний', 'Вольный', 'Снежный', 'Алый']
-const ANON_NOUN = [
-  'гость',
-  'странник',
-  'клиент',
-  'друг',
-  'союзник',
-  'наблюдатель',
-  'игрок',
-  'зритель',
-]
-
-export function anonName(userId: number): string {
-  return `${ANON_ADJ[userId % ANON_ADJ.length]} ${ANON_NOUN[(userId >> 3) % ANON_NOUN.length]}`
 }

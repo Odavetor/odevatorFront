@@ -2,28 +2,19 @@
 
 import { useId, useMemo } from 'react'
 import type { EarningsPoint } from '@/lib/referral'
+import { dailyBuckets } from '../lib/series'
 
 interface Props {
   series: EarningsPoint[]
   days: number
 }
 
-function buildBuckets(series: EarningsPoint[], days: number): number[] {
-  const byDate = new Map(series.map((p) => [p.date, p.amount_minor]))
-  const out: number[] = []
-  const now = new Date()
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(now)
-    d.setDate(now.getDate() - i)
-    const key = d.toISOString().slice(0, 10)
-    out.push(byDate.get(key) ?? 0)
-  }
-  return out
-}
-
 export function EarningsSparkline({ series, days }: Props) {
   const gradId = useId()
-  const buckets = useMemo(() => buildBuckets(series, days), [series, days])
+  const buckets = useMemo(() => {
+    const byDate = new Map(series.map((p) => [p.date, p.amount_minor]))
+    return dailyBuckets(days, (k) => byDate.get(k) ?? 0)
+  }, [series, days])
   const hasData = buckets.some((v) => v > 0)
 
   const w = 100
