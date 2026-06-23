@@ -2,7 +2,14 @@
 
 import { useSyncExternalStore } from 'react'
 import { getAuthToken } from '@shared/api'
-import { DEFAULT_STRINGS, type ContentPayload, type FaqItem, type LegalDoc, type LegalDocMeta } from './keys'
+import { getLang, subscribeLang } from '@shared/lib'
+import {
+  DEFAULT_STRINGS,
+  type ContentPayload,
+  type FaqItem,
+  type LegalDoc,
+  type LegalDocMeta,
+} from './keys'
 
 interface ContentState {
   strings: Record<string, string>
@@ -31,7 +38,7 @@ let inFlight: Promise<void> | null = null
 
 export function refreshContent(): Promise<void> {
   if (inFlight) return inFlight
-  inFlight = fetch('/api/content', { cache: 'no-store' })
+  inFlight = fetch(`/api/content?lang=${getLang()}`, { cache: 'no-store' })
     .then(async (r) => {
       if (!r.ok) return
       const data = (await r.json()) as ContentPayload
@@ -56,6 +63,10 @@ function bootstrap() {
   if (bootstrapped || typeof window === 'undefined') return
   bootstrapped = true
   refreshContent()
+  // Re-fetch CMS strings (and FAQ) whenever the active language changes.
+  subscribeLang(() => {
+    refreshContent()
+  })
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) refreshContent()
   })
@@ -100,16 +111,23 @@ async function adminFetch(path: string, init: RequestInit = {}) {
   return r.status === 204 ? null : r.json()
 }
 
-export async function updateString(key: string, value: string) {
-  const data = await adminFetch(`/api/admin/content/strings/${encodeURIComponent(key)}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ value }),
-  })
+export async function updateString(key: string, value: string, lang: string = getLang()) {
+  const data = await adminFetch(
+    `/api/admin/content/strings/${encodeURIComponent(key)}?lang=${lang}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ value }),
+    },
+  )
   await refreshContent()
   return data
 }
 
-export async function createFaq(payload: { question: string; answer: string; sort_order?: number }) {
+export async function createFaq(payload: {
+  question: string
+  answer: string
+  sort_order?: number
+}) {
   const data = await adminFetch('/api/admin/content/faq', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -137,7 +155,7 @@ export async function deleteFaq(id: number) {
 
 export async function listLegalDocs(): Promise<LegalDocMeta[]> {
   try {
-    const r = await fetch('/api/content/legal', { cache: 'no-store' })
+    const r = await fetch(`/api/content/legal?lang=${getLang()}`, { cache: 'no-store' })
     if (!r.ok) return []
     const data = (await r.json()) as { documents?: LegalDocMeta[] }
     return Array.isArray(data.documents) ? data.documents : []
@@ -148,7 +166,9 @@ export async function listLegalDocs(): Promise<LegalDocMeta[]> {
 
 export async function getLegalDoc(slug: string): Promise<LegalDoc | null> {
   try {
-    const r = await fetch(`/api/content/legal/${encodeURIComponent(slug)}`, { cache: 'no-store' })
+    const r = await fetch(`/api/content/legal/${encodeURIComponent(slug)}?lang=${getLang()}`, {
+      cache: 'no-store',
+    })
     if (!r.ok) return null
     return (await r.json()) as LegalDoc
   } catch {

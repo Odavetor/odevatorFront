@@ -8,6 +8,8 @@ interface BackPhotoOption {
   category_id: number
   slug: string
   label: string
+  label_en?: string
+  label_de?: string
   before_image_url: string
   after_image_url: string
   prompt_text: string
@@ -22,6 +24,8 @@ interface BackPhotoCategory {
   id: number
   slug: string
   label: string
+  label_en?: string
+  label_de?: string
   sort_order: number
   description?: string | null
   options: BackPhotoOption[]
@@ -42,6 +46,8 @@ function mapOption(o: BackPhotoOption): FilterOption {
     id: o.slug,
     numericId: o.id,
     label: o.label,
+    label_en: o.label_en ?? '',
+    label_de: o.label_de ?? '',
     beforeExample: o.before_image_url,
     afterExample: o.after_image_url,
     prompt_text: o.prompt_text,
@@ -59,6 +65,8 @@ function mapCategory(c: BackPhotoCategory): FilterCategory {
     id: c.slug,
     numericId: c.id,
     label: c.label,
+    label_en: c.label_en ?? '',
+    label_de: c.label_de ?? '',
     sort_order: c.sort_order,
     description: c.description ?? '',
     options: (c.options ?? []).map(mapOption),

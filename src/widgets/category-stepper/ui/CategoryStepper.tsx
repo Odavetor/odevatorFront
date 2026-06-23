@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { haptic } from '@/lib/telegram'
+import { pickLabel, useLang } from '@shared/lib'
 import { SparkleBurst } from '@shared/ui'
 import type { FilterCategory, FilterOption } from '@/data/generate-options'
 
@@ -21,6 +22,7 @@ export function CategoryStepper({
 }: Props) {
   const [burstId, setBurstId] = useState<string | null>(null)
   const prevPickedRef = useRef<string | null>(pickedOptionId)
+  useLang() // re-render labels when the active language changes
 
   useEffect(() => {
     if (pickedOptionId && pickedOptionId !== prevPickedRef.current) {
@@ -39,7 +41,7 @@ export function CategoryStepper({
         return (
           <div key={cat.id} className="flex flex-col gap-2">
             <span
-              className="font-sans px-1 inline-flex items-center gap-2"
+              className="inline-flex items-center gap-2 px-1 font-sans"
               style={{
                 fontSize: 13,
                 fontWeight: 700,
@@ -48,7 +50,7 @@ export function CategoryStepper({
                 transition: 'color 0.18s var(--ease-glide)',
               }}
             >
-              {cat.label}
+              {pickLabel(cat.label, cat.label_en, cat.label_de)}
               {rowHasPick && (
                 <span
                   className="rounded-full"
@@ -87,15 +89,13 @@ export function CategoryStepper({
                     whileTap={{ scale: 0.94 }}
                     animate={bursting ? { scale: [1, 1.08, 1] } : { scale: 1 }}
                     transition={{ duration: 0.42, ease: [0.34, 1.56, 0.64, 1] }}
-                    className="relative flex-shrink-0 rounded-full no-tap-highlight font-sans"
+                    className="no-tap-highlight relative flex-shrink-0 rounded-full font-sans"
                     style={{
                       padding: '8px 14px',
                       fontSize: 13,
                       fontWeight: active ? 700 : 600,
                       letterSpacing: '-0.01em',
-                      background: active
-                        ? 'var(--rose-dim)'
-                        : 'rgba(255,255,255,0.04)',
+                      background: active ? 'var(--rose-dim)' : 'rgba(255,255,255,0.04)',
                       boxShadow: active
                         ? 'inset 0 0 0 1.5px var(--rose), 0 6px 18px -6px rgba(224,63,106,0.5)'
                         : 'inset 0 0 0 1px var(--border-2)',
@@ -104,11 +104,11 @@ export function CategoryStepper({
                         'background 0.18s var(--ease-glide), box-shadow 0.18s var(--ease-glide), color 0.18s var(--ease-glide)',
                     }}
                   >
-                    {opt.label}
+                    {pickLabel(opt.label, opt.label_en, opt.label_de)}
                     {bursting && (
                       <span
                         aria-hidden
-                        className="absolute left-1/2 top-1/2 pointer-events-none"
+                        className="pointer-events-none absolute left-1/2 top-1/2"
                         style={{ width: 0, height: 0 }}
                       >
                         <SparkleBurst count={5} radius={26} color="var(--rose)" />

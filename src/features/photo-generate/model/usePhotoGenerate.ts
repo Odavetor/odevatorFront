@@ -20,6 +20,31 @@ import { haptic, hapticNotify, getTelegramUser as getTgUser } from '@shared/lib'
 const MODERATION_MESSAGE =
   'Фото не прошло проверку. Похоже, на снимке нет взрослого человека или есть несовершеннолетние. Загрузите чёткое фото взрослого человека.'
 
+const LAST_PHOTO_PREFIX = 'odevator_last_photo:'
+
+function readLastPhoto(tgId?: number): string | null {
+  if (!tgId || typeof window === 'undefined') return null
+  try {
+    return window.localStorage.getItem(LAST_PHOTO_PREFIX + tgId)
+  } catch {
+    return null
+  }
+}
+
+function writeLastPhoto(tgId: number | undefined, url: string): void {
+  if (!tgId || typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(LAST_PHOTO_PREFIX + tgId, url)
+  } catch {}
+}
+
+function clearLastPhoto(tgId?: number): void {
+  if (!tgId || typeof window === 'undefined') return
+  try {
+    window.localStorage.removeItem(LAST_PHOTO_PREFIX + tgId)
+  } catch {}
+}
+
 function friendlyGenerateError(e: unknown, fallback: string): string {
   if (e instanceof ApiError) {
     const code =
@@ -46,6 +71,7 @@ export interface UsePhotoGenerateResult {
 
   file: File | null
   preview: string | null
+  lastFileUrl: string | null
   setFile: (f: File | null) => void
   clearFile: () => void
 
@@ -69,8 +95,18 @@ export function usePhotoGenerate(): UsePhotoGenerateResult {
 
   const [file, setFileState] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
+  const [lastFileUrl, setLastFileUrl] = useState<string | null>(null)
   const [genState, setGenState] = useState<GenerationState>({ phase: 'idle', progress: 0 })
   const [noCredits, setNoCredits] = useState(false)
+
+  useEffect(() => {
+    const tg = getTgUser()
+    const url = readLastPhoto(tg?.id)
+    if (url) {
+      setLastFileUrl(url)
+      setPreview((prev) => prev ?? url)
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -88,7 +124,7 @@ export function usePhotoGenerate(): UsePhotoGenerateResult {
   const setFile = useCallback((f: File | null) => {
     setFileState(f)
     setPreview((prev) => {
-      if (prev) URL.revokeObjectURL(prev)
+      if (prev && prev.startsWith('blob:')) URL.revokeObjectURL(prev)
       return f ? URL.createObjectURL(f) : null
     })
     setGenState({ phase: 'idle', progress: 0 })
@@ -97,9 +133,11 @@ export function usePhotoGenerate(): UsePhotoGenerateResult {
   const clearFile = useCallback(() => {
     setFileState(null)
     setPreview((prev) => {
-      if (prev) URL.revokeObjectURL(prev)
+      if (prev && prev.startsWith('blob:')) URL.revokeObjectURL(prev)
       return null
     })
+    setLastFileUrl(null)
+    clearLastPhoto(getTgUser()?.id)
     setGenState({ phase: 'idle', progress: 0 })
   }, [])
 
@@ -120,7 +158,7 @@ export function usePhotoGenerate(): UsePhotoGenerateResult {
 
   const generate = useCallback(
     async (errorTimeout: string, errorFallback: string) => {
-      if (!file || !pickedOption || !pickedCategoryId) return
+      if ((!file && !lastFileUrl) || !pickedOption || !pickedCategoryId) return
       const tg = getTgUser()
       if (!tg) return
 
@@ -128,7 +166,14 @@ export function usePhotoGenerate(): UsePhotoGenerateResult {
       setGenState({ phase: 'uploading', progress: 10 })
 
       try {
-        const { url: fileUrl } = await uploadUserPhoto(file)
+        let fileUrl: string
+        if (file) {
+          fileUrl = (await uploadUserPhoto(file)).url
+          writeLastPhoto(tg.id, fileUrl)
+          setLastFileUrl(fileUrl)
+        } else {
+          fileUrl = lastFileUrl as string
+        }
         setGenState({ phase: 'uploading', progress: 35 })
 
         const { uid } = await startPhotoGeneration({
@@ -158,15 +203,19 @@ export function usePhotoGenerate(): UsePhotoGenerateResult {
         setGenState({ phase: 'error', progress: 0, error: friendlyGenerateError(e, errorFallback) })
       }
     },
-    [file, pickedOption, pickedCategoryId, pollUntilDone, refreshBalance],
+    [file, lastFileUrl, pickedOption, pickedCategoryId, pollUntilDone, refreshBalance],
   )
 
   const busy = genState.phase === 'uploading' || genState.phase === 'processing'
 
   const canGenerate = useCallback(
     (allConsented: boolean) =>
-      !!file && allConsented && !!pickedOption && !busy && genState.phase !== 'done',
-    [file, pickedOption, busy, genState.phase],
+      (!!file || !!lastFileUrl) &&
+      allConsented &&
+      !!pickedOption &&
+      !busy &&
+      genState.phase !== 'done',
+    [file, lastFileUrl, pickedOption, busy, genState.phase],
   )
 
   return {
@@ -176,6 +225,7 @@ export function usePhotoGenerate(): UsePhotoGenerateResult {
     selectInCategory,
     file,
     preview,
+    lastFileUrl,
     setFile,
     clearFile,
     genState,

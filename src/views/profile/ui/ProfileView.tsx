@@ -3,9 +3,9 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ShieldCheck } from '@phosphor-icons/react'
-import { DisplayTitle, Kicker } from '@shared/ui'
+import { DisplayTitle, Kicker, LanguageSwitcher } from '@shared/ui'
 import { MemberCard } from '@widgets/member-card'
-import { EASE_EDITORIAL } from '@shared/lib'
+import { EASE_EDITORIAL, tt } from '@shared/lib'
 import { useUser } from '@entities/user'
 import { BottomNav } from '@widgets/bottom-nav'
 import { useContent } from '@entities/content'
@@ -36,28 +36,31 @@ export function ProfileView() {
         className="flex items-start justify-between gap-3 px-5 pb-5 pt-[max(env(safe-area-inset-top),20px)]"
       >
         <div className="flex flex-col gap-1">
-          <Kicker tone="rose">Аккаунт</Kicker>
+          <Kicker tone="rose">{tt({ ru: 'Аккаунт', en: 'Account', de: 'Konto' })}</Kicker>
           <DisplayTitle size="md">{titleProfile}</DisplayTitle>
         </div>
-        {isAdmin && (
-          <Link
-            href="/admin"
-            onClick={() => haptic('light')}
-            className="no-tap-highlight flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium"
-            style={{
-              background: 'var(--rose-dim)',
-              border: '1px solid var(--border-rose)',
-              color: 'var(--rose)',
-            }}
-          >
-            <ShieldCheck size={12} weight="fill" />
-            admin
-          </Link>
-        )}
+        <div className="flex flex-col items-end gap-2">
+          <LanguageSwitcher />
+          {isAdmin && (
+            <Link
+              href="/admin"
+              onClick={() => haptic('light')}
+              className="no-tap-highlight flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium"
+              style={{
+                background: 'var(--rose-dim)',
+                border: '1px solid var(--border-rose)',
+                color: 'var(--rose)',
+              }}
+            >
+              <ShieldCheck size={12} weight="fill" />
+              admin
+            </Link>
+          )}
+        </div>
       </motion.header>
 
       <MemberCard
-        firstName={tgUser?.first_name ?? 'Гость'}
+        firstName={tgUser?.first_name ?? tt({ ru: 'Гость', en: 'Guest', de: 'Gast' })}
         lastName={tgUser?.last_name}
         handle={handle}
         avatarUrl={tgUser?.photo_url}
@@ -90,7 +93,7 @@ export function ProfileView() {
           className="font-sans"
           style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)' }}
         >
-          история 72 часа
+          {tt({ ru: 'история 72 часа', en: 'history kept 72 h', de: 'Verlauf 72 Std.' })}
         </p>
       </motion.section>
 

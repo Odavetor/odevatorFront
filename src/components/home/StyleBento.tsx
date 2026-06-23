@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowRight } from '@phosphor-icons/react'
 import { haptic } from '@/lib/telegram'
+import { pickLabel, tt, useLang } from '@shared/lib'
 import { getPhotoCatalogCached } from '@/lib/catalog'
 import { PHOTO_FILTER_CATEGORIES } from '@/data/generate-options'
 import type { FilterCategory } from '@/data/generate-options'
@@ -13,6 +14,8 @@ import type { FilterCategory } from '@/data/generate-options'
 interface BentoCard {
   id: string
   label: string
+  label_en?: string
+  label_de?: string
   count: number
   thumbnail: string
 }
@@ -21,6 +24,8 @@ function toCards(cats: FilterCategory[]): BentoCard[] {
   return cats.slice(0, 4).map((c) => ({
     id: c.id,
     label: c.label,
+    label_en: c.label_en,
+    label_de: c.label_de,
     count: c.options.length,
     thumbnail: c.options[0]?.afterExample ?? '',
   }))
@@ -51,6 +56,7 @@ function plural(n: number, forms: [string, string, string]): string {
 const HEIGHTS = ['220px', '170px', '170px', '220px']
 
 function StyleBentoBase() {
+  useLang() // re-render labels when the active language changes
   const [cards, setCards] = useState<BentoCard[]>(() => toCards(PHOTO_FILTER_CATEGORIES))
   const [stats, setStats] = useState<CatalogStats>(() => toStats(PHOTO_FILTER_CATEGORIES))
 
@@ -82,7 +88,7 @@ function StyleBentoBase() {
               color: 'var(--text)',
             }}
           >
-            Что можно сделать
+            {tt({ ru: 'Что можно сделать', en: 'What you can do', de: 'Was möglich ist' })}
           </h2>
           <p
             className="mt-1 font-sans"
@@ -92,8 +98,18 @@ function StyleBentoBase() {
               color: 'rgba(255,255,255,0.45)',
             }}
           >
-            {stats.styles} {plural(stats.styles, ['стиль', 'стиля', 'стилей'])} в{' '}
-            {stats.categories} {plural(stats.categories, ['категории', 'категориях', 'категориях'])}
+            {stats.styles}{' '}
+            {tt({
+              ru: plural(stats.styles, ['стиль', 'стиля', 'стилей']),
+              en: stats.styles === 1 ? 'style' : 'styles',
+              de: stats.styles === 1 ? 'Stil' : 'Stile',
+            })}{' '}
+            {tt({ ru: 'в', en: 'in', de: 'in' })} {stats.categories}{' '}
+            {tt({
+              ru: plural(stats.categories, ['категории', 'категориях', 'категориях']),
+              en: stats.categories === 1 ? 'category' : 'categories',
+              de: stats.categories === 1 ? 'Kategorie' : 'Kategorien',
+            })}
           </p>
         </div>
         <Link
@@ -108,7 +124,7 @@ function StyleBentoBase() {
             letterSpacing: '-0.01em',
           }}
         >
-          К фильтрам
+          {tt({ ru: 'К фильтрам', en: 'See filters', de: 'Zu den Filtern' })}
           <ArrowRight size={11} weight="bold" />
         </Link>
       </div>
@@ -138,7 +154,7 @@ function StyleBentoBase() {
               {c.thumbnail && (
                 <Image
                   src={c.thumbnail}
-                  alt={c.label}
+                  alt={pickLabel(c.label, c.label_en, c.label_de)}
                   fill
                   sizes="(max-width: 430px) 50vw, 200px"
                   className="object-cover transition-transform duration-700 ease-out group-active:scale-[1.04]"
@@ -164,7 +180,7 @@ function StyleBentoBase() {
                     color: '#fff',
                   }}
                 >
-                  {c.label}
+                  {pickLabel(c.label, c.label_en, c.label_de)}
                 </p>
                 <p
                   className="font-sans tabular-nums"
@@ -175,7 +191,12 @@ function StyleBentoBase() {
                     marginTop: 2,
                   }}
                 >
-                  {c.count} {c.count === 1 ? 'стиль' : c.count < 5 ? 'стиля' : 'стилей'}
+                  {c.count}{' '}
+                  {tt({
+                    ru: plural(c.count, ['стиль', 'стиля', 'стилей']),
+                    en: c.count === 1 ? 'style' : 'styles',
+                    de: c.count === 1 ? 'Stil' : 'Stile',
+                  })}
                 </p>
               </div>
 

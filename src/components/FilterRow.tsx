@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { pickLabel, useLang } from '@shared/lib'
 import type { FilterOption, FilterCategory } from '@/data/generate-options'
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
 const CHIP_STYLE = { paddingTop: 7, paddingBottom: 7, paddingLeft: 11, paddingRight: 11 }
 
 export default function FilterRow({ category, selected, onSelect }: Props) {
+  useLang() // re-render labels when the active language changes
   return (
     /* Bleed: выходим за px-5 (20px) родителя чтобы чипы не обрезались при скролле */
     <div
@@ -49,7 +51,7 @@ export default function FilterRow({ category, selected, onSelect }: Props) {
               WebkitTapHighlightColor: 'transparent',
             }}
           >
-            {opt.label}
+            {pickLabel(opt.label, opt.label_en, opt.label_de)}
           </motion.button>
         )
       })}

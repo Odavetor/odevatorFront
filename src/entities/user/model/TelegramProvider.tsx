@@ -12,6 +12,9 @@ import {
   ready,
   getDevViewAs,
   type DevViewAs,
+  setLang,
+  storedLang,
+  useLang,
 } from '@shared/lib'
 import type { MeResponse, WalletResponse } from '@shared/api'
 import { getMe } from '@entities/user/api/users'
@@ -127,6 +130,24 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
     if (useMock) return
     setUserData(buildUserData(me, wallet, tgUser))
   }, [me, wallet, tgUser, useMock])
+
+  // Resolve the active UI language: a manual choice (localStorage) always wins,
+  // otherwise follow the Telegram-provided language_code (backend, then client).
+  useEffect(() => {
+    const manual = storedLang()
+    if (manual) {
+      setLang(manual)
+      return
+    }
+    const code = me?.language_code ?? tgUser?.language_code
+    if (code) setLang(code)
+  }, [me?.language_code, tgUser])
+
+  // Keep <html lang> in sync with the active language.
+  const lang = useLang()
+  useEffect(() => {
+    if (typeof document !== 'undefined') document.documentElement.lang = lang
+  }, [lang])
 
   useEffect(() => {
     if (useMock) return

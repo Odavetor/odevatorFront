@@ -2,7 +2,16 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowDown, ArrowUp, Check, FloppyDisk, PencilSimple, Plus, Trash, X } from '@phosphor-icons/react'
+import {
+  ArrowDown,
+  ArrowUp,
+  Check,
+  FloppyDisk,
+  PencilSimple,
+  Plus,
+  Trash,
+  X,
+} from '@phosphor-icons/react'
 import { haptic, hapticNotify } from '@/lib/telegram'
 import {
   createFaq,
@@ -14,10 +23,12 @@ import {
   useFaq,
 } from '@/lib/content'
 import { TEXT_REGISTRY, type TextSpec, type FaqItem } from '@/lib/content/keys'
+import { SUPPORTED_LANGS, setLangPersisted, useLang } from '@shared/lib'
 
 export default function TextsEditor() {
   const faq = useFaq()
   const [error, setError] = useState<string | null>(null)
+  const lang = useLang()
 
   useEffect(() => {
     refreshContent()
@@ -35,9 +46,43 @@ export default function TextsEditor() {
 
   return (
     <div className="flex flex-col gap-6">
+      <div
+        className="flex items-center gap-2 rounded-2xl px-3 py-2"
+        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+      >
+        <span
+          className="font-mono uppercase"
+          style={{ fontSize: 9, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.4)' }}
+        >
+          Язык контента
+        </span>
+        <div className="ml-auto flex gap-1">
+          {SUPPORTED_LANGS.map((l) => {
+            const active = l === lang
+            return (
+              <button
+                key={l}
+                onClick={() => {
+                  haptic('light')
+                  setLangPersisted(l)
+                }}
+                className="rounded-lg px-3 py-1 text-xs font-medium uppercase"
+                style={{
+                  background: active ? 'var(--rose-dim)' : 'rgba(255,255,255,0.04)',
+                  border: active ? '1px solid var(--border-rose)' : '1px solid transparent',
+                  color: active ? 'var(--rose)' : 'rgba(255,255,255,0.55)',
+                }}
+              >
+                {l}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
       {error && (
         <div
-          className="rounded-xl px-3 py-2 text-xs flex items-start justify-between gap-2"
+          className="flex items-start justify-between gap-2 rounded-xl px-3 py-2 text-xs"
           style={{
             background: 'rgba(180,30,60,0.12)',
             border: '1px solid rgba(180,30,60,0.22)',
@@ -74,8 +119,11 @@ export default function TextsEditor() {
               {group}
             </p>
             <div
-              className="rounded-2xl divide-y"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+              className="divide-y rounded-2xl"
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.06)',
+              }}
             >
               {items.map((spec) => (
                 <StringRow key={spec.key} spec={spec} onError={setError} />
@@ -110,7 +158,10 @@ export default function TextsEditor() {
               onError={setError}
             />
           ))}
-          <FaqAddButton onError={setError} nextSortOrder={(faq[faq.length - 1]?.sort_order ?? 0) + 1} />
+          <FaqAddButton
+            onError={setError}
+            nextSortOrder={(faq[faq.length - 1]?.sort_order ?? 0) + 1}
+          />
         </div>
       </section>
     </div>
@@ -157,7 +208,7 @@ function StringRow({ spec, onError }: { spec: TextSpec; onError: (m: string | nu
   }
 
   return (
-    <div className="px-3 py-2.5 flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5 px-3 py-2.5">
       <div className="flex items-center justify-between gap-2">
         <code
           className="font-mono text-[10px]"
@@ -171,7 +222,7 @@ function StringRow({ spec, onError }: { spec: TextSpec; onError: (m: string | nu
               haptic('light')
               setEditing(true)
             }}
-            className="w-7 h-7 rounded-md flex items-center justify-center"
+            className="flex h-7 w-7 items-center justify-center rounded-md"
             style={{ background: 'rgba(255,255,255,0.05)' }}
           >
             <PencilSimple size={12} color="rgba(255,255,255,0.6)" />
@@ -180,7 +231,7 @@ function StringRow({ spec, onError }: { spec: TextSpec; onError: (m: string | nu
           <div className="flex items-center gap-1">
             <button
               onClick={cancel}
-              className="w-7 h-7 rounded-md flex items-center justify-center"
+              className="flex h-7 w-7 items-center justify-center rounded-md"
               style={{ background: 'rgba(255,255,255,0.05)' }}
             >
               <X size={12} color="rgba(255,255,255,0.55)" weight="bold" />
@@ -188,14 +239,18 @@ function StringRow({ spec, onError }: { spec: TextSpec; onError: (m: string | nu
             <button
               onClick={save}
               disabled={!dirty || saving}
-              className="w-7 h-7 rounded-md flex items-center justify-center"
+              className="flex h-7 w-7 items-center justify-center rounded-md"
               style={{
                 background: dirty ? 'var(--rose-dim)' : 'rgba(255,255,255,0.04)',
                 border: dirty ? '1px solid var(--border-rose)' : '1px solid transparent',
                 opacity: !dirty || saving ? 0.45 : 1,
               }}
             >
-              <Check size={12} color={dirty ? 'var(--rose)' : 'rgba(255,255,255,0.4)'} weight="bold" />
+              <Check
+                size={12}
+                color={dirty ? 'var(--rose)' : 'rgba(255,255,255,0.4)'}
+                weight="bold"
+              />
             </button>
           </div>
         )}
@@ -207,7 +262,7 @@ function StringRow({ spec, onError }: { spec: TextSpec; onError: (m: string | nu
             autoFocus
             onChange={(e) => setDraft(e.target.value)}
             rows={3}
-            className="w-full rounded-lg px-3 py-2 text-sm resize-none"
+            className="w-full resize-none rounded-lg px-3 py-2 text-sm"
             style={{
               background: 'rgba(0,0,0,0.3)',
               border: '1px solid rgba(255,255,255,0.08)',
@@ -229,7 +284,7 @@ function StringRow({ spec, onError }: { spec: TextSpec; onError: (m: string | nu
         )
       ) : (
         <p
-          className="text-[13px] leading-snug whitespace-pre-wrap"
+          className="whitespace-pre-wrap text-[13px] leading-snug"
           style={{ color: 'rgba(255,255,255,0.85)' }}
         >
           {current || <span style={{ color: 'rgba(255,255,255,0.3)' }}>{spec.defaultValue}</span>}
@@ -318,7 +373,7 @@ function FaqRow({
     <motion.div
       layout
       transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-      className="rounded-2xl p-3 flex flex-col gap-2"
+      className="flex flex-col gap-2 rounded-2xl p-3"
       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
     >
       <div className="flex items-start justify-between gap-2">
@@ -332,7 +387,7 @@ function FaqRow({
           <button
             disabled={isFirst}
             onClick={() => reorder(-1)}
-            className="w-7 h-7 rounded-md flex items-center justify-center"
+            className="flex h-7 w-7 items-center justify-center rounded-md"
             style={{ background: 'rgba(255,255,255,0.05)', opacity: isFirst ? 0.3 : 1 }}
           >
             <ArrowUp size={11} color="rgba(255,255,255,0.6)" weight="bold" />
@@ -340,21 +395,21 @@ function FaqRow({
           <button
             disabled={isLast}
             onClick={() => reorder(1)}
-            className="w-7 h-7 rounded-md flex items-center justify-center"
+            className="flex h-7 w-7 items-center justify-center rounded-md"
             style={{ background: 'rgba(255,255,255,0.05)', opacity: isLast ? 0.3 : 1 }}
           >
             <ArrowDown size={11} color="rgba(255,255,255,0.6)" weight="bold" />
           </button>
           <button
             onClick={() => setEditing((v) => !v)}
-            className="w-7 h-7 rounded-md flex items-center justify-center"
+            className="flex h-7 w-7 items-center justify-center rounded-md"
             style={{ background: 'rgba(255,255,255,0.05)' }}
           >
             <PencilSimple size={11} color="rgba(255,255,255,0.6)" />
           </button>
           <button
             onClick={remove}
-            className="w-7 h-7 rounded-md flex items-center justify-center"
+            className="flex h-7 w-7 items-center justify-center rounded-md"
             style={{ background: 'rgba(180,30,60,0.15)' }}
           >
             <Trash size={11} color="#ff8aa0" />
@@ -380,7 +435,7 @@ function FaqRow({
             onChange={(e) => setA(e.target.value)}
             placeholder="Ответ"
             rows={3}
-            className="rounded-lg px-3 py-2 text-sm resize-none"
+            className="resize-none rounded-lg px-3 py-2 text-sm"
             style={{
               background: 'rgba(0,0,0,0.3)',
               border: '1px solid rgba(255,255,255,0.08)',
@@ -390,7 +445,7 @@ function FaqRow({
           <button
             onClick={save}
             disabled={!dirty || saving}
-            className="rounded-lg px-3 py-2 text-sm font-medium flex items-center justify-center gap-1.5"
+            className="flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium"
             style={{
               background: dirty ? 'var(--rose-dim)' : 'rgba(255,255,255,0.04)',
               border: dirty ? '1px solid var(--border-rose)' : '1px solid var(--border-1)',
@@ -408,7 +463,7 @@ function FaqRow({
             {item.question}
           </p>
           <p
-            className="text-[12px] leading-relaxed whitespace-pre-wrap"
+            className="whitespace-pre-wrap text-[12px] leading-relaxed"
             style={{ color: 'rgba(255,255,255,0.55)' }}
           >
             {item.answer}
@@ -458,7 +513,7 @@ function FaqAddButton({
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -3 }}
-          className="rounded-2xl p-3 flex flex-col gap-2"
+          className="flex flex-col gap-2 rounded-2xl p-3"
           style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-rose)' }}
         >
           <input
@@ -478,7 +533,7 @@ function FaqAddButton({
             onChange={(e) => setA(e.target.value)}
             placeholder="Ответ"
             rows={3}
-            className="rounded-lg px-3 py-2 text-sm resize-none"
+            className="resize-none rounded-lg px-3 py-2 text-sm"
             style={{
               background: 'rgba(0,0,0,0.3)',
               border: '1px solid rgba(255,255,255,0.08)',
@@ -500,7 +555,7 @@ function FaqAddButton({
             <button
               onClick={save}
               disabled={saving || !q.trim() || !a.trim()}
-              className="flex-1 rounded-lg px-3 py-2 text-sm font-medium flex items-center justify-center gap-1.5"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium"
               style={{
                 background: 'var(--rose-dim)',
                 border: '1px solid var(--border-rose)',
@@ -521,7 +576,7 @@ function FaqAddButton({
             haptic('light')
             setOpen(true)
           }}
-          className="rounded-2xl py-3 text-sm font-medium flex items-center justify-center gap-1.5"
+          className="flex items-center justify-center gap-1.5 rounded-2xl py-3 text-sm font-medium"
           style={{
             background: 'rgba(255,255,255,0.03)',
             border: '1px dashed var(--border-rose)',

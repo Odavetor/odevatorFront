@@ -2,6 +2,8 @@ export interface FilterOption {
   id: string
   numericId?: number
   label: string
+  label_en?: string
+  label_de?: string
   beforeExample: string
   afterExample: string
   prompt_text?: string
@@ -17,6 +19,8 @@ export interface FilterCategory {
   id: string
   numericId?: number
   label: string
+  label_en?: string
+  label_de?: string
   sort_order?: number
   description?: string
   options: FilterOption[]

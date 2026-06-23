@@ -21,6 +21,20 @@ export {
   getTimeGreeting,
 } from './telegram'
 export type { TelegramUserLike } from './telegram'
+export {
+  type Lang,
+  SUPPORTED_LANGS,
+  normalizeLang,
+  getLang,
+  setLang,
+  storedLang,
+  setLangPersisted,
+  subscribeLang,
+  tt,
+  pickLabel,
+  intlLocale,
+  useLang,
+} from './locale'
 export { IS_DEV, isMockEnabled, getDevViewAs, setDevViewAs } from './dev'
 export type { DevViewAs } from './dev'
 export {

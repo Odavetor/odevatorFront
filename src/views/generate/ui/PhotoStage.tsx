@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion'
 import { BeforeAfterPreview } from '@widgets/before-after-preview'
 import { PhotoUpload } from '@features/photo-upload'
 import { CategoryStepper } from '@widgets/category-stepper'
+import { pickLabel } from '@shared/lib'
 import type { UsePhotoGenerateResult } from '@features/photo-generate'
 
 interface Props {
@@ -19,7 +20,11 @@ export function PhotoStage({ photo }: Props) {
             key={photo.pickedOption.id}
             beforeUrl={photo.pickedOption.beforeExample}
             afterUrl={photo.pickedOption.afterExample}
-            label={photo.pickedOption.label}
+            label={pickLabel(
+              photo.pickedOption.label,
+              photo.pickedOption.label_en,
+              photo.pickedOption.label_de,
+            )}
           />
         )}
       </AnimatePresence>

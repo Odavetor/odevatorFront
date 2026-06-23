@@ -52,7 +52,6 @@ export function GenerateView() {
   }
 
   function resetActive() {
-    photo.clearFile()
     photo.resetGenState()
   }
 
@@ -91,7 +90,7 @@ export function GenerateView() {
           busy={busy}
           cost={PHOTO_COST}
           onRun={handleRunPhoto}
-          hasFile={!!photo.file}
+          hasFile={!!photo.file || !!photo.lastFileUrl}
         />
       )}
 
