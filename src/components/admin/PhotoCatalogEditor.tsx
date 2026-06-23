@@ -3,7 +3,14 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  PencilSimple, X, FloppyDisk, ArrowUp, ArrowDown, Star, Plus, Trash,
+  PencilSimple,
+  X,
+  FloppyDisk,
+  ArrowUp,
+  ArrowDown,
+  Star,
+  Plus,
+  Trash,
 } from '@phosphor-icons/react'
 import {
   fetchPhotoCatalog,
@@ -20,6 +27,8 @@ import ImageUploader from './ImageUploader'
 
 interface OptionDraft {
   label: string
+  label_en: string
+  label_de: string
   before_image_url: string | null
   after_image_url: string | null
   prompt_text: string
@@ -28,13 +37,15 @@ interface OptionDraft {
   height: number
   sort_order: number
   description: string
-  price_minor: string  // строка для удобного ввода; '' = глобальная цена
+  price_minor: string // строка для удобного ввода; '' = глобальная цена
   // только для create:
   slug?: string
 }
 
 interface CategoryDraft {
   label: string
+  label_en: string
+  label_de: string
   slug: string
   sort_order: number
   description: string
@@ -44,6 +55,8 @@ interface CategoryDraft {
 
 const emptyOptionDraft = (sortOrder: number): OptionDraft => ({
   label: '',
+  label_en: '',
+  label_de: '',
   before_image_url: null,
   after_image_url: null,
   prompt_text: '',
@@ -59,6 +72,8 @@ const emptyOptionDraft = (sortOrder: number): OptionDraft => ({
 function draftFrom(opt: FilterOption): OptionDraft {
   return {
     label: opt.label,
+    label_en: opt.label_en ?? '',
+    label_de: opt.label_de ?? '',
     before_image_url: opt.beforeExample,
     after_image_url: opt.afterExample,
     prompt_text: opt.prompt_text ?? '',
@@ -91,7 +106,10 @@ export default function PhotoCatalogEditor() {
     try {
       const data = await fetchPhotoCatalog()
       setCategories(data.categories)
-      if ((!activeCatId || !data.categories.find((c) => c.id === activeCatId)) && data.categories.length > 0) {
+      if (
+        (!activeCatId || !data.categories.find((c) => c.id === activeCatId)) &&
+        data.categories.length > 0
+      ) {
         setActiveCatId(data.categories[0].id)
       }
     } catch (e) {
@@ -135,11 +153,16 @@ export default function PhotoCatalogEditor() {
   }
 
   function validateOption(d: OptionDraft, isCreate: boolean): string | null {
-    if (!d.label.trim() || !d.before_image_url || !d.after_image_url) return 'Заполните название и обе превью'
+    if (!d.label.trim() || !d.before_image_url || !d.after_image_url)
+      return 'Заполните название и обе превью'
     if (!d.prompt_text.trim()) return 'Заполните промпт для AI'
-    if (d.width < 1 || d.width > 1024 || d.height < 1 || d.height > 1024) return 'Width и height должны быть в 1–1024'
+    if (d.width < 1 || d.width > 1024 || d.height < 1 || d.height > 1024)
+      return 'Width и height должны быть в 1–1024'
     if (isCreate && !d.slug?.trim()) return 'Заполните slug'
-    if (d.price_minor.trim() !== '' && (Number.isNaN(Number(d.price_minor)) || Number(d.price_minor) < 0)) {
+    if (
+      d.price_minor.trim() !== '' &&
+      (Number.isNaN(Number(d.price_minor)) || Number(d.price_minor) < 0)
+    ) {
       return 'Цена должна быть числом ≥ 0 или пустой (= глобальная)'
     }
     return null
@@ -148,11 +171,17 @@ export default function PhotoCatalogEditor() {
   async function handleSaveOption() {
     if (!optionDraft) return
     const err = validateOption(optionDraft, creatingOption)
-    if (err) { hapticNotify('warning'); setError(err); return }
+    if (err) {
+      hapticNotify('warning')
+      setError(err)
+      return
+    }
 
     const d = optionDraft
     const basePayload = {
       label: d.label.trim(),
+      label_en: d.label_en.trim(),
+      label_de: d.label_de.trim(),
       before_image_url: d.before_image_url!,
       after_image_url: d.after_image_url!,
       prompt_text: d.prompt_text.trim(),
@@ -204,7 +233,14 @@ export default function PhotoCatalogEditor() {
 
   function startCreateCategory() {
     const nextSort = (categories[categories.length - 1]?.sort_order ?? 0) + 10
-    setCategoryDraft({ slug: '', label: '', sort_order: nextSort, description: '' })
+    setCategoryDraft({
+      slug: '',
+      label: '',
+      label_en: '',
+      label_de: '',
+      sort_order: nextSort,
+      description: '',
+    })
   }
 
   function startEditCategory(cat: FilterCategory) {
@@ -217,6 +253,8 @@ export default function PhotoCatalogEditor() {
       numericId: cat.numericId,
       slug: cat.id,
       label: cat.label,
+      label_en: cat.label_en ?? '',
+      label_de: cat.label_de ?? '',
       sort_order: cat.sort_order ?? 0,
       description: cat.description ?? '',
     })
@@ -225,12 +263,22 @@ export default function PhotoCatalogEditor() {
   async function handleSaveCategory() {
     if (!categoryDraft) return
     const d = categoryDraft
-    if (!d.label.trim()) { hapticNotify('warning'); setError('Заполните название категории'); return }
-    if (!d.numericId && !d.slug.trim()) { hapticNotify('warning'); setError('Заполните slug'); return }
+    if (!d.label.trim()) {
+      hapticNotify('warning')
+      setError('Заполните название категории')
+      return
+    }
+    if (!d.numericId && !d.slug.trim()) {
+      hapticNotify('warning')
+      setError('Заполните slug')
+      return
+    }
     try {
       if (d.numericId) {
         await updatePhotoCategory(d.numericId, {
           label: d.label.trim(),
+          label_en: d.label_en.trim(),
+          label_de: d.label_de.trim(),
           sort_order: d.sort_order,
           description: d.description.trim(),
         })
@@ -238,6 +286,8 @@ export default function PhotoCatalogEditor() {
         await createPhotoCategory({
           slug: d.slug.trim(),
           label: d.label.trim(),
+          label_en: d.label_en.trim(),
+          label_de: d.label_de.trim(),
           sort_order: d.sort_order,
           description: d.description.trim(),
         })
@@ -253,7 +303,12 @@ export default function PhotoCatalogEditor() {
 
   async function handleDeleteCategory(cat: FilterCategory) {
     if (typeof cat.numericId !== 'number') return
-    if (!confirm(`Удалить категорию «${cat.label}» и все её варианты? Soft-delete, можно восстановить в БД.`)) return
+    if (
+      !confirm(
+        `Удалить категорию «${cat.label}» и все её варианты? Soft-delete, можно восстановить в БД.`,
+      )
+    )
+      return
     try {
       await deletePhotoCategory(cat.numericId)
       hapticNotify('success')
@@ -289,7 +344,10 @@ export default function PhotoCatalogEditor() {
     if (!swap || typeof swap.numericId !== 'number') return
     try {
       await Promise.all([
-        updatePhotoOption(opt.numericId, payloadFrom(opt, swap.sort_order ?? (idx + direction) * 10)),
+        updatePhotoOption(
+          opt.numericId,
+          payloadFrom(opt, swap.sort_order ?? (idx + direction) * 10),
+        ),
         updatePhotoOption(swap.numericId, payloadFrom(swap, opt.sort_order ?? idx * 10)),
       ])
       haptic('light')
@@ -303,27 +361,40 @@ export default function PhotoCatalogEditor() {
   return (
     <div className="flex flex-col gap-4">
       {error && (
-        <div className="rounded-xl px-3 py-2 text-xs flex items-start justify-between gap-2"
-             style={{ background: 'rgba(180,30,60,0.12)', border: '1px solid rgba(180,30,60,0.22)', color: '#ff9aae' }}>
+        <div
+          className="flex items-start justify-between gap-2 rounded-xl px-3 py-2 text-xs"
+          style={{
+            background: 'rgba(180,30,60,0.12)',
+            border: '1px solid rgba(180,30,60,0.22)',
+            color: '#ff9aae',
+          }}
+        >
           <span>{error}</span>
-          <button onClick={() => setError(null)}><X size={12} /></button>
+          <button onClick={() => setError(null)}>
+            <X size={12} />
+          </button>
         </div>
       )}
 
       {/* Categories tabs + add button */}
       <div className="flex items-center gap-2">
-        <div className="flex gap-2 overflow-x-auto flex-1" style={{ scrollbarWidth: 'none' }}>
+        <div className="flex flex-1 gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {categories.map((cat) => {
             const active = cat.id === activeCatId
             return (
               <button
                 key={cat.id}
-                onClick={() => { haptic('light'); setActiveCatId(cat.id) }}
-                className="rounded-full text-sm font-medium flex-shrink-0"
+                onClick={() => {
+                  haptic('light')
+                  setActiveCatId(cat.id)
+                }}
+                className="flex-shrink-0 rounded-full text-sm font-medium"
                 style={{
                   padding: '7px 14px',
                   background: active ? 'var(--rose-dim)' : 'rgba(255,255,255,0.04)',
-                  boxShadow: active ? 'inset 0 0 0 1.5px var(--rose)' : 'inset 0 0 0 1px var(--border-2)',
+                  boxShadow: active
+                    ? 'inset 0 0 0 1.5px var(--rose)'
+                    : 'inset 0 0 0 1px var(--border-2)',
                   color: active ? 'var(--rose)' : 'rgba(255,255,255,0.55)',
                 }}
               >
@@ -333,8 +404,11 @@ export default function PhotoCatalogEditor() {
           })}
         </div>
         <button
-          onClick={() => { haptic('light'); startCreateCategory() }}
-          className="rounded-full flex items-center gap-1.5 flex-shrink-0"
+          onClick={() => {
+            haptic('light')
+            startCreateCategory()
+          }}
+          className="flex flex-shrink-0 items-center gap-1.5 rounded-full"
           title="Создать категорию"
           style={{
             padding: '7px 12px',
@@ -349,34 +423,42 @@ export default function PhotoCatalogEditor() {
         </button>
       </div>
 
-      {loading && <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Загрузка…</p>}
+      {loading && (
+        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+          Загрузка…
+        </p>
+      )}
 
       {activeCat && (
         <div className="flex flex-col gap-3">
           <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <h3 className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
                 Варианты в «{activeCat.label}»
               </h3>
-              <p className="text-[11px] leading-snug mt-0.5 flex items-center gap-1"
-                 style={{ color: 'rgba(255,255,255,0.45)' }}>
+              <p
+                className="mt-0.5 flex items-center gap-1 text-[11px] leading-snug"
+                style={{ color: 'rgba(255,255,255,0.45)' }}
+              >
                 <Star size={10} weight="fill" color="var(--gold)" />
                 Первый вариант показывается на главной как пример
               </p>
             </div>
-            <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div className="flex flex-shrink-0 items-center gap-1.5">
               <button
                 onClick={() => startEditCategory(activeCat)}
                 title="Редактировать категорию"
-                className="w-7 h-7 rounded-md flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.06)' }}>
+                className="flex h-7 w-7 items-center justify-center rounded-md"
+                style={{ background: 'rgba(255,255,255,0.06)' }}
+              >
                 <PencilSimple size={11} color="rgba(255,255,255,0.6)" />
               </button>
               <button
                 onClick={() => handleDeleteCategory(activeCat)}
                 title="Удалить категорию"
-                className="w-7 h-7 rounded-md flex items-center justify-center"
-                style={{ background: 'rgba(180,30,60,0.12)' }}>
+                className="flex h-7 w-7 items-center justify-center rounded-md"
+                style={{ background: 'rgba(180,30,60,0.12)' }}
+              >
                 <Trash size={11} color="#ff9aae" />
               </button>
             </div>
@@ -392,70 +474,100 @@ export default function PhotoCatalogEditor() {
                   key={opt.id}
                   layout
                   transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-                  className="relative rounded-xl overflow-hidden flex flex-col"
+                  className="relative flex flex-col overflow-hidden rounded-xl"
                   style={{
                     background: 'rgba(255,255,255,0.04)',
-                    border: isHero ? '1px solid rgba(201,150,106,0.32)' : '1px solid rgba(255,255,255,0.08)',
+                    border: isHero
+                      ? '1px solid rgba(201,150,106,0.32)'
+                      : '1px solid rgba(255,255,255,0.08)',
                     boxShadow: isHero ? '0 0 0 2px rgba(201,150,106,0.08)' : 'none',
                   }}
                 >
                   {isHero && (
                     <div
-                      className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded font-mono uppercase"
+                      className="absolute left-1.5 top-1.5 z-10 flex items-center gap-1 rounded px-1.5 py-0.5 font-mono uppercase"
                       style={{
                         background: 'rgba(13,11,16,0.78)',
                         border: '1px solid rgba(201,150,106,0.35)',
                         color: 'var(--gold)',
-                        fontSize: 9, letterSpacing: '0.16em', backdropFilter: 'blur(6px)',
+                        fontSize: 9,
+                        letterSpacing: '0.16em',
+                        backdropFilter: 'blur(6px)',
                       }}
                     >
                       <Star size={9} weight="fill" /> на главной
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 aspect-[1.6/1]">
+                  <div className="grid aspect-[1.6/1] grid-cols-2">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={opt.beforeExample} alt="before" className="object-cover w-full h-full" />
+                    <img
+                      src={opt.beforeExample}
+                      alt="before"
+                      className="h-full w-full object-cover"
+                    />
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={opt.afterExample} alt="after" className="object-cover w-full h-full" />
+                    <img
+                      src={opt.afterExample}
+                      alt="after"
+                      className="h-full w-full object-cover"
+                    />
                   </div>
 
-                  <div className="px-2.5 py-2 flex items-center justify-between gap-1">
-                    <span className="text-xs font-medium truncate" style={{ color: 'rgba(255,255,255,0.8)' }}>{opt.label}</span>
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <button onClick={() => reorderOption(opt, -1)} disabled={isFirst}
+                  <div className="flex items-center justify-between gap-1 px-2.5 py-2">
+                    <span
+                      className="truncate text-xs font-medium"
+                      style={{ color: 'rgba(255,255,255,0.8)' }}
+                    >
+                      {opt.label}
+                    </span>
+                    <div className="flex flex-shrink-0 items-center gap-1">
+                      <button
+                        onClick={() => reorderOption(opt, -1)}
+                        disabled={isFirst}
                         title="Поднять выше"
-                        className="w-6 h-6 rounded-md flex items-center justify-center"
-                        style={{ background: 'rgba(255,255,255,0.06)', opacity: isFirst ? 0.3 : 1 }}>
+                        className="flex h-6 w-6 items-center justify-center rounded-md"
+                        style={{ background: 'rgba(255,255,255,0.06)', opacity: isFirst ? 0.3 : 1 }}
+                      >
                         <ArrowUp size={10} color="rgba(255,255,255,0.6)" weight="bold" />
                       </button>
-                      <button onClick={() => reorderOption(opt, 1)} disabled={isLast}
+                      <button
+                        onClick={() => reorderOption(opt, 1)}
+                        disabled={isLast}
                         title="Опустить ниже"
-                        className="w-6 h-6 rounded-md flex items-center justify-center"
-                        style={{ background: 'rgba(255,255,255,0.06)', opacity: isLast ? 0.3 : 1 }}>
+                        className="flex h-6 w-6 items-center justify-center rounded-md"
+                        style={{ background: 'rgba(255,255,255,0.06)', opacity: isLast ? 0.3 : 1 }}
+                      >
                         <ArrowDown size={10} color="rgba(255,255,255,0.6)" weight="bold" />
                       </button>
-                      <button onClick={() => startEditOption(opt)} title="Редактировать"
-                        className="w-6 h-6 rounded-md flex items-center justify-center"
-                        style={{ background: 'rgba(255,255,255,0.06)' }}>
+                      <button
+                        onClick={() => startEditOption(opt)}
+                        title="Редактировать"
+                        className="flex h-6 w-6 items-center justify-center rounded-md"
+                        style={{ background: 'rgba(255,255,255,0.06)' }}
+                      >
                         <PencilSimple size={10} color="rgba(255,255,255,0.6)" />
                       </button>
-                      <button onClick={() => handleDeleteOption(opt)} title="Удалить"
-                        className="w-6 h-6 rounded-md flex items-center justify-center"
-                        style={{ background: 'rgba(180,30,60,0.12)' }}>
+                      <button
+                        onClick={() => handleDeleteOption(opt)}
+                        title="Удалить"
+                        className="flex h-6 w-6 items-center justify-center rounded-md"
+                        style={{ background: 'rgba(180,30,60,0.12)' }}
+                      >
                         <Trash size={10} color="#ff9aae" />
                       </button>
                     </div>
                   </div>
                   {opt.price_minor != null && (
-                    <div className="px-2.5 pb-2 -mt-1">
+                    <div className="-mt-1 px-2.5 pb-2">
                       <span
-                        className="font-mono text-[10px] px-1.5 py-0.5 rounded"
+                        className="rounded px-1.5 py-0.5 font-mono text-[10px]"
                         style={{
                           background: 'rgba(201,150,106,0.12)',
                           color: 'var(--gold)',
                           border: '1px solid rgba(201,150,106,0.28)',
-                        }}>
+                        }}
+                      >
                         {(opt.price_minor / 100).toFixed(2)} ₽
                       </span>
                     </div>
@@ -466,20 +578,24 @@ export default function PhotoCatalogEditor() {
 
             {/* Add option tile */}
             <button
-              onClick={() => { haptic('light'); startCreateOption() }}
-              className="rounded-xl aspect-[1.6/1] flex flex-col items-center justify-center gap-1 col-span-2"
+              onClick={() => {
+                haptic('light')
+                startCreateOption()
+              }}
+              className="col-span-2 flex aspect-[1.6/1] flex-col items-center justify-center gap-1 rounded-xl"
               style={{
                 background: 'rgba(95,210,150,0.06)',
                 border: '1px dashed rgba(95,210,150,0.32)',
                 color: '#5fd296',
-              }}>
+              }}
+            >
               <Plus size={18} weight="bold" />
               <span className="text-xs font-medium">Добавить вариант</span>
             </button>
           </div>
 
           {activeCat.options.length === 0 && (
-            <p className="text-xs text-center py-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <p className="py-3 text-center text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
               Пока нет вариантов
             </p>
           )}
@@ -487,7 +603,7 @@ export default function PhotoCatalogEditor() {
       )}
 
       {!activeCat && !loading && categories.length === 0 && (
-        <p className="text-xs text-center py-6" style={{ color: 'rgba(255,255,255,0.4)' }}>
+        <p className="py-6 text-center text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
           Нет категорий — создайте первую через кнопку выше
         </p>
       )}
@@ -496,25 +612,38 @@ export default function PhotoCatalogEditor() {
       <AnimatePresence>
         {optionDraft && (
           <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="fixed inset-0 z-[60] flex items-end justify-center"
             style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}
             onClick={closeOptionForm}
           >
             <motion.div
-              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 320 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-[430px] rounded-t-3xl p-5 flex flex-col gap-3"
-              style={{ background: '#15141a', border: '1px solid rgba(255,255,255,0.08)', maxHeight: '90dvh', overflowY: 'auto' }}
+              className="flex w-full max-w-[430px] flex-col gap-3 rounded-t-3xl p-5"
+              style={{
+                background: '#15141a',
+                border: '1px solid rgba(255,255,255,0.08)',
+                maxHeight: '90dvh',
+                overflowY: 'auto',
+              }}
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold" style={{ color: 'white' }}>
-                  {creatingOption ? 'Новый вариант' : `Редактировать «${editingOption?.label ?? ''}»`}
+                  {creatingOption
+                    ? 'Новый вариант'
+                    : `Редактировать «${editingOption?.label ?? ''}»`}
                 </h3>
-                <button onClick={closeOptionForm}
-                  className="w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(255,255,255,0.06)' }}>
+                <button
+                  onClick={closeOptionForm}
+                  className="flex h-8 w-8 items-center justify-center rounded-full"
+                  style={{ background: 'rgba(255,255,255,0.06)' }}
+                >
                   <X size={14} color="white" />
                 </button>
               </div>
@@ -522,75 +651,137 @@ export default function PhotoCatalogEditor() {
               {creatingOption && (
                 <input
                   value={optionDraft.slug ?? ''}
-                  onChange={(e) => setOptionDraft((d) => d && ({ ...d, slug: e.target.value }))}
+                  onChange={(e) => setOptionDraft((d) => d && { ...d, slug: e.target.value })}
                   placeholder="slug (латиница, без пробелов)"
-                  className="rounded-lg px-3 py-2 text-sm font-mono"
-                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                  className="rounded-lg px-3 py-2 font-mono text-sm"
+                  style={{
+                    background: 'rgba(0,0,0,0.3)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    color: 'white',
+                  }}
                 />
               )}
 
               <input
                 value={optionDraft.label}
-                onChange={(e) => setOptionDraft((d) => d && ({ ...d, label: e.target.value }))}
-                placeholder="Название"
+                onChange={(e) => setOptionDraft((d) => d && { ...d, label: e.target.value })}
+                placeholder="Название (RU)"
                 className="rounded-lg px-3 py-2 text-sm"
-                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                style={{
+                  background: 'rgba(0,0,0,0.3)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: 'white',
+                }}
               />
+              <div className="grid grid-cols-2 gap-2.5">
+                <input
+                  value={optionDraft.label_en}
+                  onChange={(e) => setOptionDraft((d) => d && { ...d, label_en: e.target.value })}
+                  placeholder="Label (EN)"
+                  className="rounded-lg px-3 py-2 text-sm"
+                  style={{
+                    background: 'rgba(0,0,0,0.3)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    color: 'white',
+                  }}
+                />
+                <input
+                  value={optionDraft.label_de}
+                  onChange={(e) => setOptionDraft((d) => d && { ...d, label_de: e.target.value })}
+                  placeholder="Label (DE)"
+                  className="rounded-lg px-3 py-2 text-sm"
+                  style={{
+                    background: 'rgba(0,0,0,0.3)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    color: 'white',
+                  }}
+                />
+              </div>
 
               <textarea
                 value={optionDraft.description}
-                onChange={(e) => setOptionDraft((d) => d && ({ ...d, description: e.target.value }))}
+                onChange={(e) => setOptionDraft((d) => d && { ...d, description: e.target.value })}
                 placeholder="Описание (опционально)"
                 rows={2}
-                className="rounded-lg px-3 py-2 text-sm resize-none"
-                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                className="resize-none rounded-lg px-3 py-2 text-sm"
+                style={{
+                  background: 'rgba(0,0,0,0.3)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: 'white',
+                }}
               />
 
               <div className="grid grid-cols-2 gap-2.5">
                 <ImageUploader
                   label="ДО"
                   value={optionDraft.before_image_url}
-                  onChange={(url) => setOptionDraft((d) => d && ({ ...d, before_image_url: url }))}
+                  onChange={(url) => setOptionDraft((d) => d && { ...d, before_image_url: url })}
                 />
                 <ImageUploader
                   label="ПОСЛЕ"
                   value={optionDraft.after_image_url}
-                  onChange={(url) => setOptionDraft((d) => d && ({ ...d, after_image_url: url }))}
+                  onChange={(url) => setOptionDraft((d) => d && { ...d, after_image_url: url })}
                 />
               </div>
 
-              <div className="flex flex-col gap-2 pt-3 mt-1" style={{ borderTop: '1px solid var(--border-1)' }}>
-                <p className="font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.2em', color: 'var(--rose)' }}>
+              <div
+                className="mt-1 flex flex-col gap-2 pt-3"
+                style={{ borderTop: '1px solid var(--border-1)' }}
+              >
+                <p
+                  className="font-mono uppercase"
+                  style={{ fontSize: 9, letterSpacing: '0.2em', color: 'var(--rose)' }}
+                >
                   Параметры генерации
                 </p>
 
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.55)' }}>Промпт для AI</span>
+                  <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                    Промпт для AI
+                  </span>
                   <textarea
                     value={optionDraft.prompt_text}
-                    onChange={(e) => setOptionDraft((d) => d && ({ ...d, prompt_text: e.target.value }))}
+                    onChange={(e) =>
+                      setOptionDraft((d) => d && { ...d, prompt_text: e.target.value })
+                    }
                     rows={3}
-                    className="rounded-lg px-3 py-2 text-sm resize-none"
-                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                    className="resize-none rounded-lg px-3 py-2 text-sm"
+                    style={{
+                      background: 'rgba(0,0,0,0.3)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      color: 'white',
+                    }}
                   />
                 </label>
 
                 <div className="grid grid-cols-3 gap-2">
                   <label className="flex flex-col gap-1">
-                    <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.55)' }}>Модель</span>
-                    <div className="flex p-0.5 rounded-lg"
-                      style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                      Модель
+                    </span>
+                    <div
+                      className="flex rounded-lg p-0.5"
+                      style={{
+                        background: 'rgba(0,0,0,0.3)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                      }}
+                    >
                       {([2, 3] as const).map((m) => {
                         const active = optionDraft.ai_model_type === m
                         return (
-                          <button key={m} type="button"
-                            onClick={() => setOptionDraft((d) => d && ({ ...d, ai_model_type: m }))}
-                            className="flex-1 py-1.5 text-xs font-medium rounded-md"
+                          <button
+                            key={m}
+                            type="button"
+                            onClick={() => setOptionDraft((d) => d && { ...d, ai_model_type: m })}
+                            className="flex-1 rounded-md py-1.5 text-xs font-medium"
                             style={{
                               background: active ? 'var(--rose-dim)' : 'transparent',
-                              border: active ? '1px solid var(--border-rose)' : '1px solid transparent',
+                              border: active
+                                ? '1px solid var(--border-rose)'
+                                : '1px solid transparent',
                               color: active ? 'var(--rose)' : 'rgba(255,255,255,0.5)',
-                            }}>
+                            }}
+                          >
                             v{m}
                           </button>
                         )
@@ -598,18 +789,44 @@ export default function PhotoCatalogEditor() {
                     </div>
                   </label>
                   <label className="flex flex-col gap-1">
-                    <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.55)' }}>Width</span>
-                    <input type="number" min={1} max={1024} value={optionDraft.width}
-                      onChange={(e) => setOptionDraft((d) => d && ({ ...d, width: Number(e.target.value) || 0 }))}
-                      className="rounded-lg px-2.5 py-1.5 text-sm font-mono"
-                      style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }} />
+                    <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                      Width
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={1024}
+                      value={optionDraft.width}
+                      onChange={(e) =>
+                        setOptionDraft((d) => d && { ...d, width: Number(e.target.value) || 0 })
+                      }
+                      className="rounded-lg px-2.5 py-1.5 font-mono text-sm"
+                      style={{
+                        background: 'rgba(0,0,0,0.3)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        color: 'white',
+                      }}
+                    />
                   </label>
                   <label className="flex flex-col gap-1">
-                    <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.55)' }}>Height</span>
-                    <input type="number" min={1} max={1024} value={optionDraft.height}
-                      onChange={(e) => setOptionDraft((d) => d && ({ ...d, height: Number(e.target.value) || 0 }))}
-                      className="rounded-lg px-2.5 py-1.5 text-sm font-mono"
-                      style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }} />
+                    <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                      Height
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={1024}
+                      value={optionDraft.height}
+                      onChange={(e) =>
+                        setOptionDraft((d) => d && { ...d, height: Number(e.target.value) || 0 })
+                      }
+                      className="rounded-lg px-2.5 py-1.5 font-mono text-sm"
+                      style={{
+                        background: 'rgba(0,0,0,0.3)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        color: 'white',
+                      }}
+                    />
                   </label>
                 </div>
 
@@ -621,16 +838,28 @@ export default function PhotoCatalogEditor() {
                     type="text"
                     inputMode="numeric"
                     value={optionDraft.price_minor}
-                    onChange={(e) => setOptionDraft((d) => d && ({ ...d, price_minor: e.target.value }))}
+                    onChange={(e) =>
+                      setOptionDraft((d) => d && { ...d, price_minor: e.target.value })
+                    }
                     placeholder="напр. 4900 = 49 ₽"
-                    className="rounded-lg px-3 py-1.5 text-sm font-mono"
-                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }} />
+                    className="rounded-lg px-3 py-1.5 font-mono text-sm"
+                    style={{
+                      background: 'rgba(0,0,0,0.3)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      color: 'white',
+                    }}
+                  />
                 </label>
               </div>
 
-              <button onClick={handleSaveOption}
-                className="w-full rounded-2xl py-3 font-semibold text-sm flex items-center justify-center gap-2"
-                style={{ background: 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)', color: 'white' }}>
+              <button
+                onClick={handleSaveOption}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-semibold"
+                style={{
+                  background: 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)',
+                  color: 'white',
+                }}
+              >
                 <FloppyDisk size={16} weight="fill" /> Сохранить
               </button>
             </motion.div>
@@ -642,25 +871,36 @@ export default function PhotoCatalogEditor() {
       <AnimatePresence>
         {categoryDraft && (
           <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="fixed inset-0 z-[60] flex items-end justify-center"
             style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}
             onClick={() => setCategoryDraft(null)}
           >
             <motion.div
-              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 320 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-[430px] rounded-t-3xl p-5 flex flex-col gap-3"
-              style={{ background: '#15141a', border: '1px solid rgba(255,255,255,0.08)', maxHeight: '90dvh', overflowY: 'auto' }}
+              className="flex w-full max-w-[430px] flex-col gap-3 rounded-t-3xl p-5"
+              style={{
+                background: '#15141a',
+                border: '1px solid rgba(255,255,255,0.08)',
+                maxHeight: '90dvh',
+                overflowY: 'auto',
+              }}
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold" style={{ color: 'white' }}>
                   {categoryDraft.numericId ? 'Редактировать категорию' : 'Новая категория'}
                 </h3>
-                <button onClick={() => setCategoryDraft(null)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(255,255,255,0.06)' }}>
+                <button
+                  onClick={() => setCategoryDraft(null)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full"
+                  style={{ background: 'rgba(255,255,255,0.06)' }}
+                >
                   <X size={14} color="white" />
                 </button>
               </div>
@@ -668,41 +908,95 @@ export default function PhotoCatalogEditor() {
               {!categoryDraft.numericId && (
                 <input
                   value={categoryDraft.slug}
-                  onChange={(e) => setCategoryDraft((d) => d && ({ ...d, slug: e.target.value }))}
+                  onChange={(e) => setCategoryDraft((d) => d && { ...d, slug: e.target.value })}
                   placeholder="slug (латиница, без пробелов)"
-                  className="rounded-lg px-3 py-2 text-sm font-mono"
-                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                  className="rounded-lg px-3 py-2 font-mono text-sm"
+                  style={{
+                    background: 'rgba(0,0,0,0.3)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    color: 'white',
+                  }}
                 />
               )}
 
               <input
                 value={categoryDraft.label}
-                onChange={(e) => setCategoryDraft((d) => d && ({ ...d, label: e.target.value }))}
-                placeholder="Название (видно пользователю)"
+                onChange={(e) => setCategoryDraft((d) => d && { ...d, label: e.target.value })}
+                placeholder="Название RU (видно пользователю)"
                 className="rounded-lg px-3 py-2 text-sm"
-                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                style={{
+                  background: 'rgba(0,0,0,0.3)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: 'white',
+                }}
               />
+              <div className="grid grid-cols-2 gap-2.5">
+                <input
+                  value={categoryDraft.label_en}
+                  onChange={(e) => setCategoryDraft((d) => d && { ...d, label_en: e.target.value })}
+                  placeholder="Label (EN)"
+                  className="rounded-lg px-3 py-2 text-sm"
+                  style={{
+                    background: 'rgba(0,0,0,0.3)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    color: 'white',
+                  }}
+                />
+                <input
+                  value={categoryDraft.label_de}
+                  onChange={(e) => setCategoryDraft((d) => d && { ...d, label_de: e.target.value })}
+                  placeholder="Label (DE)"
+                  className="rounded-lg px-3 py-2 text-sm"
+                  style={{
+                    background: 'rgba(0,0,0,0.3)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    color: 'white',
+                  }}
+                />
+              </div>
 
               <textarea
                 value={categoryDraft.description}
-                onChange={(e) => setCategoryDraft((d) => d && ({ ...d, description: e.target.value }))}
+                onChange={(e) =>
+                  setCategoryDraft((d) => d && { ...d, description: e.target.value })
+                }
                 placeholder="Описание (опционально)"
                 rows={2}
-                className="rounded-lg px-3 py-2 text-sm resize-none"
-                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                className="resize-none rounded-lg px-3 py-2 text-sm"
+                style={{
+                  background: 'rgba(0,0,0,0.3)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: 'white',
+                }}
               />
 
               <label className="flex flex-col gap-1">
-                <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.55)' }}>Sort order</span>
-                <input type="number" value={categoryDraft.sort_order}
-                  onChange={(e) => setCategoryDraft((d) => d && ({ ...d, sort_order: Number(e.target.value) || 0 }))}
-                  className="rounded-lg px-3 py-1.5 text-sm font-mono"
-                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }} />
+                <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                  Sort order
+                </span>
+                <input
+                  type="number"
+                  value={categoryDraft.sort_order}
+                  onChange={(e) =>
+                    setCategoryDraft((d) => d && { ...d, sort_order: Number(e.target.value) || 0 })
+                  }
+                  className="rounded-lg px-3 py-1.5 font-mono text-sm"
+                  style={{
+                    background: 'rgba(0,0,0,0.3)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    color: 'white',
+                  }}
+                />
               </label>
 
-              <button onClick={handleSaveCategory}
-                className="w-full rounded-2xl py-3 font-semibold text-sm flex items-center justify-center gap-2"
-                style={{ background: 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)', color: 'white' }}>
+              <button
+                onClick={handleSaveCategory}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-semibold"
+                style={{
+                  background: 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)',
+                  color: 'white',
+                }}
+              >
                 <FloppyDisk size={16} weight="fill" /> Сохранить
               </button>
             </motion.div>

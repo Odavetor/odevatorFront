@@ -11,6 +11,7 @@ import {
   type HeroSample,
 } from '@entities/catalog'
 import { useUser } from '@entities/user'
+import { tt, useLang } from '@shared/lib'
 import { BottomNav } from '@widgets/bottom-nav'
 import { EditorialHeader as HomeHeader } from '@widgets/editorial-header'
 import { CinematicHero } from '@widgets/cinematic-hero'
@@ -114,14 +115,17 @@ export function HomeView() {
     }
   }, [])
 
+  useLang()
   const slotsCount = userData?.active_processes ?? 0
   const hasCredits = slotsCount > 0
   const ctaHref = hasCredits ? '/generate' : '/shop'
-  const ctaLabel = hasCredits ? 'Создать фото' : 'Купить слоты'
+  const ctaLabel = hasCredits
+    ? tt({ ru: 'Создать фото', en: 'Create photo', de: 'Foto erstellen' })
+    : tt({ ru: 'Купить слоты', en: 'Buy slots', de: 'Slots kaufen' })
 
   return (
     <div className="relative flex min-h-[100dvh] flex-col">
-      <HomeHeader firstName={tgUser?.first_name ?? 'Гость'} />
+      <HomeHeader firstName={tgUser?.first_name ?? tt({ ru: 'Гость', en: 'Guest', de: 'Gast' })} />
 
       <CinematicHero
         samples={heroSamples}

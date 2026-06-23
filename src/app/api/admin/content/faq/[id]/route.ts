@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
+import { verifyAdmin } from '../../../_auth'
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? '').replace(/\/$/, '')
 
 async function proxy(method: 'PATCH' | 'DELETE', req: NextRequest, id: string) {
-  if (!BASE_URL) {
-    return NextResponse.json({ error: 'NEXT_PUBLIC_API_BASE_URL is not set' }, { status: 503 })
-  }
-  const auth = req.headers.get('authorization') ?? ''
-  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const check = await verifyAdmin(req)
+  if (!check.ok) return NextResponse.json({ error: check.error }, { status: check.status })
+  const auth = check.auth
 
   const init: RequestInit = {
     method,
@@ -21,8 +20,13 @@ async function proxy(method: 'PATCH' | 'DELETE', req: NextRequest, id: string) {
     init.headers = { ...init.headers, 'Content-Type': 'application/json' }
     init.body = await req.text()
   }
+  const langParam = req.nextUrl.searchParams.get('lang') ?? 'ru'
+  const lang = ['ru', 'en', 'de'].includes(langParam) ? langParam : 'ru'
 
-  const r = await fetch(`${BASE_URL}/api/v1/admin/content/faq/${encodeURIComponent(id)}`, init)
+  const r = await fetch(
+    `${BASE_URL}/api/v1/admin/content/faq/${encodeURIComponent(id)}?lang=${lang}`,
+    init,
+  )
   if (r.ok) revalidateTag('content')
 
   const text = await r.text()

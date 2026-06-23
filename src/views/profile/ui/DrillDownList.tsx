@@ -3,43 +3,44 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { CaretRight, Lightning, ShareNetwork, ShoppingBag, Star } from '@phosphor-icons/react'
-import { EASE_EDITORIAL, haptic } from '@shared/lib'
+import { EASE_EDITORIAL, haptic, tt, useLang, type Lang } from '@shared/lib'
 
 interface Row {
   href: string
-  label: string
-  sub: string
+  label: Record<Lang, string>
+  sub: Record<Lang, string>
   icon: React.ElementType
 }
 
 const ROWS: Row[] = [
   {
     href: '/profile/ledger',
-    label: 'Слоты и баланс',
-    sub: 'движения по кошельку',
+    label: { ru: 'Слоты и баланс', en: 'Slots & balance', de: 'Slots & Guthaben' },
+    sub: { ru: 'движения по кошельку', en: 'wallet activity', de: 'Wallet-Bewegungen' },
     icon: Lightning,
   },
   {
     href: '/profile/payments',
-    label: 'Покупки',
-    sub: 'история оплат',
+    label: { ru: 'Покупки', en: 'Purchases', de: 'Käufe' },
+    sub: { ru: 'история оплат', en: 'payment history', de: 'Zahlungsverlauf' },
     icon: ShoppingBag,
   },
   {
     href: '/profile/referrals',
-    label: 'Партнёрка',
-    sub: 'приглашай и зарабатывай',
+    label: { ru: 'Партнёрка', en: 'Referrals', de: 'Empfehlungen' },
+    sub: { ru: 'приглашай и зарабатывай', en: 'invite and earn', de: 'einladen und verdienen' },
     icon: ShareNetwork,
   },
   {
     href: '/profile/review',
-    label: 'Оставить отзыв',
-    sub: 'оцените сервис',
+    label: { ru: 'Оставить отзыв', en: 'Leave a review', de: 'Bewertung abgeben' },
+    sub: { ru: 'оцените сервис', en: 'rate the service', de: 'Service bewerten' },
     icon: Star,
   },
 ]
 
 export function DrillDownList() {
+  useLang()
   return (
     <motion.section
       initial={{ opacity: 0, y: 10 }}
@@ -81,7 +82,7 @@ export function DrillDownList() {
                     lineHeight: 1.15,
                   }}
                 >
-                  {row.label}
+                  {tt(row.label)}
                 </p>
                 <p
                   className="font-sans"
@@ -92,7 +93,7 @@ export function DrillDownList() {
                     marginTop: 2,
                   }}
                 >
-                  {row.sub}
+                  {tt(row.sub)}
                 </p>
               </div>
               <CaretRight

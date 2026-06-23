@@ -7,7 +7,7 @@ import { ArrowRight } from '@phosphor-icons/react'
 import { useUser } from '@entities/user'
 import { fetchHistory, type HistoryItem } from '@entities/generation'
 import { useContent } from '@entities/content'
-import { haptic } from '@shared/lib'
+import { haptic, tt, useLang, intlLocale } from '@shared/lib'
 import { HistoryGrid, HistorySkeletonGrid } from '@widgets/history-grid'
 import { BottomNav } from '@widgets/bottom-nav'
 import { HistoryHeader } from './HistoryHeader'
@@ -29,7 +29,7 @@ function groupByDay(items: HistoryItem[]): Group[] {
   const dayMs = 86_400_000
 
   const map = new Map<string, Group>()
-  const monthFmt = new Intl.DateTimeFormat('ru', { day: 'numeric', month: 'long' })
+  const monthFmt = new Intl.DateTimeFormat(intlLocale(), { day: 'numeric', month: 'long' })
 
   for (const it of items) {
     const d = new Date(it.created_at)
@@ -37,8 +37,9 @@ function groupByDay(items: HistoryItem[]): Group[] {
     if (!map.has(k)) {
       const start = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
       let label: string
-      if (start === todayMs) label = 'сегодня'
-      else if (start === todayMs - dayMs) label = 'вчера'
+      if (start === todayMs) label = tt({ ru: 'сегодня', en: 'today', de: 'heute' })
+      else if (start === todayMs - dayMs)
+        label = tt({ ru: 'вчера', en: 'yesterday', de: 'gestern' })
       else label = monthFmt.format(d)
       map.set(k, { key: k, label, items: [] })
     }
@@ -123,15 +124,12 @@ export function HistoryView() {
     return () => obs.disconnect()
   }, [hasMore, initialLoading, pageLoading, page, nextBeforeId, load])
 
-  const groups = useMemo(() => groupByDay(items), [items])
+  const lang = useLang()
+  const groups = useMemo(() => groupByDay(items), [items, lang])
 
   return (
-    <div className="flex flex-col min-h-[100dvh]">
-      <HistoryHeader
-        disclaimer={disclaimerText}
-        title={titleHistory}
-        createLabel={buttonCreate}
-      />
+    <div className="flex min-h-[100dvh] flex-col">
+      <HistoryHeader disclaimer={disclaimerText} title={titleHistory} createLabel={buttonCreate} />
 
       <div className="flex-1 px-5 pb-6">
         {!initialLoading && items.length > 0 && (
@@ -139,7 +137,7 @@ export function HistoryView() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className="flex items-baseline justify-between mb-4"
+            className="mb-4 flex items-baseline justify-between"
           >
             <span
               className="font-sans tabular-nums"
@@ -151,7 +149,7 @@ export function HistoryView() {
               }}
             >
               {total !== null
-                ? `${total} ${pluralize(total, ['работа', 'работы', 'работ'])}`
+                ? `${total} ${tt({ ru: pluralize(total, ['работа', 'работы', 'работ']), en: total === 1 ? 'render' : 'renders', de: total === 1 ? 'Ergebnis' : 'Ergebnisse' })}`
                 : `${items.length}+`}
             </span>
           </motion.div>
@@ -176,7 +174,7 @@ export function HistoryView() {
           <div ref={sentinelRef} className="flex justify-center py-8">
             {pageLoading ? (
               <div
-                className="w-5 h-5 rounded-full"
+                className="h-5 w-5 rounded-full"
                 style={{
                   border: '1.5px solid var(--border-2)',
                   borderTopColor: 'var(--rose)',
@@ -184,10 +182,7 @@ export function HistoryView() {
                 }}
               />
             ) : (
-              <div
-                className="w-2 h-2 rounded-full"
-                style={{ background: 'var(--border-2)' }}
-              />
+              <div className="h-2 w-2 rounded-full" style={{ background: 'var(--border-2)' }} />
             )}
           </div>
         )}
@@ -209,7 +204,7 @@ export function HistoryView() {
             <Link
               href="/generate"
               onClick={() => haptic('light')}
-              className="inline-flex items-center gap-1.5 pb-1 no-tap-highlight"
+              className="no-tap-highlight inline-flex items-center gap-1.5 pb-1"
               style={{
                 color: 'var(--rose)',
                 borderBottom: '1px solid var(--rose)',

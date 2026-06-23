@@ -109,12 +109,16 @@ export function getPhotoCatalogCached(): Promise<PhotoCatalogResponse> {
 export interface CreateCategoryPayload {
   slug: string
   label: string
+  label_en?: string
+  label_de?: string
   sort_order?: number
   description?: string
 }
 
 export interface UpdateCategoryPayload {
   label?: string
+  label_en?: string
+  label_de?: string
   sort_order?: number
   description?: string
 }
@@ -142,6 +146,8 @@ export function deletePhotoCategory(id: number): Promise<{ status: string }> {
 
 export interface UpdateOptionPayload {
   label: string
+  label_en?: string
+  label_de?: string
   before_image_url: string
   after_image_url: string
   prompt_text: string

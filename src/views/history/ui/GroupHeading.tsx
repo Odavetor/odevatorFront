@@ -1,9 +1,12 @@
+import { tt, useLang } from '@shared/lib'
+
 interface Props {
   label: string
   count: number
 }
 
 export function GroupHeading({ label, count }: Props) {
+  useLang()
   return (
     <div className="flex items-baseline justify-between">
       <h2
@@ -26,7 +29,12 @@ export function GroupHeading({ label, count }: Props) {
           color: 'rgba(255,255,255,0.4)',
         }}
       >
-        {count} {count === 1 ? 'фото' : count < 5 ? 'фото' : 'фото'}
+        {count}{' '}
+        {tt({
+          ru: 'фото',
+          en: count === 1 ? 'photo' : 'photos',
+          de: count === 1 ? 'Foto' : 'Fotos',
+        })}
       </span>
     </div>
   )

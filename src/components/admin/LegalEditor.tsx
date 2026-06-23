@@ -5,12 +5,48 @@ import { Check, FloppyDisk, Warning } from '@phosphor-icons/react'
 import { haptic, hapticNotify } from '@/lib/telegram'
 import { getLegalDoc, updateLegalDoc } from '@/lib/content'
 import { LEGAL_REGISTRY, type LegalSpec } from '@/lib/content/keys'
+import { SUPPORTED_LANGS, setLangPersisted, useLang } from '@shared/lib'
 
 export default function LegalEditor() {
   const [error, setError] = useState<string | null>(null)
+  const lang = useLang()
 
   return (
     <div className="flex flex-col gap-4">
+      <div
+        className="flex items-center gap-2 rounded-2xl px-3 py-2"
+        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+      >
+        <span
+          className="font-mono uppercase"
+          style={{ fontSize: 9, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.4)' }}
+        >
+          Язык документа
+        </span>
+        <div className="ml-auto flex gap-1">
+          {SUPPORTED_LANGS.map((l) => {
+            const active = l === lang
+            return (
+              <button
+                key={l}
+                onClick={() => {
+                  haptic('light')
+                  setLangPersisted(l)
+                }}
+                className="rounded-lg px-3 py-1 text-xs font-medium uppercase"
+                style={{
+                  background: active ? 'var(--rose-dim)' : 'rgba(255,255,255,0.04)',
+                  border: active ? '1px solid var(--border-rose)' : '1px solid transparent',
+                  color: active ? 'var(--rose)' : 'rgba(255,255,255,0.55)',
+                }}
+              >
+                {l}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
       {error && (
         <div
           className="rounded-xl px-3 py-2 text-xs"
@@ -37,6 +73,7 @@ export default function LegalEditor() {
 }
 
 function LegalRow({ spec, onError }: { spec: LegalSpec; onError: (m: string | null) => void }) {
+  const lang = useLang()
   const [title, setTitle] = useState(spec.title)
   const [body, setBody] = useState('')
   const [loaded, setLoaded] = useState<{ title: string; body: string } | null>(null)
@@ -56,7 +93,7 @@ function LegalRow({ spec, onError }: { spec: LegalSpec; onError: (m: string | nu
     return () => {
       cancelled = true
     }
-  }, [spec.slug, spec.title])
+  }, [spec.slug, spec.title, lang])
 
   const dirty = !loaded || title !== loaded.title || body !== loaded.body
   const empty = body.trim() === ''

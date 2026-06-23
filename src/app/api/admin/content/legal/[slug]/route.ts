@@ -13,16 +13,21 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ slug: strin
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const body = await req.text()
+  const langParam = req.nextUrl.searchParams.get('lang') ?? 'ru'
+  const lang = ['ru', 'en', 'de'].includes(langParam) ? langParam : 'ru'
 
-  const r = await fetch(`${BASE_URL}/api/v1/admin/content/legal/${encodeURIComponent(slug)}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: auth,
+  const r = await fetch(
+    `${BASE_URL}/api/v1/admin/content/legal/${encodeURIComponent(slug)}?lang=${lang}`,
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: auth,
+      },
+      body,
+      cache: 'no-store',
     },
-    body,
-    cache: 'no-store',
-  })
+  )
 
   if (r.ok) revalidateTag('content')
 

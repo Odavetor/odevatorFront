@@ -139,8 +139,9 @@ export async function createFaq(payload: {
 export async function updateFaq(
   id: number,
   payload: Partial<{ question: string; answer: string; sort_order: number }>,
+  lang: string = getLang(),
 ) {
-  const data = await adminFetch(`/api/admin/content/faq/${id}`, {
+  const data = await adminFetch(`/api/admin/content/faq/${id}?lang=${lang}`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
   })
@@ -176,11 +177,18 @@ export async function getLegalDoc(slug: string): Promise<LegalDoc | null> {
   }
 }
 
-export async function updateLegalDoc(slug: string, payload: { title: string; body: string }) {
-  const data = await adminFetch(`/api/admin/content/legal/${encodeURIComponent(slug)}`, {
-    method: 'PUT',
-    body: JSON.stringify(payload),
-  })
+export async function updateLegalDoc(
+  slug: string,
+  payload: { title: string; body: string },
+  lang: string = getLang(),
+) {
+  const data = await adminFetch(
+    `/api/admin/content/legal/${encodeURIComponent(slug)}?lang=${lang}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    },
+  )
   await refreshContent()
   return data
 }
