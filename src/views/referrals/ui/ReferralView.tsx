@@ -5,7 +5,15 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Copy, Check, ShareNetwork, TrendUp } from '@phosphor-icons/react'
 import { DisplayTitle, Kicker, CountUpNumber } from '@shared/ui'
-import { EASE_EDITORIAL, haptic, hapticNotify, openLink } from '@shared/lib'
+import {
+  EASE_EDITORIAL,
+  haptic,
+  hapticNotify,
+  intlLocale,
+  openLink,
+  tt,
+  useLang,
+} from '@shared/lib'
 import { fmtRub } from '@entities/pack'
 import { BottomNav } from '@widgets/bottom-nav'
 import { ReviewForm } from '@features/leave-review'
@@ -26,20 +34,30 @@ import { CommissionFeed } from './CommissionFeed'
 import { PeriodTabs, type Period } from './PeriodTabs'
 import { pct } from '../lib/format'
 
-const STATUS: Record<WithdrawalStatus, { label: string; color: string }> = {
-  pending: { label: 'в обработке', color: '#C9966A' },
-  approved: { label: 'выплачено', color: '#5FD296' },
-  rejected: { label: 'отклонено', color: '#ff9aae' },
+const STATUS: Record<WithdrawalStatus, { label: () => string; color: string }> = {
+  pending: {
+    label: () => tt({ ru: 'в обработке', en: 'processing', de: 'in Bearbeitung' }),
+    color: '#C9966A',
+  },
+  approved: {
+    label: () => tt({ ru: 'выплачено', en: 'paid out', de: 'ausgezahlt' }),
+    color: '#5FD296',
+  },
+  rejected: {
+    label: () => tt({ ru: 'отклонено', en: 'rejected', de: 'abgelehnt' }),
+    color: '#ff9aae',
+  },
 }
 
-const PERIOD_LABEL: Record<Period, string> = {
-  today: 'сегодня',
-  '7d': 'за 7 дней',
-  '30d': 'за 30 дней',
-  all: 'за всё время',
+const PERIOD_LABEL: Record<Period, () => string> = {
+  today: () => tt({ ru: 'сегодня', en: 'today', de: 'heute' }),
+  '7d': () => tt({ ru: 'за 7 дней', en: 'over 7 days', de: 'in 7 Tagen' }),
+  '30d': () => tt({ ru: 'за 30 дней', en: 'over 30 days', de: 'in 30 Tagen' }),
+  all: () => tt({ ru: 'за всё время', en: 'all time', de: 'gesamt' }),
 }
 
 export function ReferralView() {
+  useLang()
   const router = useRouter()
   const [data, setData] = useState<ReferralMe | null>(null)
   const [loading, setLoading] = useState(true)
@@ -55,7 +73,15 @@ export function ReferralView() {
     try {
       setData(await fetchReferralMe())
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Не удалось загрузить данные')
+      setError(
+        e instanceof Error
+          ? e.message
+          : tt({
+              ru: 'Не удалось загрузить данные',
+              en: 'Failed to load data',
+              de: 'Daten konnten nicht geladen werden',
+            }),
+      )
     } finally {
       setLoading(false)
     }
@@ -103,7 +129,13 @@ export function ReferralView() {
   function share() {
     if (!s?.deep_link) return
     haptic('light')
-    const url = `https://t.me/share/url?url=${encodeURIComponent(s.deep_link)}&text=${encodeURIComponent('Попробуй — обработка фото нейросетью')}`
+    const url = `https://t.me/share/url?url=${encodeURIComponent(s.deep_link)}&text=${encodeURIComponent(
+      tt({
+        ru: 'Попробуй — обработка фото нейросетью',
+        en: 'Try it — AI photo processing',
+        de: 'Probier es aus — KI-Fotobearbeitung',
+      }),
+    )}`
     openLink(url)
   }
 
@@ -114,13 +146,27 @@ export function ReferralView() {
     try {
       await createWithdrawal(amountMinor, details.trim())
       hapticNotify('success')
-      setNotice('Заявка создана. Сумма заморожена до решения администратора.')
+      setNotice(
+        tt({
+          ru: 'Заявка создана. Сумма заморожена до решения администратора.',
+          en: 'Request created. The amount is frozen until an admin decides.',
+          de: 'Antrag erstellt. Der Betrag ist bis zur Entscheidung des Administrators eingefroren.',
+        }),
+      )
       setAmount('')
       setDetails('')
       await reload()
     } catch (e) {
       hapticNotify('error')
-      setError(e instanceof Error ? e.message : 'Не удалось создать заявку')
+      setError(
+        e instanceof Error
+          ? e.message
+          : tt({
+              ru: 'Не удалось создать заявку',
+              en: 'Failed to create request',
+              de: 'Antrag konnte nicht erstellt werden',
+            }),
+      )
     } finally {
       setBusy(false)
     }
@@ -148,15 +194,17 @@ export function ReferralView() {
           <ArrowLeft size={18} color="rgba(255,255,255,0.7)" weight="bold" />
         </button>
         <div className="flex flex-col gap-1">
-          <Kicker tone="rose">Аккаунт</Kicker>
-          <DisplayTitle size="md">Партнёрка</DisplayTitle>
+          <Kicker tone="rose">{tt({ ru: 'Аккаунт', en: 'Account', de: 'Konto' })}</Kicker>
+          <DisplayTitle size="md">
+            {tt({ ru: 'Партнёрка', en: 'Affiliate', de: 'Partnerprogramm' })}
+          </DisplayTitle>
         </div>
       </motion.header>
 
       <div className="flex flex-1 flex-col gap-5 px-5 pb-6">
         {loading && !data ? (
           <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-            Загрузка…
+            {tt({ ru: 'Загрузка…', en: 'Loading…', de: 'Wird geladen…' })}
           </p>
         ) : s ? (
           <>
@@ -173,7 +221,11 @@ export function ReferralView() {
               <div className="flex items-start justify-between">
                 <div className="flex flex-col gap-1">
                   <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                    Доступно к выводу
+                    {tt({
+                      ru: 'Доступно к выводу',
+                      en: 'Available to withdraw',
+                      de: 'Verfügbar zur Auszahlung',
+                    })}
                   </span>
                   <span
                     className="font-sans tabular-nums"
@@ -209,10 +261,18 @@ export function ReferralView() {
 
               <div className="flex items-center justify-between">
                 <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                  заработано {PERIOD_LABEL[period]}
+                  {tt({
+                    ru: `заработано ${PERIOD_LABEL[period]()}`,
+                    en: `earned ${PERIOD_LABEL[period]()}`,
+                    de: `verdient ${PERIOD_LABEL[period]()}`,
+                  })}
                 </span>
                 <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                  {s.commission_percent}% с покупок
+                  {tt({
+                    ru: `${s.commission_percent}% с покупок`,
+                    en: `${s.commission_percent}% on purchases`,
+                    de: `${s.commission_percent}% auf Käufe`,
+                  })}
                 </span>
               </div>
             </motion.div>
@@ -220,16 +280,36 @@ export function ReferralView() {
             <PeriodTabs value={period} onChange={setPeriod} />
 
             <div className="grid grid-cols-2 gap-2.5">
-              <Stat label="Приглашено" value={`${s.invited}`} />
               <Stat
-                label="Конверсия в оплату"
+                label={tt({ ru: 'Приглашено', en: 'Invited', de: 'Eingeladen' })}
+                value={`${s.invited}`}
+              />
+              <Stat
+                label={tt({
+                  ru: 'Конверсия в оплату',
+                  en: 'Paid conversion',
+                  de: 'Kauf-Conversion',
+                })}
                 value={`${pct(s.invited_paid, s.invited)}%`}
                 accent
               />
-              <Stat label="Всего заработано" value={`${fmtRub(s.total_earned_minor)} ₽`} />
-              <Stat label="Выведено" value={`${fmtRub(s.total_withdrawn_minor)} ₽`} />
+              <Stat
+                label={tt({ ru: 'Всего заработано', en: 'Total earned', de: 'Gesamt verdient' })}
+                value={`${fmtRub(s.total_earned_minor)} ₽`}
+              />
+              <Stat
+                label={tt({ ru: 'Выведено', en: 'Withdrawn', de: 'Ausgezahlt' })}
+                value={`${fmtRub(s.total_withdrawn_minor)} ₽`}
+              />
               {s.pending_minor > 0 && (
-                <Stat label="В заявках (заморожено)" value={`${fmtRub(s.pending_minor)} ₽`} />
+                <Stat
+                  label={tt({
+                    ru: 'В заявках (заморожено)',
+                    en: 'In requests (frozen)',
+                    de: 'In Anträgen (eingefroren)',
+                  })}
+                  value={`${fmtRub(s.pending_minor)} ₽`}
+                />
               )}
             </div>
 
@@ -239,7 +319,10 @@ export function ReferralView() {
 
             <div
               className="flex flex-col gap-4 rounded-2xl px-4 py-4"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.07)',
+              }}
             >
               <EarningsBars series={data.earnings_series} days={sparkDays} />
               <div className="h-px w-full" style={{ background: 'rgba(255,255,255,0.07)' }} />
@@ -250,7 +333,9 @@ export function ReferralView() {
 
             {s.deep_link && (
               <div className="flex flex-col gap-2">
-                <span className="text-kicker">ваша ссылка</span>
+                <span className="text-kicker">
+                  {tt({ ru: 'ваша ссылка', en: 'your link', de: 'dein Link' })}
+                </span>
                 <div className="flex items-center gap-2">
                   <div
                     className="flex-1 truncate rounded-xl px-3 py-2.5 font-mono text-[12px]"
@@ -286,7 +371,12 @@ export function ReferralView() {
                     color: 'rgba(255,255,255,0.85)',
                   }}
                 >
-                  <ShareNetwork size={15} weight="fill" /> Поделиться в Telegram
+                  <ShareNetwork size={15} weight="fill" />{' '}
+                  {tt({
+                    ru: 'Поделиться в Telegram',
+                    en: 'Share on Telegram',
+                    de: 'In Telegram teilen',
+                  })}
                 </button>
               </div>
             )}
@@ -298,13 +388,17 @@ export function ReferralView() {
 
             <section className="flex flex-col gap-2.5">
               <h3 className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                Вывод средств
+                {tt({ ru: 'Вывод средств', en: 'Withdraw funds', de: 'Auszahlung' })}
               </h3>
               <input
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 inputMode="decimal"
-                placeholder={`Сумма, ₽ (мин. ${Math.round(min / 100)})`}
+                placeholder={tt({
+                  ru: `Сумма, ₽ (мин. ${Math.round(min / 100)})`,
+                  en: `Amount, ₽ (min. ${Math.round(min / 100)})`,
+                  de: `Betrag, ₽ (mind. ${Math.round(min / 100)})`,
+                })}
                 className="w-full rounded-xl px-3 py-2.5 font-mono text-sm"
                 style={{
                   background: 'rgba(0,0,0,0.3)',
@@ -316,7 +410,11 @@ export function ReferralView() {
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
                 rows={2}
-                placeholder="Реквизиты: номер карты / телефон / кошелёк"
+                placeholder={tt({
+                  ru: 'Реквизиты: номер карты / телефон / кошелёк',
+                  en: 'Payment details: card number / phone / wallet',
+                  de: 'Zahlungsdaten: Kartennummer / Telefon / Wallet',
+                })}
                 className="w-full resize-y rounded-xl px-3 py-2.5 text-sm"
                 style={{
                   background: 'rgba(0,0,0,0.3)',
@@ -335,14 +433,24 @@ export function ReferralView() {
                   color: canWithdraw ? '#fff' : 'rgba(255,255,255,0.3)',
                 }}
               >
-                {busy ? 'Создаём…' : 'Создать вывод'}
+                {busy
+                  ? tt({ ru: 'Создаём…', en: 'Creating…', de: 'Wird erstellt…' })
+                  : tt({
+                      ru: 'Создать вывод',
+                      en: 'Create withdrawal',
+                      de: 'Auszahlung erstellen',
+                    })}
               </button>
             </section>
 
             {data.withdrawals.length > 0 && (
               <section className="flex flex-col gap-2">
                 <h3 className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                  История выводов
+                  {tt({
+                    ru: 'История выводов',
+                    en: 'Withdrawal history',
+                    de: 'Auszahlungsverlauf',
+                  })}
                 </h3>
                 {data.withdrawals.map((w) => (
                   <WithdrawalRow key={w.id} w={w} />
@@ -354,9 +462,21 @@ export function ReferralView() {
 
             <ReviewForm
               kind="referrer"
-              title="Отзыв о партнёрке"
-              subtitle="Как вам условия и выплаты? Оценка видна только команде."
-              placeholder="Что нравится в партнёрской программе, чего не хватает? (необязательно)"
+              title={tt({
+                ru: 'Отзыв о партнёрке',
+                en: 'Affiliate feedback',
+                de: 'Feedback zum Partnerprogramm',
+              })}
+              subtitle={tt({
+                ru: 'Как вам условия и выплаты? Оценка видна только команде.',
+                en: 'How are the terms and payouts? Your rating is visible only to the team.',
+                de: 'Wie findest du Konditionen und Auszahlungen? Die Bewertung sieht nur das Team.',
+              })}
+              placeholder={tt({
+                ru: 'Что нравится в партнёрской программе, чего не хватает? (необязательно)',
+                en: 'What do you like about the affiliate program, what is missing? (optional)',
+                de: 'Was gefällt dir am Partnerprogramm, was fehlt? (optional)',
+              })}
             />
           </>
         ) : null}
@@ -406,7 +526,7 @@ function WithdrawalRow({ w }: { w: Withdrawal }) {
           {fmtRub(w.amount_minor)} ₽
         </span>
         <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          {new Date(w.created_at).toLocaleDateString('ru')}
+          {new Date(w.created_at).toLocaleDateString(intlLocale())}
           {w.admin_note ? ` · ${w.admin_note}` : ''}
         </span>
       </div>
@@ -414,7 +534,7 @@ function WithdrawalRow({ w }: { w: Withdrawal }) {
         className="text-[10px] font-semibold uppercase tracking-wider"
         style={{ color: meta.color }}
       >
-        {meta.label}
+        {meta.label()}
       </span>
     </div>
   )

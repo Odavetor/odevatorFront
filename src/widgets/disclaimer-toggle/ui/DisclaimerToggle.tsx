@@ -3,17 +3,19 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CaretDown, Info } from '@phosphor-icons/react'
+import { tt, useLang } from '@shared/lib'
 
 interface Props {
   text: string
 }
 
 export function DisclaimerToggle({ text }: Props) {
+  useLang()
   const [open, setOpen] = useState(false)
   if (!text) return null
   return (
     <div
-      className="rounded-2xl overflow-hidden"
+      className="overflow-hidden rounded-2xl"
       style={{
         background: 'rgba(255,255,255,0.03)',
         border: '1px solid var(--border-1)',
@@ -21,11 +23,11 @@ export function DisclaimerToggle({ text }: Props) {
     >
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2 px-4 py-2.5 no-tap-highlight"
+        className="no-tap-highlight flex w-full items-center gap-2 px-4 py-2.5"
       >
         <Info size={14} color="var(--rose)" weight="duotone" />
         <span
-          className="font-sans flex-1 text-left"
+          className="flex-1 text-left font-sans"
           style={{
             fontSize: 13,
             fontWeight: 600,
@@ -33,7 +35,7 @@ export function DisclaimerToggle({ text }: Props) {
             color: 'rgba(255,255,255,0.7)',
           }}
         >
-          Юридические условия
+          {tt({ ru: 'Юридические условия', en: 'Legal terms', de: 'Rechtliche Bedingungen' })}
         </span>
         <motion.span
           animate={{ rotate: open ? 180 : 0 }}
@@ -53,7 +55,7 @@ export function DisclaimerToggle({ text }: Props) {
             style={{ overflow: 'hidden' }}
           >
             <div
-              className="px-4 pb-3 text-[12px] leading-relaxed whitespace-pre-wrap"
+              className="whitespace-pre-wrap px-4 pb-3 text-[12px] leading-relaxed"
               style={{ color: 'rgba(255,255,255,0.6)' }}
             >
               {text}

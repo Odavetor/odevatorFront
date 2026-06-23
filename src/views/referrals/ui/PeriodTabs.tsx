@@ -1,15 +1,15 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { haptic } from '@shared/lib'
+import { haptic, tt, useLang } from '@shared/lib'
 
 export type Period = 'today' | '7d' | '30d' | 'all'
 
-const TABS: { key: Period; label: string }[] = [
-  { key: 'today', label: 'Сегодня' },
-  { key: '7d', label: '7 дней' },
-  { key: '30d', label: '30 дней' },
-  { key: 'all', label: 'Всё' },
+const TABS: { key: Period; label: () => string }[] = [
+  { key: 'today', label: () => tt({ ru: 'Сегодня', en: 'Today', de: 'Heute' }) },
+  { key: '7d', label: () => tt({ ru: '7 дней', en: '7 days', de: '7 Tage' }) },
+  { key: '30d', label: () => tt({ ru: '30 дней', en: '30 days', de: '30 Tage' }) },
+  { key: 'all', label: () => tt({ ru: 'Всё', en: 'All', de: 'Alle' }) },
 ]
 
 interface Props {
@@ -18,6 +18,7 @@ interface Props {
 }
 
 export function PeriodTabs({ value, onChange }: Props) {
+  useLang()
   return (
     <div
       className="flex gap-1 rounded-xl p-1"
@@ -45,7 +46,7 @@ export function PeriodTabs({ value, onChange }: Props) {
                 transition={{ type: 'spring', stiffness: 380, damping: 32 }}
               />
             )}
-            <span className="relative">{t.label}</span>
+            <span className="relative">{t.label()}</span>
           </button>
         )
       })}

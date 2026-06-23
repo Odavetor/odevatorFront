@@ -2,13 +2,14 @@
 
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { EASE_EDITORIAL } from '@shared/lib'
+import { EASE_EDITORIAL, tt, useLang } from '@shared/lib'
 import type { CountPoint } from '@/lib/referral'
 import { dailyBuckets } from '../lib/series'
 
 const DAYS = 30
 
 export function SignupsBars({ series }: { series: CountPoint[] }) {
+  useLang()
   const buckets = useMemo(() => {
     const byDate = new Map(series.map((p) => [p.date, p.count]))
     return dailyBuckets(DAYS, (k) => byDate.get(k) ?? 0)
@@ -20,8 +21,17 @@ export function SignupsBars({ series }: { series: CountPoint[] }) {
   return (
     <section className="flex flex-col gap-2.5">
       <div className="flex items-end justify-between">
-        <span className="text-kicker">приток рефералов · 30 дней</span>
-        <span className="font-sans text-[14px] font-bold tabular-nums" style={{ color: 'var(--text)' }}>
+        <span className="text-kicker">
+          {tt({
+            ru: 'приток рефералов · 30 дней',
+            en: 'referral inflow · 30 days',
+            de: 'Referral-Zulauf · 30 Tage',
+          })}
+        </span>
+        <span
+          className="font-sans text-[14px] font-bold tabular-nums"
+          style={{ color: 'var(--text)' }}
+        >
           +{total}
         </span>
       </div>

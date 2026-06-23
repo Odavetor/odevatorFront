@@ -7,8 +7,10 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, CaretRight, FileText } from '@phosphor-icons/react'
 import { LEGAL_REGISTRY, listLegalDocs } from '@entities/content'
 import { haptic } from '@/lib/telegram'
+import { tt, useLang } from '@shared/lib'
 
 export default function LegalIndexPage() {
+  useLang()
   const router = useRouter()
   const [titles, setTitles] = useState<Record<string, string>>({})
 
@@ -62,7 +64,7 @@ export default function LegalIndexPage() {
             color: 'var(--text)',
           }}
         >
-          Документы
+          {tt({ ru: 'Документы', en: 'Documents', de: 'Dokumente' })}
         </h1>
       </motion.header>
 

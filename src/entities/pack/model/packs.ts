@@ -1,4 +1,5 @@
 import type { GenerationPackOption } from '@shared/api'
+import { tt } from '@shared/lib'
 import { generationsPluralRu } from '@entities/pack/lib/pricing'
 
 export type SplashColor = 'rose' | 'violet' | 'cyan' | 'orange' | 'green'
@@ -14,26 +15,38 @@ export interface PackMeta {
 export function getPackMeta(opt: GenerationPackOption): PackMeta {
   const q = opt.quantity
   if (q === 1) {
-    return { title: '1 фото', sub: 'попробовать', splash: 'cyan' }
+    return {
+      title: tt({ ru: '1 фото', en: '1 photo', de: '1 Foto' }),
+      sub: tt({ ru: 'попробовать', en: 'try it out', de: 'ausprobieren' }),
+      splash: 'cyan',
+    }
   }
   if (q === 3) {
     return {
-      title: '3 фото',
-      sub: 'на вечер',
+      title: tt({ ru: '3 фото', en: '3 photos', de: '3 Fotos' }),
+      sub: tt({ ru: 'на вечер', en: 'for the evening', de: 'für den Abend' }),
       splash: 'rose',
       featured: true,
-      badge: 'выбор большинства',
+      badge: tt({ ru: 'выбор большинства', en: 'most popular', de: 'beliebteste Wahl' }),
     }
   }
   if (q <= 12) {
-    return { title: `${q} фото`, sub: 'выгоднее всего', splash: 'violet' }
+    return {
+      title: tt({ ru: `${q} фото`, en: `${q} photos`, de: `${q} Fotos` }),
+      sub: tt({ ru: 'выгоднее всего', en: 'best value', de: 'bestes Angebot' }),
+      splash: 'violet',
+    }
   }
   if (q <= 30) {
-    return { title: `${q} фото`, sub: 'про-набор', splash: 'orange' }
+    return {
+      title: tt({ ru: `${q} фото`, en: `${q} photos`, de: `${q} Fotos` }),
+      sub: tt({ ru: 'про-набор', en: 'pro pack', de: 'Pro-Paket' }),
+      splash: 'orange',
+    }
   }
   return {
     title: `${q} ${generationsPluralRu(q)}`,
-    sub: 'максимум',
+    sub: tt({ ru: 'максимум', en: 'maximum', de: 'Maximum' }),
     splash: 'green',
   }
 }

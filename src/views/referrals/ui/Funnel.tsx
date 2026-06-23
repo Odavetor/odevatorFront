@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { EASE_EDITORIAL } from '@shared/lib'
+import { EASE_EDITORIAL, tt, useLang } from '@shared/lib'
 import { pct } from '../lib/format'
 
 interface Props {
@@ -17,11 +17,24 @@ interface Stage {
 }
 
 export function Funnel({ clicks, invited, paid }: Props) {
+  useLang()
   const top = Math.max(clicks, invited, paid, 1)
   const stages: Stage[] = [
-    { label: 'Переходы', value: clicks, color: 'rgba(255,255,255,0.55)' },
-    { label: 'Регистрации', value: invited, color: 'var(--rose)' },
-    { label: 'Оплатили', value: paid, color: '#5FD296' },
+    {
+      label: tt({ ru: 'Переходы', en: 'Clicks', de: 'Klicks' }),
+      value: clicks,
+      color: 'rgba(255,255,255,0.55)',
+    },
+    {
+      label: tt({ ru: 'Регистрации', en: 'Signups', de: 'Anmeldungen' }),
+      value: invited,
+      color: 'var(--rose)',
+    },
+    {
+      label: tt({ ru: 'Оплатили', en: 'Paid', de: 'Bezahlt' }),
+      value: paid,
+      color: '#5FD296',
+    },
   ]
   const regConv = pct(invited, clicks)
   const payConv = pct(paid, invited)
@@ -29,9 +42,13 @@ export function Funnel({ clicks, invited, paid }: Props) {
   return (
     <section className="flex flex-col gap-2.5">
       <div className="flex items-center justify-between">
-        <span className="text-kicker">воронка</span>
+        <span className="text-kicker">{tt({ ru: 'воронка', en: 'funnel', de: 'Funnel' })}</span>
         <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          {regConv}% переход→рег · {payConv}% рег→оплата
+          {tt({
+            ru: `${regConv}% переход→рег · ${payConv}% рег→оплата`,
+            en: `${regConv}% click→signup · ${payConv}% signup→paid`,
+            de: `${regConv}% Klick→Anmeldung · ${payConv}% Anmeldung→Kauf`,
+          })}
         </span>
       </div>
       <div className="flex flex-col gap-2">

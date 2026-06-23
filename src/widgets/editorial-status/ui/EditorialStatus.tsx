@@ -6,13 +6,32 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, DownloadSimple, WarningCircle } from '@phosphor-icons/react'
 import { hapticNotify } from '@/lib/telegram'
 import { SparkleBurst } from '@shared/ui'
-import { EASE_EDITORIAL } from '@shared/lib'
+import { EASE_EDITORIAL, tt, useLang } from '@shared/lib'
 import type { GenerationState } from '@/types'
 
-const PHASE_LABELS: Record<string, { title: string; sub: string }> = {
-  uploading: { title: 'Загружаем', sub: 'отправляем фото на сервер' },
-  processing: { title: 'Обрабатываем', sub: 'нейросеть работает над кадром' },
-  done: { title: 'Готово', sub: 'забирай результат' },
+function phaseLabels(): Record<string, { title: string; sub: string }> {
+  return {
+    uploading: {
+      title: tt({ ru: 'Загружаем', en: 'Uploading', de: 'Hochladen' }),
+      sub: tt({
+        ru: 'отправляем фото на сервер',
+        en: 'sending your photo to the server',
+        de: 'Foto wird an den Server gesendet',
+      }),
+    },
+    processing: {
+      title: tt({ ru: 'Обрабатываем', en: 'Processing', de: 'Verarbeitung' }),
+      sub: tt({
+        ru: 'нейросеть работает над кадром',
+        en: 'the neural network is working on your shot',
+        de: 'das neuronale Netz bearbeitet die Aufnahme',
+      }),
+    },
+    done: {
+      title: tt({ ru: 'Готово', en: 'Done', de: 'Fertig' }),
+      sub: tt({ ru: 'забирай результат', en: 'grab your result', de: 'Ergebnis abholen' }),
+    },
+  }
 }
 
 interface Props {
@@ -52,17 +71,17 @@ export function EditorialStatus({ state, onDownload, onRetry }: Props) {
 }
 
 function BusyState({ phase, progress }: { phase: 'uploading' | 'processing'; progress: number }) {
-  const meta = PHASE_LABELS[phase]
+  useLang()
+  const meta = phaseLabels()[phase]
   const radius = 56
   const circumference = 2 * Math.PI * radius
   const offset = circumference - (Math.max(8, Math.min(100, progress)) / 100) * circumference
 
   return (
     <div
-      className="relative rounded-3xl px-5 py-8 flex flex-col items-center gap-4"
+      className="relative flex flex-col items-center gap-4 rounded-3xl px-5 py-8"
       style={{
-        background:
-          'linear-gradient(180deg, rgba(31,25,41,0.85) 0%, rgba(13,11,16,0.92) 100%)',
+        background: 'linear-gradient(180deg, rgba(31,25,41,0.85) 0%, rgba(13,11,16,0.92) 100%)',
         border: '1px solid var(--border-1)',
         boxShadow: 'var(--shadow-premium)',
       }}
@@ -120,7 +139,7 @@ function BusyState({ phase, progress }: { phase: 'uploading' | 'processing'; pro
         </div>
       </div>
 
-      <div className="text-center flex flex-col gap-1">
+      <div className="flex flex-col gap-1 text-center">
         <p
           className="font-sans"
           style={{
@@ -152,19 +171,18 @@ function BusyState({ phase, progress }: { phase: 'uploading' | 'processing'; pro
           color: 'rgba(255,255,255,0.35)',
         }}
       >
-        обычно 20–40 секунд
+        {tt({
+          ru: 'обычно 20–40 секунд',
+          en: 'usually 20–40 seconds',
+          de: 'meist 20–40 Sekunden',
+        })}
       </p>
     </div>
   )
 }
 
-function DoneState({
-  resultUrl,
-  onDownload,
-}: {
-  resultUrl: string
-  onDownload?: () => void
-}) {
+function DoneState({ resultUrl, onDownload }: { resultUrl: string; onDownload?: () => void }) {
+  useLang()
   const [showSparkles, setShowSparkles] = useState(false)
   useEffect(() => {
     const t = setTimeout(() => setShowSparkles(true), 1050)
@@ -179,7 +197,7 @@ function DoneState({
       className="flex flex-col gap-4"
     >
       <div
-        className="relative w-full rounded-3xl overflow-hidden"
+        className="relative w-full overflow-hidden rounded-3xl"
         style={{
           aspectRatio: '1 / 1.272',
           border: '1px solid var(--border-2)',
@@ -201,10 +219,9 @@ function DoneState({
             className="object-cover"
           />
           <div
-            className="absolute inset-0 pointer-events-none"
+            className="pointer-events-none absolute inset-0"
             style={{
-              background:
-                'linear-gradient(to top, rgba(13,11,16,0.78) 0%, transparent 55%)',
+              background: 'linear-gradient(to top, rgba(13,11,16,0.78) 0%, transparent 55%)',
             }}
           />
         </motion.div>
@@ -220,7 +237,7 @@ function DoneState({
               delay: 0.18,
             },
           }}
-          className="absolute left-0 right-0 pointer-events-none"
+          className="pointer-events-none absolute left-0 right-0"
           style={{
             height: 44,
             background:
@@ -247,14 +264,14 @@ function DoneState({
               color: 'var(--text)',
             }}
           >
-            готово
+            {tt({ ru: 'готово', en: 'done', de: 'fertig' })}
           </span>
         </motion.div>
 
         {showSparkles && (
           <span
             aria-hidden
-            className="absolute left-1/2 top-1/2 pointer-events-none"
+            className="pointer-events-none absolute left-1/2 top-1/2"
             style={{ width: 0, height: 0, zIndex: 8 }}
           >
             <SparkleBurst count={14} radius={120} color="#fff" />
@@ -264,7 +281,7 @@ function DoneState({
 
       <button
         onClick={onDownload}
-        className="w-full py-4 rounded-2xl flex items-center justify-center gap-2 no-tap-highlight active:scale-[0.98]"
+        className="no-tap-highlight flex w-full items-center justify-center gap-2 rounded-2xl py-4 active:scale-[0.98]"
         style={{
           background: 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)',
           boxShadow: 'var(--shadow-neon-cta)',
@@ -276,16 +293,17 @@ function DoneState({
         }}
       >
         <DownloadSimple size={18} weight="bold" />
-        Сохранить
+        {tt({ ru: 'Сохранить', en: 'Save', de: 'Speichern' })}
       </button>
     </motion.div>
   )
 }
 
 function ErrorState({ message, onRetry }: { message?: string; onRetry?: () => void }) {
+  useLang()
   return (
     <div
-      className="rounded-2xl p-5 flex flex-col gap-3"
+      className="flex flex-col gap-3 rounded-2xl p-5"
       style={{
         background: 'rgba(180,40,40,0.12)',
         border: '1px solid rgba(220,80,80,0.2)',
@@ -293,17 +311,19 @@ function ErrorState({ message, onRetry }: { message?: string; onRetry?: () => vo
     >
       <div className="flex items-center gap-3">
         <WarningCircle size={22} color="#e07070" weight="fill" />
-        <p
-          className="font-sans"
-          style={{ fontSize: 14, fontWeight: 600, color: '#e07070' }}
-        >
-          {message ?? 'Ошибка обработки. Слот возвращён.'}
+        <p className="font-sans" style={{ fontSize: 14, fontWeight: 600, color: '#e07070' }}>
+          {message ??
+            tt({
+              ru: 'Ошибка обработки. Слот возвращён.',
+              en: 'Processing error. Slot refunded.',
+              de: 'Verarbeitungsfehler. Slot zurückerstattet.',
+            })}
         </p>
       </div>
       {onRetry && (
         <button
           onClick={onRetry}
-          className="w-full py-2.5 rounded-xl no-tap-highlight"
+          className="no-tap-highlight w-full rounded-xl py-2.5"
           style={{
             background: 'rgba(220,80,80,0.15)',
             color: '#e07070',
@@ -311,7 +331,7 @@ function ErrorState({ message, onRetry }: { message?: string; onRetry?: () => vo
             fontWeight: 600,
           }}
         >
-          Попробовать снова
+          {tt({ ru: 'Попробовать снова', en: 'Try again', de: 'Erneut versuchen' })}
         </button>
       )}
     </div>

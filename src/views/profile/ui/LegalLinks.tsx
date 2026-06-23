@@ -6,9 +6,13 @@ import Link from 'next/link'
 import { FileText, ArrowUpRight } from '@phosphor-icons/react'
 import { LEGAL_REGISTRY, LEGAL_SLUG, listLegalDocs } from '@entities/content'
 import { haptic } from '@/lib/telegram'
+import { tt, useLang } from '@shared/lib'
 
 export function LegalLinks() {
-  const fallbackTitle = LEGAL_REGISTRY[0]?.title ?? 'Пользовательское соглашение'
+  useLang()
+  const fallbackTitle =
+    LEGAL_REGISTRY[0]?.title ??
+    tt({ ru: 'Пользовательское соглашение', en: 'Terms of Service', de: 'Nutzungsbedingungen' })
   const [title, setTitle] = useState(fallbackTitle)
 
   useEffect(() => {

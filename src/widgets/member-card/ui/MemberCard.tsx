@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { Lightning, ShareNetwork, Wallet } from '@phosphor-icons/react'
 import { CountUpNumber, DotPulse } from '@shared/ui'
-import { EASE_EDITORIAL } from '@shared/lib'
+import { EASE_EDITORIAL, intlLocale, tt, useLang } from '@shared/lib'
 
 interface MemberCardProps {
   firstName: string
@@ -17,7 +17,7 @@ interface MemberCardProps {
   referralBalanceMajor: number
 }
 
-const fmtRub = (n: number) => `${Math.round(n).toLocaleString('ru')} ₽`
+const fmtRub = (n: number) => `${Math.round(n).toLocaleString(intlLocale())} ₽`
 
 export function MemberCard({
   firstName,
@@ -29,6 +29,7 @@ export function MemberCard({
   balanceMajor,
   referralBalanceMajor,
 }: MemberCardProps) {
+  useLang()
   return (
     <motion.section
       initial={{ opacity: 0, y: 14 }}
@@ -105,13 +106,22 @@ export function MemberCard({
           border: '1px solid var(--border-1)',
         }}
       >
-        <Cell icon={Lightning} label="обработок" accent="rose">
+        <Cell
+          icon={Lightning}
+          label={tt({ ru: 'обработок', en: 'credits', de: 'Credits' })}
+          accent="rose"
+        >
           <CountUpNumber to={slots} duration={0.7} />
         </Cell>
-        <Cell icon={Wallet} label="баланс" divided>
+        <Cell icon={Wallet} label={tt({ ru: 'баланс', en: 'balance', de: 'Guthaben' })} divided>
           <CountUpNumber to={balanceMajor} duration={1.0} format={fmtRub} />
         </Cell>
-        <Cell icon={ShareNetwork} label="рефер." divided accent="rose">
+        <Cell
+          icon={ShareNetwork}
+          label={tt({ ru: 'рефер.', en: 'referral', de: 'Empfehl.' })}
+          divided
+          accent="rose"
+        >
           <CountUpNumber to={referralBalanceMajor} duration={1.0} format={fmtRub} />
         </Cell>
       </div>

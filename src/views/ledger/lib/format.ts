@@ -1,5 +1,6 @@
 import { fmtRub, generationsPluralRu } from '@entities/pack'
 import type { LedgerEntry } from '@shared/api'
+import { tt, intlLocale } from '@shared/lib'
 
 export type DeltaKind = 'money' | 'slots'
 
@@ -18,21 +19,38 @@ export function formatDeltaAmount(entry: LedgerEntry): string {
   if (kind === 'money') {
     return `${sign}${fmtRub(abs)} ₽`
   }
-  return `${sign}${abs} ${generationsPluralRu(abs)}`
+  const unit = tt({
+    ru: generationsPluralRu(abs),
+    en: abs === 1 ? 'generation' : 'generations',
+    de: abs === 1 ? 'Generierung' : 'Generierungen',
+  })
+  return `${sign}${abs} ${unit}`
 }
 
-const KIND_LABELS: Record<string, string> = {
-  generation: 'Обработка',
-  generation_refund: 'Возврат за обработку',
-  purchase: 'Пополнение',
-  pack_purchase: 'Покупка пакета',
-  referral_payout: 'Реферальный бонус',
-  referral_credit: 'Начисление от друга',
-  welcome_bonus: 'Приветственный бонус',
+const KIND_LABELS: Record<string, () => string> = {
+  generation: () => tt({ ru: 'Обработка', en: 'Processing', de: 'Verarbeitung' }),
+  generation_refund: () =>
+    tt({
+      ru: 'Возврат за обработку',
+      en: 'Processing refund',
+      de: 'Rückerstattung für Verarbeitung',
+    }),
+  purchase: () => tt({ ru: 'Пополнение', en: 'Top-up', de: 'Aufladung' }),
+  pack_purchase: () => tt({ ru: 'Покупка пакета', en: 'Pack purchase', de: 'Paketkauf' }),
+  referral_payout: () =>
+    tt({ ru: 'Реферальный бонус', en: 'Referral bonus', de: 'Empfehlungsbonus' }),
+  referral_credit: () =>
+    tt({
+      ru: 'Начисление от друга',
+      en: 'Credit from a friend',
+      de: 'Gutschrift von einem Freund',
+    }),
+  welcome_bonus: () =>
+    tt({ ru: 'Приветственный бонус', en: 'Welcome bonus', de: 'Willkommensbonus' }),
 }
 
 export function getKindLabel(kind: string): string {
-  return KIND_LABELS[kind] ?? kind.replace(/_/g, ' ')
+  return KIND_LABELS[kind]?.() ?? kind.replace(/_/g, ' ')
 }
 
 export function fmtRelativeDate(iso: string): string {
@@ -45,12 +63,12 @@ export function fmtRelativeDate(iso: string): string {
 
   if (diff < hour) {
     const m = Math.max(1, Math.floor(diff / minute))
-    return `${m} мин назад`
+    return tt({ ru: `${m} мин назад`, en: `${m} min ago`, de: `vor ${m} Min.` })
   }
   if (diff < day) {
     const h = Math.floor(diff / hour)
-    return `${h} ч назад`
+    return tt({ ru: `${h} ч назад`, en: `${h} h ago`, de: `vor ${h} Std.` })
   }
-  if (diff < 2 * day) return 'вчера'
-  return d.toLocaleDateString('ru', { day: 'numeric', month: 'long' })
+  if (diff < 2 * day) return tt({ ru: 'вчера', en: 'yesterday', de: 'gestern' })
+  return d.toLocaleDateString(intlLocale(), { day: 'numeric', month: 'long' })
 }

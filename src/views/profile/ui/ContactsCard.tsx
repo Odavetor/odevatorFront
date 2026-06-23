@@ -4,12 +4,21 @@ import { motion } from 'framer-motion'
 import { ArrowUpRight, Handshake, Headset } from '@phosphor-icons/react'
 import { haptic, openLink } from '@/lib/telegram'
 import { useContent } from '@entities/content'
+import { tt } from '@shared/lib'
 
 const cleanHandle = (h: string) => h.trim().replace(/^@+/, '')
 
 export function ContactsCard() {
-  const cooperation = { label: useContent('contact.cooperation.label'), handle: cleanHandle(useContent('contact.cooperation.handle')), icon: Handshake }
-  const support = { label: useContent('contact.support.label'), handle: cleanHandle(useContent('contact.support.handle')), icon: Headset }
+  const cooperation = {
+    label: useContent('contact.cooperation.label'),
+    handle: cleanHandle(useContent('contact.cooperation.handle')),
+    icon: Handshake,
+  }
+  const support = {
+    label: useContent('contact.support.label'),
+    handle: cleanHandle(useContent('contact.support.handle')),
+    icon: Headset,
+  }
   const items = [cooperation, support].filter((c) => c.handle !== '')
 
   function open(handle: string) {
@@ -35,15 +44,14 @@ export function ContactsCard() {
           color: 'var(--rose)',
         }}
       >
-        Связь
+        {tt({ ru: 'Связь', en: 'Contact', de: 'Kontakt' })}
       </span>
 
       <div
         className="mt-2 overflow-hidden"
         style={{
           borderRadius: 24,
-          background:
-            'linear-gradient(135deg, rgba(31,25,41,0.55) 0%, rgba(13,13,15,0.9) 100%)',
+          background: 'linear-gradient(135deg, rgba(31,25,41,0.55) 0%, rgba(13,13,15,0.9) 100%)',
           border: '1px solid var(--border-1)',
           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
         }}
@@ -82,7 +90,7 @@ export function ContactsCard() {
                   {c.label}
                 </span>
                 <span
-                  className="font-sans truncate"
+                  className="truncate font-sans"
                   style={{
                     fontSize: 13,
                     fontWeight: 500,

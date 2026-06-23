@@ -1,3 +1,5 @@
+import { intlLocale, tt } from '@shared/lib'
+
 export function dailyBuckets(days: number, lookup: (dateKey: string) => number): number[] {
   const out: number[] = []
   const now = new Date()
@@ -10,8 +12,8 @@ export function dailyBuckets(days: number, lookup: (dateKey: string) => number):
 }
 
 export function dayLabel(daysAgo: number, total: number): string {
-  if (daysAgo === total - 1) return 'сегодня'
+  if (daysAgo === total - 1) return tt({ ru: 'сегодня', en: 'today', de: 'heute' })
   const d = new Date()
   d.setDate(d.getDate() - (total - 1 - daysAgo))
-  return d.toLocaleDateString('ru', { day: 'numeric', month: 'short' })
+  return d.toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short' })
 }

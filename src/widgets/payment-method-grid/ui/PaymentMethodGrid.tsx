@@ -2,6 +2,7 @@
 
 import { CheckCircle, CurrencyEth } from '@phosphor-icons/react'
 import { SbpLogo } from '@shared/ui'
+import { tt, useLang } from '@shared/lib'
 import { haptic } from '@/lib/telegram'
 import { PAYMENT_METHOD, type PaymentMethodId } from '@/lib/api/types'
 
@@ -12,10 +13,30 @@ type Spec = {
   icon: 'sbp' | 'crypto'
 }
 
-const METHODS: Spec[] = [
-  { id: PAYMENT_METHOD.SBP, label: 'СБП', sub: 'Российские банки · мгновенно', icon: 'sbp' },
-  { id: PAYMENT_METHOD.CRYPTO, label: 'Крипта', sub: 'USDT · до 5 минут', icon: 'crypto' },
-]
+function paymentMethodsSpec(): Spec[] {
+  return [
+    {
+      id: PAYMENT_METHOD.SBP,
+      label: tt({ ru: 'СБП', en: 'SBP', de: 'SBP' }),
+      sub: tt({
+        ru: 'Российские банки · мгновенно',
+        en: 'Russian banks · instant',
+        de: 'Russische Banken · sofort',
+      }),
+      icon: 'sbp',
+    },
+    {
+      id: PAYMENT_METHOD.CRYPTO,
+      label: tt({ ru: 'Крипта', en: 'Crypto', de: 'Krypto' }),
+      sub: tt({
+        ru: 'USDT · до 5 минут',
+        en: 'USDT · up to 5 minutes',
+        de: 'USDT · bis zu 5 Minuten',
+      }),
+      icon: 'crypto',
+    },
+  ]
+}
 
 interface Props {
   selected: PaymentMethodId | null
@@ -24,6 +45,8 @@ interface Props {
 }
 
 export function PaymentMethodGrid({ selected, onSelect, stepLabel }: Props) {
+  useLang()
+  const methods = paymentMethodsSpec()
   return (
     <section className="flex flex-col gap-3">
       <h2
@@ -38,7 +61,7 @@ export function PaymentMethodGrid({ selected, onSelect, stepLabel }: Props) {
         {stepLabel}
       </h2>
       <div className="grid grid-cols-2 gap-2.5">
-        {METHODS.map((m) => {
+        {methods.map((m) => {
           const active = selected === m.id
           return (
             <button
@@ -47,7 +70,7 @@ export function PaymentMethodGrid({ selected, onSelect, stepLabel }: Props) {
                 haptic('light')
                 onSelect(m.id)
               }}
-              className="relative rounded-2xl p-3.5 flex flex-col gap-2.5 text-left no-tap-highlight"
+              className="no-tap-highlight relative flex flex-col gap-2.5 rounded-2xl p-3.5 text-left"
               style={{
                 background: active ? 'var(--rose-dim)' : 'rgba(255,255,255,0.03)',
                 border: active ? '1.5px solid var(--rose)' : '1px solid var(--border-1)',
@@ -58,7 +81,7 @@ export function PaymentMethodGrid({ selected, onSelect, stepLabel }: Props) {
               }}
             >
               <span
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                className="flex h-10 w-10 items-center justify-center rounded-xl"
                 style={{
                   background: active ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.05)',
                   border: active ? '1px solid var(--border-rose)' : '1px solid var(--border-1)',
@@ -88,7 +111,7 @@ export function PaymentMethodGrid({ selected, onSelect, stepLabel }: Props) {
                   {m.label}
                 </p>
                 <p
-                  className="font-sans mt-0.5"
+                  className="mt-0.5 font-sans"
                   style={{
                     fontSize: 11,
                     fontWeight: 500,
@@ -104,7 +127,7 @@ export function PaymentMethodGrid({ selected, onSelect, stepLabel }: Props) {
                   size={14}
                   color="var(--rose)"
                   weight="fill"
-                  className="absolute top-3 right-3"
+                  className="absolute right-3 top-3"
                 />
               )}
             </button>
@@ -115,4 +138,4 @@ export function PaymentMethodGrid({ selected, onSelect, stepLabel }: Props) {
   )
 }
 
-export { METHODS as PAYMENT_METHODS_SPEC }
+export { paymentMethodsSpec as PAYMENT_METHODS_SPEC }

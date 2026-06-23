@@ -4,11 +4,12 @@ import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft } from '@phosphor-icons/react'
 import { DisplayTitle, Kicker } from '@shared/ui'
-import { EASE_EDITORIAL, haptic } from '@shared/lib'
+import { EASE_EDITORIAL, haptic, tt, useLang } from '@shared/lib'
 import { BottomNav } from '@widgets/bottom-nav'
 import { ReviewForm } from '@features/leave-review'
 
 export function ReviewView() {
+  useLang()
   const router = useRouter()
 
   return (
@@ -33,17 +34,31 @@ export function ReviewView() {
           <ArrowLeft size={18} color="rgba(255,255,255,0.7)" weight="bold" />
         </button>
         <div className="flex flex-col gap-1">
-          <Kicker tone="rose">Аккаунт</Kicker>
-          <DisplayTitle size="md">Отзыв</DisplayTitle>
+          <Kicker tone="rose">{tt({ ru: 'Аккаунт', en: 'Account', de: 'Konto' })}</Kicker>
+          <DisplayTitle size="md">
+            {tt({ ru: 'Отзыв', en: 'Review', de: 'Bewertung' })}
+          </DisplayTitle>
         </div>
       </motion.header>
 
       <div className="flex flex-1 flex-col gap-5 px-5 pb-6">
         <ReviewForm
           kind="user"
-          title="Оцените сервис"
-          subtitle="Ваша оценка помогает нам стать лучше."
-          placeholder="Что понравилось, а что можно улучшить? (необязательно)"
+          title={tt({
+            ru: 'Оцените сервис',
+            en: 'Rate the service',
+            de: 'Bewerten Sie den Service',
+          })}
+          subtitle={tt({
+            ru: 'Ваша оценка помогает нам стать лучше.',
+            en: 'Your rating helps us improve.',
+            de: 'Ihre Bewertung hilft uns, besser zu werden.',
+          })}
+          placeholder={tt({
+            ru: 'Что понравилось, а что можно улучшить? (необязательно)',
+            en: 'What did you like, and what could be better? (optional)',
+            de: 'Was hat Ihnen gefallen, was könnte besser sein? (optional)',
+          })}
         />
       </div>
 

@@ -2,22 +2,31 @@
 
 import { motion } from 'framer-motion'
 import { Coins, Sparkle } from '@phosphor-icons/react'
-import { EASE_EDITORIAL } from '@shared/lib'
+import { EASE_EDITORIAL, tt, useLang } from '@shared/lib'
 import { fmtRub } from '@entities/pack'
 import type { CommissionEvent } from '@/lib/referral'
 import { relativeTime } from '../lib/format'
 
 const SOURCE = {
-  purchase: { label: 'покупка пакета', Icon: Coins },
-  generation: { label: 'генерация', Icon: Sparkle },
+  purchase: {
+    label: () => tt({ ru: 'покупка пакета', en: 'pack purchase', de: 'Paketkauf' }),
+    Icon: Coins,
+  },
+  generation: {
+    label: () => tt({ ru: 'генерация', en: 'generation', de: 'Generierung' }),
+    Icon: Sparkle,
+  },
 } as const
 
 export function CommissionFeed({ events }: { events: CommissionEvent[] }) {
+  useLang()
   if (events.length === 0) return null
 
   return (
     <section className="flex flex-col gap-2.5">
-      <span className="text-kicker">последние начисления</span>
+      <span className="text-kicker">
+        {tt({ ru: 'последние начисления', en: 'recent earnings', de: 'letzte Gutschriften' })}
+      </span>
       <div className="flex flex-col gap-1.5">
         {events.map((e, i) => {
           const meta = SOURCE[e.source] ?? SOURCE.purchase
@@ -41,7 +50,7 @@ export function CommissionFeed({ events }: { events: CommissionEvent[] }) {
               </div>
               <div className="flex flex-1 flex-col">
                 <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                  {meta.label}
+                  {meta.label()}
                 </span>
                 <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.38)' }}>
                   {relativeTime(e.created_at)}

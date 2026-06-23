@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { EASE_EDITORIAL } from '@shared/lib'
+import { EASE_EDITORIAL, tt, useLang } from '@shared/lib'
 import { fmtRub } from '@entities/pack'
 import { pct } from '../lib/format'
 
@@ -14,6 +14,7 @@ const PURCHASE_COLOR = 'var(--rose)'
 const GEN_COLOR = '#7AA2F7'
 
 export function SourceSplit({ purchaseMinor, genMinor }: Props) {
+  useLang()
   const total = purchaseMinor + genMinor
   if (total <= 0) return null
 
@@ -22,8 +23,13 @@ export function SourceSplit({ purchaseMinor, genMinor }: Props) {
 
   return (
     <section className="flex flex-col gap-2.5">
-      <span className="text-kicker">источники дохода</span>
-      <div className="flex h-3 overflow-hidden rounded-full" style={{ background: 'rgba(0,0,0,0.3)' }}>
+      <span className="text-kicker">
+        {tt({ ru: 'источники дохода', en: 'income sources', de: 'Einnahmequellen' })}
+      </span>
+      <div
+        className="flex h-3 overflow-hidden rounded-full"
+        style={{ background: 'rgba(0,0,0,0.3)' }}
+      >
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${pPct}%` }}
@@ -38,8 +44,18 @@ export function SourceSplit({ purchaseMinor, genMinor }: Props) {
         />
       </div>
       <div className="grid grid-cols-2 gap-2.5">
-        <Legend color={PURCHASE_COLOR} label="Пополнения" amount={purchaseMinor} percent={pPct} />
-        <Legend color={GEN_COLOR} label="Генерации" amount={genMinor} percent={gPct} />
+        <Legend
+          color={PURCHASE_COLOR}
+          label={tt({ ru: 'Пополнения', en: 'Top-ups', de: 'Aufladungen' })}
+          amount={purchaseMinor}
+          percent={pPct}
+        />
+        <Legend
+          color={GEN_COLOR}
+          label={tt({ ru: 'Генерации', en: 'Generations', de: 'Generierungen' })}
+          amount={genMinor}
+          percent={gPct}
+        />
       </div>
     </section>
   )

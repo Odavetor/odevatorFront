@@ -2,10 +2,11 @@
 
 import { motion } from 'framer-motion'
 import { Crown } from '@phosphor-icons/react'
-import { EASE_EDITORIAL } from '@shared/lib'
+import { EASE_EDITORIAL, tt, useLang } from '@shared/lib'
 import type { ReferralTier } from '@/lib/referral'
 
 export function TierBadge({ tier }: { tier: ReferralTier }) {
+  useLang()
   const isMax = !tier.next_name
   const remaining = Math.max(tier.next_at - tier.paid_referrals, 0)
 
@@ -30,7 +31,7 @@ export function TierBadge({ tier }: { tier: ReferralTier }) {
           </div>
           <div className="flex flex-col">
             <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.45)' }}>
-              ваш уровень
+              {tt({ ru: 'ваш уровень', en: 'your tier', de: 'deine Stufe' })}
             </span>
             <span className="font-sans text-[16px] font-extrabold" style={{ color: '#E8C9A4' }}>
               {tier.name}
@@ -38,7 +39,11 @@ export function TierBadge({ tier }: { tier: ReferralTier }) {
           </div>
         </div>
         <span className="text-[11px] tabular-nums" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          {tier.paid_referrals} оплат
+          {tt({
+            ru: `${tier.paid_referrals} оплат`,
+            en: `${tier.paid_referrals} paid`,
+            de: `${tier.paid_referrals} Käufe`,
+          })}
         </span>
       </div>
 
@@ -57,13 +62,21 @@ export function TierBadge({ tier }: { tier: ReferralTier }) {
             />
           </div>
           <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
-            ещё {remaining} оплат до уровня «{tier.next_name}»
+            {tt({
+              ru: `ещё ${remaining} оплат до уровня «${tier.next_name}»`,
+              en: `${remaining} more paid to reach tier «${tier.next_name}»`,
+              de: `noch ${remaining} Käufe bis zur Stufe «${tier.next_name}»`,
+            })}
           </span>
         </div>
       )}
       {isMax && (
         <span className="text-[11px]" style={{ color: 'rgba(232,201,164,0.8)' }}>
-          максимальный уровень — вы в числе лучших партнёров
+          {tt({
+            ru: 'максимальный уровень — вы в числе лучших партнёров',
+            en: 'top tier — you are among the best partners',
+            de: 'höchste Stufe — du gehörst zu den besten Partnern',
+          })}
         </span>
       )}
     </section>

@@ -1,16 +1,18 @@
 import { Lightning } from '@phosphor-icons/react'
+import { tt, useLang } from '@shared/lib'
 
 export function EmptyState() {
+  useLang()
   return (
     <div
-      className="flex flex-col items-center text-center px-6 py-10 rounded-3xl"
+      className="flex flex-col items-center rounded-3xl px-6 py-10 text-center"
       style={{
         background: 'rgba(255,255,255,0.03)',
         border: '1px solid var(--border-1)',
       }}
     >
       <div
-        className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+        className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
         style={{
           background: 'var(--rose-dim)',
           border: '1px solid var(--border-rose)',
@@ -19,7 +21,7 @@ export function EmptyState() {
         <Lightning size={24} weight="duotone" color="var(--rose)" />
       </div>
       <h3
-        className="font-sans mb-2"
+        className="mb-2 font-sans"
         style={{
           fontSize: 20,
           fontWeight: 800,
@@ -27,10 +29,10 @@ export function EmptyState() {
           color: 'var(--text)',
         }}
       >
-        Пока тихо
+        {tt({ ru: 'Пока тихо', en: 'All quiet for now', de: 'Noch ist alles ruhig' })}
       </h3>
       <p
-        className="font-sans max-w-[26ch]"
+        className="max-w-[26ch] font-sans"
         style={{
           fontSize: 13,
           fontWeight: 500,
@@ -38,7 +40,11 @@ export function EmptyState() {
           lineHeight: 1.4,
         }}
       >
-        Здесь появятся все движения слотов и денег
+        {tt({
+          ru: 'Здесь появятся все движения слотов и денег',
+          en: 'All slot and money movements will show up here',
+          de: 'Hier erscheinen alle Slot- und Geldbewegungen',
+        })}
       </p>
     </div>
   )

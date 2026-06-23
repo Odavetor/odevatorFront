@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { Check, Lightning } from '@phosphor-icons/react'
 import { SparkleBurst } from '@shared/ui'
-import { EASE_GLIDE } from '@shared/lib'
+import { EASE_GLIDE, tt, useLang } from '@shared/lib'
 import { fmtRub, getPackMeta, unitPriceRub, type SplashColor } from '@entities/pack'
 import type { GenerationPackOption } from '@shared/api'
 
@@ -60,6 +60,7 @@ export function PackCard({
   index,
   onSelect,
 }: PackCardProps) {
+  useLang()
   const meta = getPackMeta(option)
   const tokens = SPLASH_TOKENS[meta.splash]
   const unit = unitPriceRub(option)
@@ -199,7 +200,7 @@ export function PackCard({
             className="font-sans tabular-nums"
             style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}
           >
-            {unit} ₽/фото
+            {unit} ₽/{tt({ ru: 'фото', en: 'photo', de: 'Foto' })}
           </span>
         </div>
       </div>

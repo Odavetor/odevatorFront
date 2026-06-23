@@ -15,10 +15,14 @@ import {
 } from '@entities/generation'
 import { ApiError } from '@shared/api'
 import { useUser } from '@entities/user'
-import { haptic, hapticNotify, getTelegramUser as getTgUser } from '@shared/lib'
+import { haptic, hapticNotify, getTelegramUser as getTgUser, tt } from '@shared/lib'
 
-const MODERATION_MESSAGE =
-  'Фото не прошло проверку. Похоже, на снимке нет взрослого человека или есть несовершеннолетние. Загрузите чёткое фото взрослого человека.'
+const moderationMessage = () =>
+  tt({
+    ru: 'Фото не прошло проверку. Похоже, на снимке нет взрослого человека или есть несовершеннолетние. Загрузите чёткое фото взрослого человека.',
+    en: 'The photo did not pass moderation. It looks like there is no adult in the shot, or minors are present. Please upload a clear photo of an adult.',
+    de: 'Das Foto hat die Prüfung nicht bestanden. Anscheinend ist keine erwachsene Person im Bild oder es sind Minderjährige zu sehen. Bitte lade ein klares Foto einer erwachsenen Person hoch.',
+  })
 
 const LAST_PHOTO_PREFIX = 'odevator_last_photo:'
 
@@ -51,13 +55,31 @@ function friendlyGenerateError(e: unknown, fallback: string): string {
       e.body && typeof e.body === 'object' && 'error' in e.body
         ? String((e.body as { error: unknown }).error)
         : e.message
-    if (e.status === 422 || code === 'moderation_blocked') return MODERATION_MESSAGE
-    if (e.status === 503) return 'Сервис временно недоступен. Попробуйте чуть позже.'
-    if (e.status === 429) return 'Слишком много запросов. Подождите немного и попробуйте снова.'
+    if (e.status === 422 || code === 'moderation_blocked') return moderationMessage()
+    if (e.status === 503)
+      return tt({
+        ru: 'Сервис временно недоступен. Попробуйте чуть позже.',
+        en: 'The service is temporarily unavailable. Please try again a bit later.',
+        de: 'Der Dienst ist vorübergehend nicht verfügbar. Bitte versuche es etwas später erneut.',
+      })
+    if (e.status === 429)
+      return tt({
+        ru: 'Слишком много запросов. Подождите немного и попробуйте снова.',
+        en: 'Too many requests. Please wait a moment and try again.',
+        de: 'Zu viele Anfragen. Bitte warte kurz und versuche es erneut.',
+      })
     if (e.status === 400) {
       if (code.includes('file_url'))
-        return 'Не удалось обработать загруженное фото. Попробуйте другое изображение.'
-      return 'Не получилось начать обработку. Проверьте фото и параметры, затем попробуйте снова.'
+        return tt({
+          ru: 'Не удалось обработать загруженное фото. Попробуйте другое изображение.',
+          en: 'Could not process the uploaded photo. Please try another image.',
+          de: 'Das hochgeladene Foto konnte nicht verarbeitet werden. Bitte versuche ein anderes Bild.',
+        })
+      return tt({
+        ru: 'Не получилось начать обработку. Проверьте фото и параметры, затем попробуйте снова.',
+        en: 'Could not start processing. Check the photo and settings, then try again.',
+        de: 'Die Verarbeitung konnte nicht gestartet werden. Prüfe Foto und Einstellungen und versuche es erneut.',
+      })
     }
   }
   return fallback

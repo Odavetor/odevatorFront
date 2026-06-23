@@ -6,12 +6,16 @@ import { motion } from 'framer-motion'
 import { ArrowLeft } from '@phosphor-icons/react'
 import { getLegalDoc, LEGAL_REGISTRY, type LegalDoc } from '@entities/content'
 import { haptic } from '@/lib/telegram'
+import { tt, useLang } from '@shared/lib'
 
 export default function LegalPage() {
+  useLang()
   const router = useRouter()
   const params = useParams<{ slug: string }>()
   const slug = typeof params.slug === 'string' ? params.slug : ''
-  const fallbackTitle = LEGAL_REGISTRY.find((d) => d.slug === slug)?.title ?? 'Документ'
+  const fallbackTitle =
+    LEGAL_REGISTRY.find((d) => d.slug === slug)?.title ??
+    tt({ ru: 'Документ', en: 'Document', de: 'Dokument' })
 
   const [doc, setDoc] = useState<LegalDoc | null>(null)
   const [loaded, setLoaded] = useState(false)
@@ -79,7 +83,7 @@ export default function LegalPage() {
       >
         {!loaded ? (
           <p className="font-sans" style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>
-            Загрузка…
+            {tt({ ru: 'Загрузка…', en: 'Loading…', de: 'Wird geladen…' })}
           </p>
         ) : body ? (
           <p
@@ -94,7 +98,11 @@ export default function LegalPage() {
           </p>
         ) : (
           <p className="font-sans" style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)' }}>
-            Документ пока не заполнен.
+            {tt({
+              ru: 'Документ пока не заполнен.',
+              en: 'This document has not been filled in yet.',
+              de: 'Dieses Dokument wurde noch nicht ausgefüllt.',
+            })}
           </p>
         )}
       </motion.div>

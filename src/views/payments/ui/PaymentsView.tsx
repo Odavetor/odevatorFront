@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { ArrowLeft } from '@phosphor-icons/react'
 import { DisplayTitle, Kicker } from '@shared/ui'
-import { EASE_EDITORIAL, haptic } from '@shared/lib'
+import { EASE_EDITORIAL, haptic, tt, useLang } from '@shared/lib'
 import { fetchPayments } from '@entities/user'
 import { BottomNav } from '@widgets/bottom-nav'
 import type { PaymentTx } from '@shared/api'
@@ -15,6 +15,7 @@ import { EmptyState } from './EmptyState'
 const PER_PAGE = 15
 
 export function PaymentsView() {
+  useLang()
   const router = useRouter()
   const [items, setItems] = useState<PaymentTx[]>([])
   const [initialLoading, setInitialLoading] = useState(true)
@@ -56,12 +57,12 @@ export function PaymentsView() {
   }, [hasMore, initialLoading, pageLoading, nextBeforeId, load])
 
   return (
-    <div className="flex flex-col min-h-[100dvh]">
+    <div className="flex min-h-[100dvh] flex-col">
       <motion.header
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE_EDITORIAL }}
-        className="px-5 pt-[max(env(safe-area-inset-top),20px)] pb-5"
+        className="px-5 pb-5 pt-[max(env(safe-area-inset-top),20px)]"
       >
         <div className="flex items-center gap-3">
           <button
@@ -69,7 +70,7 @@ export function PaymentsView() {
               haptic()
               router.back()
             }}
-            className="w-9 h-9 rounded-xl flex items-center justify-center no-tap-highlight"
+            className="no-tap-highlight flex h-9 w-9 items-center justify-center rounded-xl"
             style={{
               background: 'rgba(255,255,255,0.06)',
               border: '1px solid rgba(255,255,255,0.12)',
@@ -81,8 +82,10 @@ export function PaymentsView() {
             <ArrowLeft size={18} color="rgba(255,255,255,0.7)" weight="bold" />
           </button>
           <div className="flex flex-col gap-1">
-            <Kicker tone="rose">Аккаунт</Kicker>
-            <DisplayTitle size="md">Покупки</DisplayTitle>
+            <Kicker tone="rose">{tt({ ru: 'Аккаунт', en: 'Account', de: 'Konto' })}</Kicker>
+            <DisplayTitle size="md">
+              {tt({ ru: 'Покупки', en: 'Purchases', de: 'Käufe' })}
+            </DisplayTitle>
           </div>
         </div>
       </motion.header>
@@ -115,7 +118,7 @@ export function PaymentsView() {
           <div ref={sentinelRef} className="flex justify-center py-8">
             {pageLoading ? (
               <div
-                className="w-5 h-5 rounded-full"
+                className="h-5 w-5 rounded-full"
                 style={{
                   border: '1.5px solid var(--border-2)',
                   borderTopColor: 'var(--rose)',
@@ -123,16 +126,13 @@ export function PaymentsView() {
                 }}
               />
             ) : (
-              <div
-                className="w-2 h-2 rounded-full"
-                style={{ background: 'var(--border-2)' }}
-              />
+              <div className="h-2 w-2 rounded-full" style={{ background: 'var(--border-2)' }} />
             )}
           </div>
         )}
 
         {!hasMore && !initialLoading && items.length > 0 && (
-          <div className="flex justify-center pt-8 pb-4">
+          <div className="flex justify-center pb-4 pt-8">
             <div className="h-px w-12" style={{ background: 'var(--border-2)' }} />
           </div>
         )}
@@ -147,11 +147,7 @@ function SkeletonList() {
   return (
     <div className="flex flex-col gap-2">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div
-          key={i}
-          className="skeleton"
-          style={{ height: 68, borderRadius: 16 }}
-        />
+        <div key={i} className="skeleton" style={{ height: 68, borderRadius: 16 }} />
       ))}
     </div>
   )

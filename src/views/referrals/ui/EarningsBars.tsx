@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { EASE_EDITORIAL, haptic } from '@shared/lib'
+import { EASE_EDITORIAL, haptic, tt, useLang } from '@shared/lib'
 import { fmtRub } from '@entities/pack'
 import type { EarningsPoint } from '@/lib/referral'
 import { dailyBuckets, dayLabel } from '../lib/series'
@@ -13,6 +13,7 @@ interface Props {
 }
 
 export function EarningsBars({ series, days }: Props) {
+  useLang()
   const [active, setActive] = useState<number | null>(null)
   const buckets = useMemo(() => {
     const byDate = new Map(series.map((p) => [p.date, p.amount_minor]))
@@ -29,14 +30,22 @@ export function EarningsBars({ series, days }: Props) {
     <section className="flex flex-col gap-3">
       <div className="flex items-end justify-between">
         <div className="flex flex-col">
-          <span className="text-kicker">динамика заработка</span>
-          <span className="font-sans text-[20px] font-extrabold tabular-nums" style={{ color: 'var(--text)' }}>
+          <span className="text-kicker">
+            {tt({ ru: 'динамика заработка', en: 'earnings trend', de: 'Einnahmenverlauf' })}
+          </span>
+          <span
+            className="font-sans text-[20px] font-extrabold tabular-nums"
+            style={{ color: 'var(--text)' }}
+          >
             {fmtRub(total)} ₽
           </span>
         </div>
         {hasData && (
           <div className="flex flex-col items-end">
-            <span className="font-sans text-[14px] font-bold tabular-nums" style={{ color: 'var(--rose)' }}>
+            <span
+              className="font-sans text-[14px] font-bold tabular-nums"
+              style={{ color: 'var(--rose)' }}
+            >
               {fmtRub(buckets[shown])} ₽
             </span>
             <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
@@ -63,7 +72,11 @@ export function EarningsBars({ series, days }: Props) {
                 <motion.span
                   initial={{ height: 0 }}
                   animate={{ height: `${Math.max((v / max) * 100, v > 0 ? 4 : 1.5)}%` }}
-                  transition={{ duration: 0.6, delay: Math.min(i * 0.012, 0.25), ease: EASE_EDITORIAL }}
+                  transition={{
+                    duration: 0.6,
+                    delay: Math.min(i * 0.012, 0.25),
+                    ease: EASE_EDITORIAL,
+                  }}
                   className="w-full rounded-t-[3px]"
                   style={{
                     background: isActive
@@ -80,9 +93,17 @@ export function EarningsBars({ series, days }: Props) {
       ) : (
         <div
           className="flex items-center justify-center rounded-xl text-[11px]"
-          style={{ height: 88, color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.03)' }}
+          style={{
+            height: 88,
+            color: 'rgba(255,255,255,0.3)',
+            background: 'rgba(255,255,255,0.03)',
+          }}
         >
-          пока нет начислений за период
+          {tt({
+            ru: 'пока нет начислений за период',
+            en: 'no earnings for this period yet',
+            de: 'noch keine Einnahmen in diesem Zeitraum',
+          })}
         </div>
       )}
     </section>

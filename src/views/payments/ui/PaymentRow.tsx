@@ -1,6 +1,7 @@
 import { Bank, CurrencyEth } from '@phosphor-icons/react'
 import { PAYMENT_METHOD } from '@shared/api'
 import type { PaymentTx } from '@shared/api'
+import { tt, useLang } from '@shared/lib'
 import {
   fmtAmount,
   fmtRelativeDate,
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function PaymentRow({ payment }: Props) {
+  useLang()
   const status = getStatusMeta(payment.status)
   const isCrypto = payment.payment_method === PAYMENT_METHOD.CRYPTO
   const Icon = isCrypto ? CurrencyEth : Bank
@@ -27,7 +29,7 @@ export function PaymentRow({ payment }: Props) {
       }}
     >
       <div
-        className="flex items-center justify-center flex-shrink-0"
+        className="flex flex-shrink-0 items-center justify-center"
         style={{
           width: 36,
           height: 36,
@@ -39,9 +41,9 @@ export function PaymentRow({ payment }: Props) {
         <Icon size={16} weight="duotone" color="rgba(255,255,255,0.7)" />
       </div>
 
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <p
-          className="font-sans truncate"
+          className="truncate font-sans"
           style={{
             fontSize: 14,
             fontWeight: 700,
@@ -50,7 +52,7 @@ export function PaymentRow({ payment }: Props) {
             lineHeight: 1.15,
           }}
         >
-          {payment.description ?? 'Платёж'}
+          {payment.description ?? tt({ ru: 'Платёж', en: 'Payment', de: 'Zahlung' })}
         </p>
         <p
           className="font-sans"
@@ -65,7 +67,7 @@ export function PaymentRow({ payment }: Props) {
         </p>
       </div>
 
-      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+      <div className="flex flex-shrink-0 flex-col items-end gap-1">
         <span
           className="font-sans tabular-nums"
           style={{
@@ -79,7 +81,7 @@ export function PaymentRow({ payment }: Props) {
           {fmtAmount(payment.amount_minor)}
         </span>
         <span
-          className="font-sans inline-flex items-center px-1.5 py-0.5 rounded"
+          className="inline-flex items-center rounded px-1.5 py-0.5 font-sans"
           style={{
             fontSize: 10,
             fontWeight: 700,

@@ -3,19 +3,20 @@
 import Link from 'next/link'
 import { ArrowRight, ShoppingBag } from '@phosphor-icons/react'
 import { PremiumButton } from '@shared/ui'
-import { haptic } from '@shared/lib'
+import { haptic, tt, useLang } from '@shared/lib'
 
 export function EmptyState() {
+  useLang()
   return (
     <div
-      className="flex flex-col items-center text-center px-6 py-10 rounded-3xl"
+      className="flex flex-col items-center rounded-3xl px-6 py-10 text-center"
       style={{
         background: 'rgba(255,255,255,0.03)',
         border: '1px solid var(--border-1)',
       }}
     >
       <div
-        className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+        className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
         style={{
           background: 'var(--rose-dim)',
           border: '1px solid var(--border-rose)',
@@ -24,7 +25,7 @@ export function EmptyState() {
         <ShoppingBag size={24} weight="duotone" color="var(--rose)" />
       </div>
       <h3
-        className="font-sans mb-2"
+        className="mb-2 font-sans"
         style={{
           fontSize: 20,
           fontWeight: 800,
@@ -32,10 +33,10 @@ export function EmptyState() {
           color: 'var(--text)',
         }}
       >
-        Покупок пока нет
+        {tt({ ru: 'Покупок пока нет', en: 'No purchases yet', de: 'Noch keine Käufe' })}
       </h3>
       <p
-        className="font-sans max-w-[26ch] mb-6"
+        className="mb-6 max-w-[26ch] font-sans"
         style={{
           fontSize: 13,
           fontWeight: 500,
@@ -43,11 +44,15 @@ export function EmptyState() {
           lineHeight: 1.4,
         }}
       >
-        Когда возьмёшь первый пакет — он появится тут
+        {tt({
+          ru: 'Когда возьмёшь первый пакет — он появится тут',
+          en: 'Once you grab your first pack, it will show up here',
+          de: 'Sobald du dein erstes Paket holst, erscheint es hier',
+        })}
       </p>
       <Link href="/shop" onClick={() => haptic('medium')}>
         <PremiumButton tone="rose" size="md" glow trailing={<ArrowRight size={14} weight="bold" />}>
-          В магазин
+          {tt({ ru: 'В магазин', en: 'To shop', de: 'Zum Shop' })}
         </PremiumButton>
       </Link>
     </div>

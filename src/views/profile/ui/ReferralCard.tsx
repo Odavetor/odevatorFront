@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Check, Copy, ShareNetwork } from '@phosphor-icons/react'
 import { SparkleBurst } from '@shared/ui'
 import { fmtRub } from '@entities/pack'
+import { tt, useLang } from '@shared/lib'
 import { haptic, hapticNotify, openLink } from '@/lib/telegram'
 
 interface Props {
@@ -44,6 +45,7 @@ function fallbackCopy(text: string): boolean {
 }
 
 export function ReferralCard({ link, earnedMinor }: Props) {
+  useLang()
   const [copied, setCopied] = useState(false)
 
   async function copy() {
@@ -68,33 +70,38 @@ export function ReferralCard({ link, earnedMinor }: Props) {
 
   function shareToTelegram() {
     haptic('medium')
-    const text = encodeURIComponent('попробуй — реально работает')
+    const text = encodeURIComponent(
+      tt({
+        ru: 'попробуй — реально работает',
+        en: 'try this — it actually works',
+        de: 'probier mal — funktioniert wirklich',
+      }),
+    )
     const url = encodeURIComponent(link)
     openLink(`https://t.me/share/url?url=${url}&text=${text}`)
   }
 
   return (
     <section
-      className="relative overflow-hidden mx-5 mt-4"
+      className="relative mx-5 mt-4 overflow-hidden"
       style={{
         borderRadius: 24,
         background:
           'linear-gradient(135deg, rgba(224,63,106,0.18) 0%, rgba(31,25,41,0.6) 60%, rgba(13,13,15,0.92) 100%)',
         border: '1px solid var(--border-rose)',
-        boxShadow:
-          'inset 0 1px 0 rgba(255,255,255,0.06), 0 18px 44px -16px rgba(224,63,106,0.4)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 18px 44px -16px rgba(224,63,106,0.4)',
       }}
     >
       <span
         aria-hidden
-        className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
+        className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full"
         style={{
           background: 'radial-gradient(circle, rgba(224,63,106,0.3) 0%, transparent 70%)',
           filter: 'blur(6px)',
         }}
       />
 
-      <div className="relative px-5 pt-5 pb-4 flex flex-col gap-1.5">
+      <div className="relative flex flex-col gap-1.5 px-5 pb-4 pt-5">
         <span
           className="font-sans"
           style={{
@@ -104,7 +111,7 @@ export function ReferralCard({ link, earnedMinor }: Props) {
             color: 'var(--rose)',
           }}
         >
-          Зови друзей
+          {tt({ ru: 'Зови друзей', en: 'Invite friends', de: 'Freunde einladen' })}
         </span>
         <h3
           className="font-sans"
@@ -116,7 +123,13 @@ export function ReferralCard({ link, earnedMinor }: Props) {
             color: 'var(--text)',
           }}
         >
-          Получай <span style={{ color: 'var(--rose)' }}>₽</span> с покупок друга
+          {tt({ ru: 'Получай ', en: 'Earn ', de: 'Verdiene ' })}
+          <span style={{ color: 'var(--rose)' }}>₽</span>
+          {tt({
+            ru: ' с покупок друга',
+            en: " from your friend's purchases",
+            de: ' aus den Käufen deines Freundes',
+          })}
         </h3>
         <p
           className="font-sans"
@@ -128,16 +141,24 @@ export function ReferralCard({ link, earnedMinor }: Props) {
           }}
         >
           {earnedMinor > 0
-            ? `Уже капнуло ${fmtRub(earnedMinor)} ₽ на счёт`
-            : 'Каждая его покупка — кэшбек тебе'}
+            ? tt({
+                ru: `Уже капнуло ${fmtRub(earnedMinor)} ₽ на счёт`,
+                en: `Already ${fmtRub(earnedMinor)} ₽ landed in your balance`,
+                de: `Bereits ${fmtRub(earnedMinor)} ₽ auf deinem Guthaben`,
+              })
+            : tt({
+                ru: 'Каждая его покупка — кэшбек тебе',
+                en: 'Every purchase they make is cashback for you',
+                de: 'Jeder ihrer Käufe ist Cashback für dich',
+              })}
         </p>
       </div>
 
-      <div className="relative px-3 pb-3 flex flex-col gap-2">
+      <div className="relative flex flex-col gap-2 px-3 pb-3">
         <motion.button
           onClick={copy}
           whileTap={{ scale: 0.98 }}
-          className="relative rounded-2xl px-3 py-2.5 flex items-center gap-2 w-full no-tap-highlight overflow-hidden"
+          className="no-tap-highlight relative flex w-full items-center gap-2 overflow-hidden rounded-2xl px-3 py-2.5"
           animate={{
             background: copied ? 'rgba(95,210,150,0.12)' : 'rgba(0,0,0,0.34)',
             boxShadow: copied
@@ -145,7 +166,11 @@ export function ReferralCard({ link, earnedMinor }: Props) {
               : 'inset 0 0 0 1px rgba(255,255,255,0.06)',
           }}
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          aria-label="Скопировать реферальную ссылку"
+          aria-label={tt({
+            ru: 'Скопировать реферальную ссылку',
+            en: 'Copy referral link',
+            de: 'Empfehlungslink kopieren',
+          })}
         >
           <AnimatePresence mode="wait" initial={false}>
             {copied ? (
@@ -155,7 +180,7 @@ export function ReferralCard({ link, earnedMinor }: Props) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                className="font-sans flex-1 text-left inline-flex items-center gap-1.5"
+                className="inline-flex flex-1 items-center gap-1.5 text-left font-sans"
                 style={{
                   fontSize: 13,
                   fontWeight: 700,
@@ -164,7 +189,11 @@ export function ReferralCard({ link, earnedMinor }: Props) {
                 }}
               >
                 <Check size={13} weight="bold" />
-                Скопировано — отправь другу
+                {tt({
+                  ru: 'Скопировано — отправь другу',
+                  en: 'Copied — send it to a friend',
+                  de: 'Kopiert — schick es einem Freund',
+                })}
               </motion.span>
             ) : (
               <motion.span
@@ -173,7 +202,7 @@ export function ReferralCard({ link, earnedMinor }: Props) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 8 }}
                 transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                className="font-sans flex-1 truncate text-left"
+                className="flex-1 truncate text-left font-sans"
                 style={{
                   fontSize: 12,
                   fontWeight: 500,
@@ -186,12 +215,10 @@ export function ReferralCard({ link, earnedMinor }: Props) {
           </AnimatePresence>
 
           <span
-            className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center relative"
+            className="relative flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg"
             style={{
               background: copied ? 'rgba(95,210,150,0.18)' : 'var(--rose-dim)',
-              border: copied
-                ? '1px solid rgba(95,210,150,0.4)'
-                : '1px solid var(--border-rose)',
+              border: copied ? '1px solid rgba(95,210,150,0.4)' : '1px solid var(--border-rose)',
               transition: 'all 0.22s var(--ease-glide)',
             }}
           >
@@ -218,15 +245,13 @@ export function ReferralCard({ link, earnedMinor }: Props) {
                 </motion.span>
               )}
             </AnimatePresence>
-            {copied && (
-              <SparkleBurst count={8} radius={26} color="var(--splash-green)" />
-            )}
+            {copied && <SparkleBurst count={8} radius={26} color="var(--splash-green)" />}
           </span>
         </motion.button>
 
         <button
           onClick={shareToTelegram}
-          className="w-full py-3 rounded-2xl flex items-center justify-center gap-2 no-tap-highlight active:scale-[0.98]"
+          className="no-tap-highlight flex w-full items-center justify-center gap-2 rounded-2xl py-3 active:scale-[0.98]"
           style={{
             background: 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)',
             boxShadow:
@@ -239,7 +264,7 @@ export function ReferralCard({ link, earnedMinor }: Props) {
           }}
         >
           <ShareNetwork size={15} weight="bold" />
-          Поделиться в Telegram
+          {tt({ ru: 'Поделиться в Telegram', en: 'Share on Telegram', de: 'Auf Telegram teilen' })}
           <ArrowRight size={13} weight="bold" />
         </button>
       </div>

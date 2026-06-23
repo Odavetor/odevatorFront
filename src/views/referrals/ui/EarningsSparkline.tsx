@@ -1,6 +1,7 @@
 'use client'
 
 import { useId, useMemo } from 'react'
+import { tt, useLang } from '@shared/lib'
 import type { EarningsPoint } from '@/lib/referral'
 import { dailyBuckets } from '../lib/series'
 
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function EarningsSparkline({ series, days }: Props) {
+  useLang()
   const gradId = useId()
   const buckets = useMemo(() => {
     const byDate = new Map(series.map((p) => [p.date, p.amount_minor]))
@@ -32,7 +34,11 @@ export function EarningsSparkline({ series, days }: Props) {
         className="flex items-center justify-center rounded-xl text-[11px]"
         style={{ height: 56, color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.03)' }}
       >
-        пока нет начислений за период
+        {tt({
+          ru: 'пока нет начислений за период',
+          en: 'no earnings for this period yet',
+          de: 'noch keine Einnahmen in diesem Zeitraum',
+        })}
       </div>
     )
   }

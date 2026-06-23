@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Star, CheckCircle } from '@phosphor-icons/react'
-import { haptic, hapticNotify, hapticSelect } from '@shared/lib'
+import { haptic, hapticNotify, hapticSelect, tt, useLang } from '@shared/lib'
 import { submitReview, type ReviewKind } from '@/lib/reviews'
 
 const MAX_BODY = 1000
@@ -16,6 +16,7 @@ interface ReviewFormProps {
 }
 
 export function ReviewForm({ kind, title, subtitle, placeholder }: ReviewFormProps) {
+  useLang()
   const [rating, setRating] = useState(0)
   const [body, setBody] = useState('')
   const [busy, setBusy] = useState(false)
@@ -34,7 +35,15 @@ export function ReviewForm({ kind, title, subtitle, placeholder }: ReviewFormPro
       setDone(true)
     } catch (e) {
       hapticNotify('error')
-      setError(e instanceof Error ? e.message : 'Не удалось отправить отзыв')
+      setError(
+        e instanceof Error
+          ? e.message
+          : tt({
+              ru: 'Не удалось отправить отзыв',
+              en: 'Failed to submit review',
+              de: 'Bewertung konnte nicht gesendet werden',
+            }),
+      )
     } finally {
       setBusy(false)
     }
@@ -53,10 +62,18 @@ export function ReviewForm({ kind, title, subtitle, placeholder }: ReviewFormPro
       >
         <CheckCircle size={32} weight="fill" color="#5fd296" />
         <p className="text-sm font-semibold" style={{ color: '#7fe0a8' }}>
-          Спасибо за отзыв!
+          {tt({
+            ru: 'Спасибо за отзыв!',
+            en: 'Thanks for your review!',
+            de: 'Danke für Ihre Bewertung!',
+          })}
         </p>
         <p className="text-[12px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
-          Мы прочитаем каждое слово.
+          {tt({
+            ru: 'Мы прочитаем каждое слово.',
+            en: 'We read every word.',
+            de: 'Wir lesen jedes Wort.',
+          })}
         </p>
       </motion.div>
     )
@@ -80,7 +97,7 @@ export function ReviewForm({ kind, title, subtitle, placeholder }: ReviewFormPro
             <button
               key={n}
               type="button"
-              aria-label={`${n} из 5`}
+              aria-label={tt({ ru: `${n} из 5`, en: `${n} of 5`, de: `${n} von 5` })}
               onClick={() => {
                 hapticSelect()
                 setRating(n)
@@ -136,7 +153,9 @@ export function ReviewForm({ kind, title, subtitle, placeholder }: ReviewFormPro
         }}
         onPointerDown={() => canSubmit && haptic('light')}
       >
-        {busy ? 'Отправляем…' : 'Отправить отзыв'}
+        {busy
+          ? tt({ ru: 'Отправляем…', en: 'Sending…', de: 'Senden…' })
+          : tt({ ru: 'Отправить отзыв', en: 'Submit review', de: 'Bewertung senden' })}
       </button>
     </section>
   )

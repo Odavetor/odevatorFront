@@ -1,5 +1,7 @@
 'use client'
 
+import { tt } from './locale'
+
 export interface TelegramUserLike {
   id: number
   first_name: string
@@ -92,13 +94,19 @@ export function ready() {
 }
 
 export function openLink(url: string) {
+  try {
+    const { protocol } = new URL(url)
+    if (protocol !== 'https:' && protocol !== 'http:') return
+  } catch {
+    return
+  }
   getWebApp()?.openLink(url)
 }
 
 export function getTimeGreeting(): string {
   const h = new Date().getHours()
-  if (h < 6) return 'Доброй ночи'
-  if (h < 12) return 'Доброе утро'
-  if (h < 17) return 'Добрый день'
-  return 'Добрый вечер'
+  if (h < 6) return tt({ ru: 'Доброй ночи', en: 'Good night', de: 'Gute Nacht' })
+  if (h < 12) return tt({ ru: 'Доброе утро', en: 'Good morning', de: 'Guten Morgen' })
+  if (h < 17) return tt({ ru: 'Добрый день', en: 'Good afternoon', de: 'Guten Tag' })
+  return tt({ ru: 'Добрый вечер', en: 'Good evening', de: 'Guten Abend' })
 }
