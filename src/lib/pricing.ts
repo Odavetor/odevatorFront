@@ -5,5 +5,7 @@ export {
   updatePricingConfig,
   fetchPackPricing,
   updatePackPricing,
+  fetchFxRates,
+  updateFxRate,
 } from '@entities/pack'
-export type { PricingConfigItem, PackPricingItem } from '@entities/pack'
+export type { PricingConfigItem, PackPricingItem, FxRateItem } from '@entities/pack'

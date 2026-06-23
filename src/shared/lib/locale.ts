@@ -79,6 +79,12 @@ export function intlLocale(): string {
   return INTL_LOCALE[current]
 }
 
+const LANG_CURRENCY: Record<Lang, string> = { ru: 'RUB', en: 'USD', de: 'EUR' }
+
+export function currencyForLang(l: Lang = current): string {
+  return LANG_CURRENCY[l]
+}
+
 // useLang re-renders a component when the active language changes.
 export function useLang(): Lang {
   return useSyncExternalStore(subscribeLang, getLang, () => DEFAULT_LANG)

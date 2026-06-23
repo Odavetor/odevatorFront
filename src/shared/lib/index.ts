@@ -33,8 +33,10 @@ export {
   tt,
   pickLabel,
   intlLocale,
+  currencyForLang,
   useLang,
 } from './locale'
+export { fxRate, useFx, formatPrice } from './fx'
 export { IS_DEV, isMockEnabled, getDevViewAs, setDevViewAs } from './dev'
 export type { DevViewAs } from './dev'
 export {

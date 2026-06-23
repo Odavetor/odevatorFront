@@ -7,10 +7,118 @@ import {
   updatePricingConfig,
   fetchPackPricing,
   updatePackPricing,
+  fetchFxRates,
+  updateFxRate,
   type PricingConfigItem,
   type PackPricingItem,
+  type FxRateItem,
 } from '@/lib/pricing'
 import { hapticNotify, haptic } from '@/lib/telegram'
+
+const CURRENCY_LABEL: Record<string, string> = {
+  USD: 'Доллар (англ. язык)',
+  EUR: 'Евро (нем. язык)',
+}
+
+function FxRatesSection({ onError }: { onError: (m: string | null) => void }) {
+  const [rates, setRates] = useState<FxRateItem[]>([])
+  const [drafts, setDrafts] = useState<Record<string, string>>({})
+  const [savingCur, setSavingCur] = useState<string | null>(null)
+
+  async function load() {
+    try {
+      const r = await fetchFxRates()
+      setRates(r)
+      setDrafts(Object.fromEntries(r.map((x) => [x.currency, String(x.rub_per_unit)])))
+    } catch {
+      setRates([])
+    }
+  }
+
+  useEffect(() => {
+    load()
+  }, [])
+
+  async function save(currency: string) {
+    const v = Number(drafts[currency])
+    if (!Number.isFinite(v) || v <= 0) {
+      hapticNotify('warning')
+      onError('Курс должен быть числом больше 0')
+      return
+    }
+    setSavingCur(currency)
+    onError(null)
+    try {
+      await updateFxRate(currency, v)
+      hapticNotify('success')
+      await load()
+    } catch (e) {
+      hapticNotify('error')
+      onError(e instanceof Error ? e.message : 'Не удалось сохранить курс')
+    } finally {
+      setSavingCur(null)
+    }
+  }
+
+  return (
+    <section className="flex flex-col gap-2">
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
+          Курсы валют (показ цен)
+        </h3>
+        <span
+          className="font-mono uppercase"
+          style={{ fontSize: 9, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.35)' }}
+        >
+          ₽ за 1 единицу
+        </span>
+      </div>
+      <p className="text-[11px] leading-snug" style={{ color: 'rgba(255,255,255,0.45)' }}>
+        Цены в шопе показываются в €/$ по языку (списание всё равно в ₽). Сколько рублей в 1 €/$.
+        Пусто/живой курс обновляется автоматически; здесь можно зафиксировать вручную.
+      </p>
+      <div
+        className="divide-y rounded-2xl"
+        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+      >
+        {rates.map((rate) => (
+          <div key={rate.currency} className="flex items-center gap-2 px-3 py-2.5">
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px]" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                {CURRENCY_LABEL[rate.currency] ?? rate.currency}
+              </p>
+              <p className="font-mono text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                1 {rate.currency} = … ₽ {rate.manual ? '(вручную)' : '(авто)'}
+              </p>
+            </div>
+            <input
+              value={drafts[rate.currency] ?? ''}
+              onChange={(e) => setDrafts((d) => ({ ...d, [rate.currency]: e.target.value }))}
+              inputMode="decimal"
+              className="w-24 rounded-lg px-2.5 py-1.5 text-right font-mono text-sm"
+              style={{
+                background: 'rgba(0,0,0,0.3)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                color: 'white',
+              }}
+            />
+            <button
+              onClick={() => {
+                haptic('light')
+                save(rate.currency)
+              }}
+              disabled={savingCur === rate.currency}
+              className="flex h-8 w-8 items-center justify-center rounded-md"
+              style={{ background: 'var(--rose-dim)', border: '1px solid var(--border-rose)' }}
+            >
+              <FloppyDisk size={13} weight="fill" color="var(--rose)" />
+            </button>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
 
 const KNOWN_KEYS: Record<string, string> = {
   'generation.model_2_per_minor': 'Цена за 1 фото · модель v2',
@@ -18,8 +126,8 @@ const KNOWN_KEYS: Record<string, string> = {
 }
 
 const TIER_LABELS: Record<string, string> = {
-  'standard': 'Стандарт',
-  'weekly_promo': 'Акции',
+  standard: 'Стандарт',
+  weekly_promo: 'Акции',
 }
 
 const fmtRub = (minor: number) => (minor / 100).toFixed(2)
@@ -32,10 +140,14 @@ export default function PricingEditor() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [drafts, setDrafts] = useState<Record<string, string>>({})
-  const [packDrafts, setPackDrafts] = useState<Record<string, { price: string; active: boolean }>>({})
+  const [packDrafts, setPackDrafts] = useState<Record<string, { price: string; active: boolean }>>(
+    {},
+  )
   const [savingKey, setSavingKey] = useState<string | null>(null)
 
-  function packKey(p: PackPricingItem) { return `${p.tier}:${p.quantity}` }
+  function packKey(p: PackPricingItem) {
+    return `${p.tier}:${p.quantity}`
+  }
 
   async function reload() {
     setLoading(true)
@@ -50,14 +162,21 @@ export default function PricingEditor() {
       }
       if (p.status === 'fulfilled') {
         setPacks(p.value)
-        setPackDrafts(Object.fromEntries(
-          p.value.map((x) => [packKey(x), { price: minorToRub(x.price_minor), active: x.is_active }]),
-        ))
+        setPackDrafts(
+          Object.fromEntries(
+            p.value.map((x) => [
+              packKey(x),
+              { price: minorToRub(x.price_minor), active: x.is_active },
+            ]),
+          ),
+        )
       } else {
         setPacks([])
       }
       if (g.status === 'rejected' && p.status === 'rejected') {
-        setError('Бэк не отвечает на /admin/pricing и /admin/payments/packs — возможно эндпоинты ещё не реализованы')
+        setError(
+          'Бэк не отвечает на /admin/pricing и /admin/payments/packs — возможно эндпоинты ещё не реализованы',
+        )
       }
     } finally {
       setLoading(false)
@@ -73,12 +192,15 @@ export default function PricingEditor() {
     const raw = drafts[item.key] ?? ''
     const num = Number(raw)
     if (Number.isNaN(num) || num < 0) {
-      hapticNotify('warning'); setError('Цена должна быть числом ≥ 0'); return
+      hapticNotify('warning')
+      setError('Цена должна быть числом ≥ 0')
+      return
     }
     setSavingKey(item.key)
     try {
       await updatePricingConfig(item.key, rubToMinor(num))
-      haptic('light'); hapticNotify('success')
+      haptic('light')
+      hapticNotify('success')
       await reload()
     } catch (e) {
       hapticNotify('error')
@@ -94,12 +216,18 @@ export default function PricingEditor() {
     if (!d) return
     const num = Number(d.price)
     if (Number.isNaN(num) || num < 0) {
-      hapticNotify('warning'); setError('Цена должна быть числом ≥ 0'); return
+      hapticNotify('warning')
+      setError('Цена должна быть числом ≥ 0')
+      return
     }
     setSavingKey(k)
     try {
-      await updatePackPricing(p.tier, p.quantity, { price_minor: rubToMinor(num), is_active: d.active })
-      haptic('light'); hapticNotify('success')
+      await updatePackPricing(p.tier, p.quantity, {
+        price_minor: rubToMinor(num),
+        is_active: d.active,
+      })
+      haptic('light')
+      hapticNotify('success')
       await reload()
     } catch (e) {
       hapticNotify('error')
@@ -122,26 +250,41 @@ export default function PricingEditor() {
   return (
     <div className="flex flex-col gap-6">
       {error && (
-        <div className="rounded-xl px-3 py-2 text-xs flex items-start justify-between gap-2"
-             style={{ background: 'rgba(180,30,60,0.12)', border: '1px solid rgba(180,30,60,0.22)', color: '#ff9aae' }}>
+        <div
+          className="flex items-start justify-between gap-2 rounded-xl px-3 py-2 text-xs"
+          style={{
+            background: 'rgba(180,30,60,0.12)',
+            border: '1px solid rgba(180,30,60,0.22)',
+            color: '#ff9aae',
+          }}
+        >
           <span>{error}</span>
-          <button onClick={() => setError(null)}><X size={12} /></button>
+          <button onClick={() => setError(null)}>
+            <X size={12} />
+          </button>
         </div>
       )}
 
       <div
-        className="rounded-2xl px-3.5 py-3 flex items-start gap-2.5"
+        className="flex items-start gap-2.5 rounded-2xl px-3.5 py-3"
         style={{ background: 'rgba(201,150,106,0.08)', border: '1px solid rgba(201,150,106,0.22)' }}
       >
-        <Info size={14} weight="fill" color="var(--gold)" className="flex-shrink-0 mt-0.5" />
+        <Info size={14} weight="fill" color="var(--gold)" className="mt-0.5 flex-shrink-0" />
         <div className="text-[12px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>
-          Цены в <strong>рублях</strong> (можно с копейками через точку, напр. <strong>49</strong> или <strong>49.90</strong>).
-          Глобальные цены — для всех генераций по умолчанию; у конкретной опции/сценария можно задать своё значение,
-          оно перебьёт глобальное. Тир «Акции» — отдельные акционные цены, кредиты по ним не сгорают.
+          Цены в <strong>рублях</strong> (можно с копейками через точку, напр. <strong>49</strong>{' '}
+          или <strong>49.90</strong>). Глобальные цены — для всех генераций по умолчанию; у
+          конкретной опции/сценария можно задать своё значение, оно перебьёт глобальное. Тир «Акции»
+          — отдельные акционные цены, кредиты по ним не сгорают.
         </div>
       </div>
 
-      {loading && <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Загрузка…</p>}
+      <FxRatesSection onError={setError} />
+
+      {loading && (
+        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+          Загрузка…
+        </p>
+      )}
 
       {/* GLOBAL PRICING */}
       <section className="flex flex-col gap-3">
@@ -164,15 +307,26 @@ export default function PricingEditor() {
             const changed = draftValue !== minorToRub(item.value_minor)
             const known = KNOWN_KEYS[item.key]
             return (
-              <div key={item.key}
-                className="rounded-xl px-3 py-2.5 flex flex-col gap-1.5"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div
+                key={item.key}
+                className="flex flex-col gap-1.5 rounded-xl px-3 py-2.5"
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                }}
+              >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex flex-col">
-                    <span className="text-[12px] font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                    <span
+                      className="text-[12px] font-medium"
+                      style={{ color: 'rgba(255,255,255,0.85)' }}
+                    >
                       {known ?? item.key}
                     </span>
-                    <span className="font-mono text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                    <span
+                      className="font-mono text-[10px]"
+                      style={{ color: 'rgba(255,255,255,0.35)' }}
+                    >
                       {item.key}
                     </span>
                   </div>
@@ -186,18 +340,26 @@ export default function PricingEditor() {
                     inputMode="decimal"
                     value={draftValue}
                     onChange={(e) => setDrafts((prev) => ({ ...prev, [item.key]: e.target.value }))}
-                    className="flex-1 rounded-lg px-3 py-1.5 text-sm font-mono"
-                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }} />
+                    className="flex-1 rounded-lg px-3 py-1.5 font-mono text-sm"
+                    style={{
+                      background: 'rgba(0,0,0,0.3)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      color: 'white',
+                    }}
+                  />
                   <button
                     onClick={() => handleSaveGlobal(item)}
                     disabled={!changed || savingKey === item.key}
-                    className="rounded-lg px-3 py-1.5 text-xs font-medium flex items-center gap-1"
+                    className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium"
                     style={{
                       background: changed ? 'var(--rose-dim)' : 'rgba(255,255,255,0.04)',
-                      border: changed ? '1px solid var(--border-rose)' : '1px solid var(--border-1)',
+                      border: changed
+                        ? '1px solid var(--border-rose)'
+                        : '1px solid var(--border-1)',
                       color: changed ? 'var(--rose)' : 'rgba(255,255,255,0.3)',
                       opacity: savingKey === item.key ? 0.5 : 1,
-                    }}>
+                    }}
+                  >
                     <FloppyDisk size={12} weight="fill" /> Сохранить
                   </button>
                 </div>
@@ -225,8 +387,9 @@ export default function PricingEditor() {
         {Object.keys(packsByTier).map((tier) => (
           <div key={tier} className="flex flex-col gap-2">
             <p
-              className="font-mono uppercase mb-0.5"
-              style={{ fontSize: 10, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.4)' }}>
+              className="mb-0.5 font-mono uppercase"
+              style={{ fontSize: 10, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.4)' }}
+            >
               {TIER_LABELS[tier] ?? tier}
             </p>
             <div className="flex flex-col gap-1.5">
@@ -235,49 +398,71 @@ export default function PricingEditor() {
                 const d = packDrafts[k] ?? { price: minorToRub(p.price_minor), active: p.is_active }
                 const changed = d.price !== minorToRub(p.price_minor) || d.active !== p.is_active
                 return (
-                  <div key={k}
-                    className="rounded-xl px-3 py-2 flex items-center gap-2"
+                  <div
+                    key={k}
+                    className="flex items-center gap-2 rounded-xl px-3 py-2"
                     style={{
                       background: 'rgba(255,255,255,0.04)',
                       border: '1px solid rgba(255,255,255,0.08)',
                       opacity: d.active ? 1 : 0.55,
-                    }}>
-                    <div className="font-display flex-shrink-0" style={{ fontSize: 22, color: 'var(--text)', minWidth: 32 }}>
+                    }}
+                  >
+                    <div
+                      className="font-display flex-shrink-0"
+                      style={{ fontSize: 22, color: 'var(--text)', minWidth: 32 }}
+                    >
                       {p.quantity}
                     </div>
                     <input
                       type="text"
                       inputMode="decimal"
                       value={d.price}
-                      onChange={(e) => setPackDrafts((prev) => ({
-                        ...prev, [k]: { ...d, price: e.target.value },
-                      }))}
-                      className="flex-1 rounded-lg px-2.5 py-1.5 text-sm font-mono"
-                      style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }} />
-                    <span className="font-mono text-[10px] flex-shrink-0" style={{ color: 'rgba(255,255,255,0.45)', minWidth: 56 }}>
+                      onChange={(e) =>
+                        setPackDrafts((prev) => ({
+                          ...prev,
+                          [k]: { ...d, price: e.target.value },
+                        }))
+                      }
+                      className="flex-1 rounded-lg px-2.5 py-1.5 font-mono text-sm"
+                      style={{
+                        background: 'rgba(0,0,0,0.3)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        color: 'white',
+                      }}
+                    />
+                    <span
+                      className="flex-shrink-0 font-mono text-[10px]"
+                      style={{ color: 'rgba(255,255,255,0.45)', minWidth: 56 }}
+                    >
                       = {(Number(d.price) || 0).toFixed(2)} ₽
                     </span>
                     <button
-                      onClick={() => setPackDrafts((prev) => ({ ...prev, [k]: { ...d, active: !d.active } }))}
+                      onClick={() =>
+                        setPackDrafts((prev) => ({ ...prev, [k]: { ...d, active: !d.active } }))
+                      }
                       title={d.active ? 'Выключить' : 'Включить'}
-                      className="px-2 py-1 rounded text-[10px] font-medium flex-shrink-0"
+                      className="flex-shrink-0 rounded px-2 py-1 text-[10px] font-medium"
                       style={{
                         background: d.active ? 'rgba(95,210,150,0.10)' : 'rgba(255,255,255,0.04)',
                         border: `1px solid ${d.active ? 'rgba(95,210,150,0.28)' : 'var(--border-1)'}`,
                         color: d.active ? '#5fd296' : 'rgba(255,255,255,0.4)',
-                      }}>
+                      }}
+                    >
                       {d.active ? 'on' : 'off'}
                     </button>
                     <button
                       onClick={() => handleSavePack(p)}
                       disabled={!changed || savingKey === k}
-                      className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
+                      className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md"
                       style={{
                         background: changed ? 'var(--rose-dim)' : 'rgba(255,255,255,0.04)',
-                        border: changed ? '1px solid var(--border-rose)' : '1px solid var(--border-1)',
+                        border: changed
+                          ? '1px solid var(--border-rose)'
+                          : '1px solid var(--border-1)',
                         color: changed ? 'var(--rose)' : 'rgba(255,255,255,0.3)',
                         opacity: savingKey === k ? 0.5 : 1,
-                      }}>
+                      }}
+                    >
                       <FloppyDisk size={11} weight="fill" />
                     </button>
                   </div>

@@ -4,8 +4,7 @@ import { motion } from 'framer-motion'
 import { ArrowRight, Lightning } from '@phosphor-icons/react'
 import { PAYMENT_METHODS_SPEC } from '@widgets/payment-method-grid'
 import { PremiumButton } from '@shared/ui'
-import { EASE_EDITORIAL, useLang } from '@shared/lib'
-import { fmtRub } from '@entities/pack'
+import { EASE_EDITORIAL, useLang, useFx, formatPrice } from '@shared/lib'
 import { useContent } from '@/lib/content'
 import type { UseBuyPackResult } from '@features/buy-pack'
 
@@ -15,6 +14,7 @@ interface Props {
 
 export function PendingStep({ buy }: Props) {
   useLang()
+  useFx()
   const pendingTitle = useContent('shop.pending.title')
   const pendingSubtitle = useContent('shop.pending.subtitle')
   const pendingReopen = useContent('shop.pending.reopen')
@@ -61,7 +61,7 @@ export function PendingStep({ buy }: Props) {
             className="font-display"
             style={{ fontSize: 26, color: 'var(--rose)', letterSpacing: '-0.018em' }}
           >
-            {fmtRub(buy.selectedOption.price_minor)} ₽
+            {formatPrice(buy.selectedOption.price_minor)}
           </span>
           <span
             className="rounded px-2 py-0.5 font-mono text-[11px] uppercase"

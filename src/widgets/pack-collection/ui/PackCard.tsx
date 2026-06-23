@@ -3,8 +3,8 @@
 import { motion } from 'framer-motion'
 import { Check, Lightning } from '@phosphor-icons/react'
 import { SparkleBurst } from '@shared/ui'
-import { EASE_GLIDE, tt, useLang } from '@shared/lib'
-import { fmtRub, getPackMeta, unitPriceRub, type SplashColor } from '@entities/pack'
+import { EASE_GLIDE, tt, useLang, useFx, formatPrice } from '@shared/lib'
+import { getPackMeta, type SplashColor } from '@entities/pack'
 import type { GenerationPackOption } from '@shared/api'
 
 interface PackCardProps {
@@ -61,9 +61,10 @@ export function PackCard({
   onSelect,
 }: PackCardProps) {
   useLang()
+  useFx()
   const meta = getPackMeta(option)
   const tokens = SPLASH_TOKENS[meta.splash]
-  const unit = unitPriceRub(option)
+  const perUnitMinor = Math.round(option.price_minor / option.quantity)
   const discount =
     compareAtMinor && compareAtMinor > option.price_minor
       ? Math.round((1 - option.price_minor / compareAtMinor) * 100)
@@ -171,7 +172,7 @@ export function PackCard({
                 lineHeight: 1,
               }}
             >
-              {fmtRub(compareAtMinor ?? 0)} ₽
+              {formatPrice(compareAtMinor ?? 0)}
             </span>
           )}
           <span
@@ -184,23 +185,13 @@ export function PackCard({
               lineHeight: 1,
             }}
           >
-            {fmtRub(option.price_minor)}
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: 'rgba(255,255,255,0.45)',
-                marginLeft: 2,
-              }}
-            >
-              ₽
-            </span>
+            {formatPrice(option.price_minor)}
           </span>
           <span
             className="font-sans tabular-nums"
             style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}
           >
-            {unit} ₽/{tt({ ru: 'фото', en: 'photo', de: 'Foto' })}
+            {formatPrice(perUnitMinor)}/{tt({ ru: 'фото', en: 'photo', de: 'Foto' })}
           </span>
         </div>
       </div>

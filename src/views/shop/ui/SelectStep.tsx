@@ -5,8 +5,7 @@ import { motion } from 'framer-motion'
 import { PackCollection } from '@widgets/pack-collection'
 import { PaymentMethodGrid } from '@widgets/payment-method-grid'
 import { PremiumButton } from '@shared/ui'
-import { EASE_EDITORIAL, tt, useLang } from '@shared/lib'
-import { fmtRub } from '@entities/pack'
+import { EASE_EDITORIAL, tt, useLang, useFx, formatPrice } from '@shared/lib'
 import { useContent } from '@/lib/content'
 import type { UseBuyPackResult } from '@features/buy-pack'
 import { TierSwitch } from './TierSwitch'
@@ -17,6 +16,7 @@ interface Props {
 
 export function SelectStep({ buy }: Props) {
   useLang()
+  useFx()
   const stepPack = useContent('shop.step.pack')
   const stepMethod = useContent('shop.step.method')
   const buttonChoosePack = useContent('shop.button.choose_pack')
@@ -87,7 +87,7 @@ export function SelectStep({ buy }: Props) {
         {buy.loading
           ? buttonCreating
           : enabled && buy.selectedOption
-            ? `${tt({ ru: 'Оплатить', en: 'Pay', de: 'Bezahlen' })} ${fmtRub(buy.selectedOption.price_minor)} ₽`
+            ? `${tt({ ru: 'Оплатить', en: 'Pay', de: 'Bezahlen' })} ${formatPrice(buy.selectedOption.price_minor)}`
             : buy.selectedOption
               ? buttonChooseMethod
               : buttonChoosePack}
