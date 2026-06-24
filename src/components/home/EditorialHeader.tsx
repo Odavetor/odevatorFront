@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { getTimeGreeting } from '@/lib/telegram'
 import { tt, useLang } from '@shared/lib'
 import CurrencyPill from '@/components/CurrencyPill'
+import LangSwitch from '@/components/LangSwitch'
 import { DotPulse } from '@shared/ui'
 
 interface Props {
@@ -42,7 +43,10 @@ function HomeHeaderBase({ firstName }: Props) {
             {greeting}
           </p>
         </div>
-        <CurrencyPill />
+        <div className="flex items-center gap-2">
+          <LangSwitch />
+          <CurrencyPill />
+        </div>
       </motion.div>
 
       <motion.h1

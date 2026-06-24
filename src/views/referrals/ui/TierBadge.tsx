@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Crown } from '@phosphor-icons/react'
 import { EASE_EDITORIAL, tt, useLang } from '@shared/lib'
 import type { ReferralTier } from '@/lib/referral'
+import { localizeTier } from '../lib/tiers'
 
 export function TierBadge({ tier }: { tier: ReferralTier }) {
   useLang()
@@ -34,7 +35,7 @@ export function TierBadge({ tier }: { tier: ReferralTier }) {
               {tt({ ru: 'ваш уровень', en: 'your tier', de: 'deine Stufe' })}
             </span>
             <span className="font-sans text-[16px] font-extrabold" style={{ color: '#E8C9A4' }}>
-              {tier.name}
+              {localizeTier(tier.name)}
             </span>
           </div>
         </div>
@@ -63,9 +64,9 @@ export function TierBadge({ tier }: { tier: ReferralTier }) {
           </div>
           <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
             {tt({
-              ru: `ещё ${remaining} оплат до уровня «${tier.next_name}»`,
-              en: `${remaining} more paid to reach tier «${tier.next_name}»`,
-              de: `noch ${remaining} Käufe bis zur Stufe «${tier.next_name}»`,
+              ru: `ещё ${remaining} оплат до уровня «${localizeTier(tier.next_name)}»`,
+              en: `${remaining} more paid to reach tier «${localizeTier(tier.next_name)}»`,
+              de: `noch ${remaining} Käufe bis zur Stufe «${localizeTier(tier.next_name)}»`,
             })}
           </span>
         </div>
