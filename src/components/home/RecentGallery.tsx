@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowRight, Sparkle } from '@phosphor-icons/react'
 import { haptic } from '@/lib/telegram'
+import { tt, useLang } from '@shared/lib'
 import { useContent } from '@/lib/content'
 import type { HistoryItem } from '@/types'
 
@@ -17,8 +18,10 @@ interface Props {
 const HEIGHT_PATTERN = ['168px', '128px', '128px', '168px']
 
 function RecentGalleryBase({ items }: Props) {
+  useLang()
   const emptyTitle = useContent('home.empty.title')
   const emptyBody = useContent('home.empty.body')
+  const recentTitle = tt({ ru: 'Последние работы', en: 'Recent results', de: 'Letzte Ergebnisse' })
 
   if (items.length === 0) {
     return (
@@ -33,14 +36,14 @@ function RecentGalleryBase({ items }: Props) {
               color: 'var(--text)',
             }}
           >
-            Последние работы
+            {recentTitle}
           </h2>
         </div>
 
         <Link
           href="/generate"
           onClick={() => haptic('light')}
-          className="block relative overflow-hidden rounded-3xl"
+          className="relative block overflow-hidden rounded-3xl"
           style={{
             border: '1px dashed var(--border-rose)',
             background:
@@ -48,9 +51,9 @@ function RecentGalleryBase({ items }: Props) {
             WebkitTapHighlightColor: 'transparent',
           }}
         >
-          <div className="px-5 py-6 flex items-start gap-4">
+          <div className="flex items-start gap-4 px-5 py-6">
             <div
-              className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl"
               style={{
                 background: 'var(--rose-dim)',
                 border: '1px solid var(--border-rose)',
@@ -58,9 +61,9 @@ function RecentGalleryBase({ items }: Props) {
             >
               <Sparkle size={20} color="var(--rose)" weight="duotone" />
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <p
-                className="font-medium mb-1"
+                className="mb-1 font-medium"
                 style={{ fontSize: 16, lineHeight: 1.2, color: 'var(--text)' }}
               >
                 {emptyTitle}
@@ -91,12 +94,12 @@ function RecentGalleryBase({ items }: Props) {
             color: 'var(--text)',
           }}
         >
-          Последние работы
+          {recentTitle}
         </h2>
         <Link
           href="/history"
           onClick={() => haptic('light')}
-          className="inline-flex items-center gap-1 no-tap-highlight"
+          className="no-tap-highlight inline-flex items-center gap-1"
           style={{
             color: 'var(--rose)',
             fontSize: 13,
@@ -104,7 +107,7 @@ function RecentGalleryBase({ items }: Props) {
             letterSpacing: '-0.01em',
           }}
         >
-          Вся история
+          {tt({ ru: 'Вся история', en: 'All history', de: 'Ganzer Verlauf' })}
           <ArrowRight size={11} weight="bold" />
         </Link>
       </div>
@@ -124,7 +127,7 @@ function RecentGalleryBase({ items }: Props) {
             <Link
               href="/history"
               onClick={() => haptic('light')}
-              className="block relative w-full overflow-hidden rounded-2xl"
+              className="relative block w-full overflow-hidden rounded-2xl"
               style={{
                 height: HEIGHT_PATTERN[i] ?? '140px',
                 border: '1px solid var(--border-1)',
@@ -140,7 +143,7 @@ function RecentGalleryBase({ items }: Props) {
               />
               {item.expires_in_hours !== undefined && item.expires_in_hours <= 12 && (
                 <span
-                  className="absolute top-2 right-2 px-2 py-0.5 rounded-md font-sans tabular-nums"
+                  className="absolute right-2 top-2 rounded-md px-2 py-0.5 font-sans tabular-nums"
                   style={{
                     background: 'rgba(13,11,16,0.7)',
                     color: 'var(--rose)',
@@ -152,7 +155,8 @@ function RecentGalleryBase({ items }: Props) {
                     WebkitBackdropFilter: 'blur(10px) saturate(160%)',
                   }}
                 >
-                  {item.expires_in_hours}ч
+                  {item.expires_in_hours}
+                  {tt({ ru: 'ч', en: 'h', de: 'Std.' })}
                 </span>
               )}
             </Link>

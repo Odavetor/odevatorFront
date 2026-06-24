@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
 import { ArrowRight, Lightning } from '@phosphor-icons/react'
 import { haptic } from '@/lib/telegram'
+import { tt, useLang } from '@shared/lib'
 import type { HeroSample } from '@/data/hero-samples'
 
 interface Props {
@@ -29,6 +30,7 @@ function CinematicHeroBase({
   slotsCount,
   onComparingChange,
 }: Props) {
+  useLang()
   const sample = samples[activeIndex]
 
   // Drag-to-compare разделитель: пользователь тянет линию между до/после.
@@ -85,7 +87,7 @@ function CinematicHeroBase({
               <div className="kenburns absolute inset-0">
                 <Image
                   src={sample.after}
-                  alt="после"
+                  alt={tt({ ru: 'после', en: 'after', de: 'nachher' })}
                   fill
                   sizes="(max-width: 430px) 100vw, 430px"
                   className="object-cover"
@@ -115,7 +117,7 @@ function CinematicHeroBase({
                 >
                   <Image
                     src={sample.before}
-                    alt="до"
+                    alt={tt({ ru: 'до', en: 'before', de: 'vorher' })}
                     fill
                     priority
                     sizes="(max-width: 430px) 100vw, 430px"
@@ -125,7 +127,8 @@ function CinematicHeroBase({
                 <div
                   className="absolute inset-0"
                   style={{
-                    background: 'linear-gradient(to right, transparent 65%, rgba(13,13,15,0.4) 100%)',
+                    background:
+                      'linear-gradient(to right, transparent 65%, rgba(13,13,15,0.4) 100%)',
                   }}
                 />
               </div>
@@ -134,7 +137,7 @@ function CinematicHeroBase({
         </AnimatePresence>
 
         <div
-          className="absolute top-3 left-3 px-2.5 py-1 rounded-md z-20"
+          className="absolute left-3 top-3 z-20 rounded-md px-2.5 py-1"
           style={{
             background: 'rgba(13,11,16,0.62)',
             color: 'rgba(255,255,255,0.9)',
@@ -146,11 +149,11 @@ function CinematicHeroBase({
             border: '1px solid rgba(255,255,255,0.1)',
           }}
         >
-          до
+          {tt({ ru: 'до', en: 'before', de: 'vorher' })}
         </div>
 
         <div
-          className="absolute top-3 right-3 px-2.5 py-1 rounded-md z-20"
+          className="absolute right-3 top-3 z-20 rounded-md px-2.5 py-1"
           style={{
             background: 'var(--rose)',
             color: '#fff',
@@ -160,14 +163,14 @@ function CinematicHeroBase({
             boxShadow: '0 4px 18px rgba(224,63,106,0.55)',
           }}
         >
-          после
+          {tt({ ru: 'после', en: 'after', de: 'nachher' })}
         </div>
 
         {/* Divider line + handle — handle приклеен к линии, едет вместе.
             Клампы splitPercent (10–90%) и dragX (см. handlePan) гарантируют,
             что ручка не выходит за края диптиха. */}
         <motion.div
-          className="absolute top-0 bottom-0 z-10"
+          className="absolute bottom-0 top-0 z-10"
           style={{
             left: splitWidth,
             x: '-50%',
@@ -181,7 +184,7 @@ function CinematicHeroBase({
             onPan={handlePan}
             onPanEnd={handlePanEnd}
             whileTap={{ scale: 0.94 }}
-            className="absolute top-1/2 left-1/2 pointer-events-auto cursor-grab active:cursor-grabbing touch-none"
+            className="pointer-events-auto absolute left-1/2 top-1/2 cursor-grab touch-none active:cursor-grabbing"
             style={{
               // Центрирование задаём через motion-aware x/y (а не tailwind -translate),
               // чтобы whileTap не перезаписывал transform целиком и не съезжал handle.
@@ -202,13 +205,28 @@ function CinematicHeroBase({
           >
             <span className="flex items-center gap-px">
               <span
-                style={{ width: 1.5, height: 8, background: 'rgba(255,255,255,0.5)', borderRadius: 1 }}
+                style={{
+                  width: 1.5,
+                  height: 8,
+                  background: 'rgba(255,255,255,0.5)',
+                  borderRadius: 1,
+                }}
               />
               <span
-                style={{ width: 1.5, height: 12, background: 'rgba(255,255,255,0.75)', borderRadius: 1 }}
+                style={{
+                  width: 1.5,
+                  height: 12,
+                  background: 'rgba(255,255,255,0.75)',
+                  borderRadius: 1,
+                }}
               />
               <span
-                style={{ width: 1.5, height: 8, background: 'rgba(255,255,255,0.5)', borderRadius: 1 }}
+                style={{
+                  width: 1.5,
+                  height: 8,
+                  background: 'rgba(255,255,255,0.5)',
+                  borderRadius: 1,
+                }}
               />
             </span>
           </motion.div>
@@ -216,7 +234,7 @@ function CinematicHeroBase({
 
         {/* Bottom soft fade */}
         <div
-          className="absolute bottom-0 left-0 right-0 h-20 pointer-events-none z-[5]"
+          className="pointer-events-none absolute bottom-0 left-0 right-0 z-[5] h-20"
           style={{
             background:
               'linear-gradient(to top, var(--bg) 0%, rgba(13,13,15,0.5) 60%, transparent 100%)',
@@ -236,28 +254,42 @@ function CinematicHeroBase({
             color: 'var(--text)',
           }}
         >
-          Сними одежду
+          {tt({
+            ru: 'Сними одежду',
+            en: 'Undress',
+            de: 'Kleidung entfernen',
+          })}
           <br />
-          с любого{' '}
-          <span style={{ color: 'var(--rose)' }}>фото</span>
+          {tt({ ru: 'с любого ', en: 'from any ', de: 'von jedem ' })}
+          <span style={{ color: 'var(--rose)' }}>
+            {tt({ ru: 'фото', en: 'photo', de: 'Foto' })}
+          </span>
         </h1>
 
         <p
-          className="mt-3 text-[14px] leading-snug max-w-[36ch]"
+          className="mt-3 max-w-[36ch] text-[14px] leading-snug"
           style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}
         >
-          Купальник, бельё, топлес, без одежды.
+          {tt({
+            ru: 'Купальник, бельё, топлес, без одежды.',
+            en: 'Swimsuit, lingerie, topless, nude.',
+            de: 'Badeanzug, Dessous, Oben-ohne, nackt.',
+          })}
           <br />
-          Результат за 10 секунд.
+          {tt({
+            ru: 'Результат за 10 секунд.',
+            en: 'Result in 10 seconds.',
+            de: 'Ergebnis in 10 Sekunden.',
+          })}
         </p>
       </div>
 
       {/* CTA + dots */}
-      <div className="px-5 mt-5 flex items-center justify-between gap-3">
+      <div className="mt-5 flex items-center justify-between gap-3 px-5">
         <Link
           href={ctaHref}
           onClick={() => haptic('medium')}
-          className="relative inline-flex items-center gap-2 rounded-2xl pl-5 pr-2.5 py-3 active:scale-[0.97]"
+          className="relative inline-flex items-center gap-2 rounded-2xl py-3 pl-5 pr-2.5 active:scale-[0.97]"
           style={{
             background: 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)',
             boxShadow: 'var(--shadow-neon-cta)',
@@ -274,10 +306,12 @@ function CinematicHeroBase({
               color: '#fff',
             }}
           >
-            {hasCredits ? 'Создать фото' : 'Попробовать бесплатно'}
+            {hasCredits
+              ? tt({ ru: 'Создать фото', en: 'Create photo', de: 'Foto erstellen' })
+              : tt({ ru: 'Попробовать бесплатно', en: 'Try for free', de: 'Kostenlos testen' })}
           </span>
           <span
-            className="flex items-center gap-1 rounded-xl px-2 py-1 ml-1"
+            className="ml-1 flex items-center gap-1 rounded-xl px-2 py-1"
             style={{ background: 'rgba(0,0,0,0.22)' }}
           >
             {hasCredits ? (
@@ -299,7 +333,7 @@ function CinematicHeroBase({
           {!hasCredits && (
             <span
               aria-hidden
-              className="pointer-events-none absolute inset-0 rounded-2xl animate-glow-breathe"
+              className="pointer-events-none absolute inset-0 animate-glow-breathe rounded-2xl"
               style={{
                 background:
                   'radial-gradient(circle at 50% 50%, rgba(224,63,106,0.55), transparent 65%)',
@@ -320,7 +354,7 @@ function CinematicHeroBase({
                 onSelectIndex(i)
               }}
               aria-label={s.category}
-              className="rounded-full no-tap-highlight"
+              className="no-tap-highlight rounded-full"
               style={{
                 width: i === activeIndex ? 22 : 6,
                 height: 6,
@@ -333,9 +367,9 @@ function CinematicHeroBase({
       </div>
 
       {!hasCredits && (
-        <div className="px-5 mt-2.5">
+        <div className="mt-2.5 px-5">
           <p
-            className="font-sans text-center"
+            className="text-center font-sans"
             style={{
               fontSize: 12,
               fontWeight: 500,
@@ -343,7 +377,12 @@ function CinematicHeroBase({
             }}
           >
             <span style={{ color: 'var(--splash-green)' }}>● </span>
-            Первое фото — бесплатно. Дальше от <strong style={{ color: '#fff', fontWeight: 700 }}>49₽</strong>.
+            {tt({
+              ru: 'Первое фото — бесплатно. Дальше от ',
+              en: 'First photo is free. Then from ',
+              de: 'Erstes Foto gratis. Danach ab ',
+            })}
+            <strong style={{ color: '#fff', fontWeight: 700 }}>49₽</strong>.
           </p>
         </div>
       )}

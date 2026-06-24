@@ -3,6 +3,7 @@
 import { memo, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { getTimeGreeting } from '@/lib/telegram'
+import { tt, useLang } from '@shared/lib'
 import CurrencyPill from '@/components/CurrencyPill'
 import { DotPulse } from '@shared/ui'
 
@@ -11,25 +12,26 @@ interface Props {
 }
 
 function HomeHeaderBase({ firstName }: Props) {
-  const greeting = useMemo(() => getTimeGreeting(), [])
+  const lang = useLang()
+  const greeting = useMemo(() => getTimeGreeting(), [lang])
 
   return (
     <motion.header
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-      className="relative px-5 pt-[max(env(safe-area-inset-top),18px)] pb-4"
+      className="relative px-5 pb-4 pt-[max(env(safe-area-inset-top),18px)]"
     >
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
-        className="flex items-center justify-between gap-3 mb-4"
+        className="mb-4 flex items-center justify-between gap-3"
       >
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex min-w-0 items-center gap-2">
           <DotPulse tone="rose" size={12} />
           <p
-            className="font-sans truncate"
+            className="truncate font-sans"
             style={{
               fontSize: 12,
               fontWeight: 600,
@@ -47,7 +49,7 @@ function HomeHeaderBase({ firstName }: Props) {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-        className="font-sans flex items-baseline gap-1.5"
+        className="flex items-baseline gap-1.5 font-sans"
         style={{
           fontSize: 30,
           fontWeight: 800,
@@ -56,7 +58,7 @@ function HomeHeaderBase({ firstName }: Props) {
           color: 'var(--text)',
         }}
       >
-        <span>привет,</span>
+        <span>{tt({ ru: 'привет,', en: 'hi,', de: 'hallo,' })}</span>
         <span style={{ color: 'var(--rose)' }} className="truncate">
           {firstName.toLowerCase()}
         </span>

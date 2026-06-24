@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { tt, useLang } from '@shared/lib'
 
 interface Props {
   beforeUrl: string
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function BeforeAfterPreview({ beforeUrl, afterUrl, label }: Props) {
+  useLang()
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-baseline justify-between">
@@ -21,7 +23,7 @@ export default function BeforeAfterPreview({ beforeUrl, afterUrl, label }: Props
             letterSpacing: '-0.005em',
           }}
         >
-          Превью образа
+          {tt({ ru: 'Превью образа', en: 'Style preview', de: 'Stil-Vorschau' })}
         </p>
         <p
           className="font-sans"
@@ -38,7 +40,7 @@ export default function BeforeAfterPreview({ beforeUrl, afterUrl, label }: Props
       </div>
 
       <div
-        className="relative rounded-2xl overflow-hidden"
+        className="relative overflow-hidden rounded-2xl"
         style={{
           aspectRatio: '1.272 / 1',
           border: '1px solid var(--border-1)',
@@ -47,7 +49,7 @@ export default function BeforeAfterPreview({ beforeUrl, afterUrl, label }: Props
         <div className="absolute inset-y-0 left-0 w-1/2 overflow-hidden">
           <Image
             src={beforeUrl}
-            alt="до"
+            alt={tt({ ru: 'до', en: 'before', de: 'vorher' })}
             fill
             sizes="(max-width: 430px) 50vw, 215px"
             className="object-cover"
@@ -55,12 +57,11 @@ export default function BeforeAfterPreview({ beforeUrl, afterUrl, label }: Props
           <div
             className="absolute inset-0"
             style={{
-              background:
-                'linear-gradient(to right, transparent 60%, rgba(13,13,15,0.55) 100%)',
+              background: 'linear-gradient(to right, transparent 60%, rgba(13,13,15,0.55) 100%)',
             }}
           />
           <div
-            className="absolute bottom-3 left-3 px-2.5 py-1 rounded-md font-sans"
+            className="absolute bottom-3 left-3 rounded-md px-2.5 py-1 font-sans"
             style={{
               fontSize: 11,
               fontWeight: 700,
@@ -72,14 +73,14 @@ export default function BeforeAfterPreview({ beforeUrl, afterUrl, label }: Props
               WebkitBackdropFilter: 'blur(8px)',
             }}
           >
-            до
+            {tt({ ru: 'до', en: 'before', de: 'vorher' })}
           </div>
         </div>
 
         <div className="absolute inset-y-0 right-0 w-1/2 overflow-hidden">
           <Image
             src={afterUrl}
-            alt="после"
+            alt={tt({ ru: 'после', en: 'after', de: 'nachher' })}
             fill
             sizes="(max-width: 430px) 50vw, 215px"
             className="object-cover"
@@ -87,12 +88,11 @@ export default function BeforeAfterPreview({ beforeUrl, afterUrl, label }: Props
           <div
             className="absolute inset-0"
             style={{
-              background:
-                'linear-gradient(to left, transparent 60%, rgba(13,13,15,0.45) 100%)',
+              background: 'linear-gradient(to left, transparent 60%, rgba(13,13,15,0.45) 100%)',
             }}
           />
           <div
-            className="absolute bottom-3 right-3 px-2.5 py-1 rounded-md font-sans"
+            className="absolute bottom-3 right-3 rounded-md px-2.5 py-1 font-sans"
             style={{
               fontSize: 11,
               fontWeight: 700,
@@ -102,12 +102,12 @@ export default function BeforeAfterPreview({ beforeUrl, afterUrl, label }: Props
               boxShadow: '0 4px 14px rgba(224,63,106,0.45)',
             }}
           >
-            после
+            {tt({ ru: 'после', en: 'after', de: 'nachher' })}
           </div>
         </div>
 
         <div
-          className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-px"
+          className="absolute bottom-0 left-1/2 top-0 w-px -translate-x-1/2"
           style={{ background: 'rgba(255,255,255,0.16)' }}
         />
       </div>

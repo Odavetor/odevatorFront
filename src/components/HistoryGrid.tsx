@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { DownloadSimple, ClockCounterClockwise, X } from '@phosphor-icons/react'
 import type { HistoryItem } from '@/types'
 import { haptic } from '@/lib/telegram'
+import { tt, useLang } from '@shared/lib'
 
 interface Props {
   items: HistoryItem[]
@@ -19,18 +20,19 @@ function timeLeft(createdAt: string): string {
   const expiry = new Date(createdAt).getTime() + TTL_MS
   const diff = expiry - Date.now()
   const h = Math.floor(diff / HOUR_MS)
-  if (h < 1) return '< 1ч'
-  if (h < 24) return `${h}ч`
-  return `${Math.floor(h / 24)}д`
+  const hUnit = tt({ ru: 'ч', en: 'h', de: 'Std.' })
+  if (h < 1) return `< 1${hUnit}`
+  if (h < 24) return `${h}${hUnit}`
+  return `${Math.floor(h / 24)}${tt({ ru: 'д', en: 'd', de: 'T' })}`
 }
 
 function SkeletonCard() {
   return (
     <div
-      className="rounded-2xl overflow-hidden"
+      className="overflow-hidden rounded-2xl"
       style={{ aspectRatio: '1 / 1.618', background: 'rgba(255,255,255,0.03)' }}
     >
-      <div className="w-full h-full skeleton" />
+      <div className="skeleton h-full w-full" />
     </div>
   )
 }
@@ -48,6 +50,7 @@ function ImageCard({ item }: { item: HistoryItem }) {
     a.click()
   }
 
+  useLang()
   const left = timeLeft(item.created_at)
   const expiringSoon = item.expires_in_hours !== undefined && item.expires_in_hours <= 6
 
@@ -58,7 +61,7 @@ function ImageCard({ item }: { item: HistoryItem }) {
           haptic()
           setLightbox(true)
         }}
-        className="relative rounded-2xl overflow-hidden cursor-pointer"
+        className="relative cursor-pointer overflow-hidden rounded-2xl"
         style={{
           aspectRatio: '1 / 1.618',
           border: '1px solid var(--border-1)',
@@ -75,7 +78,7 @@ function ImageCard({ item }: { item: HistoryItem }) {
         />
 
         <div
-          className="absolute inset-0 pointer-events-none"
+          className="pointer-events-none absolute inset-0"
           style={{
             background:
               'linear-gradient(to top, rgba(13,11,16,0.78) 0%, rgba(13,11,16,0.15) 28%, transparent 55%)',
@@ -114,8 +117,8 @@ function ImageCard({ item }: { item: HistoryItem }) {
 
         <button
           onClick={handleDownload}
-          aria-label="Скачать"
-          className="absolute bottom-2 right-2 w-7 h-7 rounded-lg flex items-center justify-center"
+          aria-label={tt({ ru: 'Скачать', en: 'Download', de: 'Herunterladen' })}
+          className="absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-lg"
           style={{
             background: 'var(--rose-dim)',
             border: '1px solid var(--border-rose)',
@@ -148,7 +151,7 @@ function ImageCard({ item }: { item: HistoryItem }) {
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 280, damping: 26 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative max-w-full max-h-[85dvh] rounded-3xl overflow-hidden"
+              className="relative max-h-[85dvh] max-w-full overflow-hidden rounded-3xl"
               style={{ border: '1px solid var(--border-1)' }}
             >
               <Image
@@ -156,12 +159,12 @@ function ImageCard({ item }: { item: HistoryItem }) {
                 alt=""
                 width={800}
                 height={1294}
-                className="max-w-full max-h-[85dvh] object-contain w-auto h-auto"
+                className="h-auto max-h-[85dvh] w-auto max-w-full object-contain"
                 priority
               />
               <button
                 onClick={() => setLightbox(false)}
-                className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center"
+                className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full"
                 style={{
                   background: 'rgba(13,11,16,0.7)',
                   border: '1px solid var(--border-2)',
@@ -171,7 +174,7 @@ function ImageCard({ item }: { item: HistoryItem }) {
               </button>
               <button
                 onClick={handleDownload}
-                className="absolute bottom-4 right-4 px-4 py-2.5 rounded-xl flex items-center gap-2 text-sm font-medium"
+                className="absolute bottom-4 right-4 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
                 style={{
                   background: 'var(--rose-dim)',
                   border: '1px solid var(--border-rose)',
@@ -179,7 +182,7 @@ function ImageCard({ item }: { item: HistoryItem }) {
                 }}
               >
                 <DownloadSimple size={15} weight="bold" />
-                Сохранить
+                {tt({ ru: 'Сохранить', en: 'Save', de: 'Speichern' })}
               </button>
             </motion.div>
           </motion.div>
@@ -200,6 +203,7 @@ export function HistorySkeletonGrid({ count = 6 }: { count?: number }) {
 }
 
 export default function HistoryGrid({ items, loading }: Props) {
+  useLang()
   if (loading) return <HistorySkeletonGrid count={6} />
 
   if (!items.length) {
@@ -208,10 +212,10 @@ export default function HistoryGrid({ items, loading }: Props) {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col items-center justify-center py-16 gap-4 text-center"
+        className="flex flex-col items-center justify-center gap-4 py-16 text-center"
       >
         <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center"
+          className="flex h-16 w-16 items-center justify-center rounded-2xl"
           style={{
             background: 'rgba(255,255,255,0.03)',
             border: '1px dashed var(--border-rose)',
@@ -221,13 +225,17 @@ export default function HistoryGrid({ items, loading }: Props) {
         </div>
         <div className="max-w-[260px]">
           <p
-            className="font-medium mb-1"
+            className="mb-1 font-medium"
             style={{ fontSize: 16, lineHeight: 1.2, color: 'var(--text)' }}
           >
-            Пока пусто
+            {tt({ ru: 'Пока пусто', en: 'Nothing yet', de: 'Noch leer' })}
           </p>
           <p className="text-[12px] leading-snug" style={{ color: 'rgba(255,255,255,0.5)' }}>
-            Создайте первую обработку — она появится здесь и пробудет 72 часа.
+            {tt({
+              ru: 'Создайте первую обработку — она появится здесь и пробудет 72 часа.',
+              en: 'Create your first result — it will appear here and stay for 72 hours.',
+              de: 'Erstelle dein erstes Ergebnis — es erscheint hier und bleibt 72 Stunden.',
+            })}
           </p>
         </div>
       </motion.div>
