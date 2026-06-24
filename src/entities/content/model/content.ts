@@ -35,13 +35,17 @@ const notify = () => {
 }
 
 let inFlight: Promise<void> | null = null
+let inFlightLang: string | null = null
 
 export function refreshContent(): Promise<void> {
-  if (inFlight) return inFlight
-  inFlight = fetch(`/api/content?lang=${getLang()}`, { cache: 'no-store' })
+  const lang = getLang()
+  if (inFlight && inFlightLang === lang) return inFlight
+  inFlightLang = lang
+  const p = fetch(`/api/content?lang=${lang}`, { cache: 'no-store' })
     .then(async (r) => {
       if (!r.ok) return
       const data = (await r.json()) as ContentPayload
+      if (getLang() !== lang) return
       state = {
         strings: { ...DEFAULT_STRINGS, ...(data.strings ?? {}) },
         faq: Array.isArray(data.faq)
@@ -53,9 +57,13 @@ export function refreshContent(): Promise<void> {
     })
     .catch(() => {})
     .finally(() => {
-      inFlight = null
+      if (inFlight === p) {
+        inFlight = null
+        inFlightLang = null
+      }
     })
-  return inFlight
+  inFlight = p
+  return p
 }
 
 let bootstrapped = false
