@@ -74,6 +74,7 @@ export function ReferralView() {
   const [boundCode, setBoundCode] = useState<string | null>(null)
   const [bindBusy, setBindBusy] = useState(false)
   const [bindMsg, setBindMsg] = useState<string | null>(null)
+  const [showAffEdit, setShowAffEdit] = useState(false)
 
   async function bindLink() {
     setBindMsg(null)
@@ -82,6 +83,7 @@ export function ReferralView() {
       const r = await bindAffiliateLink(affLink.trim())
       setBoundCode(r.code || null)
       setAffLink('')
+      setShowAffEdit(false)
       hapticNotify('success')
       setBindMsg(tt({ ru: 'Ссылка привязана ✓', en: 'Link bound ✓', de: 'Link verknüpft ✓' }))
     } catch (e) {
@@ -148,10 +150,13 @@ export function ReferralView() {
 
   const sparkDays = period === '30d' || period === 'all' ? 30 : 7
 
+  const affiliateLink =
+    s?.deep_link && boundCode ? `${s.deep_link.split('?')[0]}?start=_tgr_${boundCode}` : ''
+
   async function copyLink() {
-    if (!s?.deep_link) return
+    if (!affiliateLink) return
     try {
-      await navigator.clipboard.writeText(s.deep_link)
+      await navigator.clipboard.writeText(affiliateLink)
       setCopied(true)
       hapticNotify('success')
       setTimeout(() => setCopied(false), 1600)
@@ -161,9 +166,9 @@ export function ReferralView() {
   }
 
   function share() {
-    if (!s?.deep_link) return
+    if (!affiliateLink) return
     haptic('light')
-    const url = `https://t.me/share/url?url=${encodeURIComponent(s.deep_link)}&text=${encodeURIComponent(
+    const url = `https://t.me/share/url?url=${encodeURIComponent(affiliateLink)}&text=${encodeURIComponent(
       tt({
         ru: 'Попробуй — обработка фото нейросетью',
         en: 'Try it — AI photo processing',
@@ -311,6 +316,152 @@ export function ReferralView() {
               </div>
             </motion.div>
 
+            <section
+              className="flex flex-col gap-3 rounded-2xl px-4 py-4"
+              style={{
+                background: 'linear-gradient(135deg, var(--rose-dim) 0%, rgba(15,13,18,0.55) 100%)',
+                border: '1px solid var(--border-rose)',
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-kicker" style={{ color: 'var(--rose)' }}>
+                  {tt({
+                    ru: 'ваша партнёрская ссылка',
+                    en: 'your affiliate link',
+                    de: 'dein partnerlink',
+                  })}
+                </span>
+                {boundCode && (
+                  <span
+                    className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider"
+                    style={{ color: '#5fd296' }}
+                  >
+                    <Check size={12} weight="bold" />
+                    {tt({ ru: 'привязана', en: 'bound', de: 'verknüpft' })}
+                  </span>
+                )}
+              </div>
+
+              {boundCode && !showAffEdit ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="flex-1 truncate rounded-xl px-3 py-2.5 font-mono text-[12px]"
+                      style={{
+                        background: 'rgba(0,0,0,0.3)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        color: 'rgba(255,255,255,0.8)',
+                      }}
+                    >
+                      {affiliateLink}
+                    </div>
+                    <button
+                      onClick={copyLink}
+                      className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl"
+                      style={{
+                        background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid var(--border-rose)',
+                      }}
+                    >
+                      {copied ? (
+                        <Check size={16} color="#5fd296" weight="bold" />
+                      ) : (
+                        <Copy size={16} color="var(--rose)" />
+                      )}
+                    </button>
+                  </div>
+                  <button
+                    onClick={share}
+                    className="flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold"
+                    style={{
+                      background: 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)',
+                      color: '#fff',
+                    }}
+                  >
+                    <ShareNetwork size={15} weight="fill" />
+                    {tt({
+                      ru: 'Поделиться в Telegram',
+                      en: 'Share on Telegram',
+                      de: 'In Telegram teilen',
+                    })}
+                  </button>
+                  <button
+                    onClick={() => {
+                      haptic('light')
+                      setShowAffEdit(true)
+                    }}
+                    className="self-center text-[12px]"
+                    style={{ color: 'rgba(255,255,255,0.45)' }}
+                  >
+                    {tt({ ru: 'Изменить ссылку', en: 'Change link', de: 'Link ändern' })}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p
+                    className="text-[12px] leading-relaxed"
+                    style={{ color: 'rgba(255,255,255,0.7)' }}
+                  >
+                    {tt({
+                      ru: 'Приглашайте по своей партнёрской ссылке Telegram. Где взять: откройте профиль бота → «Партнёрская программа» → скопируйте ссылку и вставьте сюда.',
+                      en: 'Invite with your Telegram affiliate link. Where to get it: open the bot profile → “Affiliate program” → copy the link and paste it here.',
+                      de: 'Lade mit deinem Telegram-Partnerlink ein. Wo du ihn findest: Bot-Profil → „Partnerprogramm“ → Link kopieren und hier einfügen.',
+                    })}
+                  </p>
+                  <input
+                    value={affLink}
+                    onChange={(e) => setAffLink(e.target.value)}
+                    placeholder="https://t.me/lucid_ai_robot?start=_tgr_…"
+                    className="w-full rounded-xl px-3 py-2.5 font-mono text-[12px]"
+                    style={{
+                      background: 'rgba(0,0,0,0.3)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      color: 'white',
+                    }}
+                  />
+                  <button
+                    onClick={bindLink}
+                    disabled={bindBusy || affLink.trim().length === 0}
+                    className="no-tap-highlight rounded-xl py-3 text-sm font-semibold"
+                    style={{
+                      background:
+                        !bindBusy && affLink.trim().length > 0
+                          ? 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)'
+                          : 'rgba(255,255,255,0.04)',
+                      color: !bindBusy && affLink.trim().length > 0 ? '#fff' : 'rgba(255,255,255,0.3)',
+                    }}
+                  >
+                    {bindBusy
+                      ? tt({ ru: 'Привязываем…', en: 'Binding…', de: 'Wird verknüpft…' })
+                      : tt({ ru: 'Привязать ссылку', en: 'Bind link', de: 'Link verknüpfen' })}
+                  </button>
+                  {boundCode && (
+                    <button
+                      onClick={() => setShowAffEdit(false)}
+                      className="self-center text-[12px]"
+                      style={{ color: 'rgba(255,255,255,0.4)' }}
+                    >
+                      {tt({ ru: 'Отмена', en: 'Cancel', de: 'Abbrechen' })}
+                    </button>
+                  )}
+                  {bindMsg && (
+                    <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                      {bindMsg}
+                    </span>
+                  )}
+                </>
+              )}
+
+              <div className="h-px w-full" style={{ background: 'rgba(255,255,255,0.08)' }} />
+              <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                {tt({
+                  ru: '⭐ Звёзды — Telegram платит вам сам. 💳 СБП/крипта — 70% на ваш баланс здесь, вывод заказываете сами.',
+                  en: '⭐ Stars — Telegram pays you directly. 💳 SBP/crypto — 70% to your balance here, withdraw yourself.',
+                  de: '⭐ Sterne — Telegram zahlt dich direkt. 💳 SBP/Krypto — 70% auf dein Guthaben, Auszahlung selbst.',
+                })}
+              </p>
+            </section>
+
             <PeriodTabs value={period} onChange={setPeriod} />
 
             <div className="grid grid-cols-2 gap-2.5">
@@ -364,134 +515,6 @@ export function ReferralView() {
               <div className="h-px w-full" style={{ background: 'rgba(255,255,255,0.07)' }} />
               <SignupsBars series={data.signups_series} />
             </div>
-
-            {s.deep_link && (
-              <div className="flex flex-col gap-2">
-                <span className="text-kicker">
-                  {tt({ ru: 'ваша ссылка', en: 'your link', de: 'dein Link' })}
-                </span>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="flex-1 truncate rounded-xl px-3 py-2.5 font-mono text-[12px]"
-                    style={{
-                      background: 'rgba(0,0,0,0.3)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      color: 'rgba(255,255,255,0.7)',
-                    }}
-                  >
-                    {s.deep_link}
-                  </div>
-                  <button
-                    onClick={copyLink}
-                    className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl"
-                    style={{
-                      background: 'var(--rose-dim)',
-                      border: '1px solid var(--border-rose)',
-                    }}
-                  >
-                    {copied ? (
-                      <Check size={16} color="#5fd296" weight="bold" />
-                    ) : (
-                      <Copy size={16} color="var(--rose)" />
-                    )}
-                  </button>
-                </div>
-                <button
-                  onClick={share}
-                  className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium"
-                  style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid var(--border-2)',
-                    color: 'rgba(255,255,255,0.85)',
-                  }}
-                >
-                  <ShareNetwork size={15} weight="fill" />{' '}
-                  {tt({
-                    ru: 'Поделиться в Telegram',
-                    en: 'Share on Telegram',
-                    de: 'In Telegram teilen',
-                  })}
-                </button>
-              </div>
-            )}
-
-            <section
-              className="flex flex-col gap-3 rounded-2xl px-4 py-4"
-              style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.08)',
-              }}
-            >
-              <div className="flex flex-col gap-1">
-                <span className="text-kicker">
-                  {tt({
-                    ru: 'партнёрская ссылка telegram',
-                    en: 'telegram affiliate link',
-                    de: 'telegram-partnerlink',
-                  })}
-                </span>
-                <p
-                  className="text-[12px] leading-relaxed"
-                  style={{ color: 'rgba(255,255,255,0.6)' }}
-                >
-                  {tt({
-                    ru: '⭐ Звёзды Telegram начисляет вам автоматически. 💳 Оплаты по СБП/крипте начисляются на ваш баланс здесь — вывод вы заказываете сами. Чтобы засчитывались оплаты по СБП/крипте, привяжите свою партнёрскую ссылку Telegram (профиль бота → «Партнёрская программа» → ваша ссылка).',
-                    en: '⭐ Telegram credits Stars to you automatically. 💳 SBP/crypto payments are credited to your balance here — you request the withdrawal yourself. To get SBP/crypto credited, bind your Telegram affiliate link (bot profile → “Affiliate program” → your link).',
-                    de: '⭐ Sterne schreibt Telegram dir automatisch gut. 💳 SBP/Krypto-Zahlungen werden hier deinem Guthaben gutgeschrieben — die Auszahlung beantragst du selbst. Damit SBP/Krypto gutgeschrieben wird, verknüpfe deinen Telegram-Partnerlink (Bot-Profil → „Partnerprogramm“ → dein Link).',
-                  })}
-                </p>
-              </div>
-
-              {boundCode && (
-                <div
-                  className="flex items-center gap-2 rounded-xl px-3 py-2.5"
-                  style={{
-                    background: 'rgba(95,210,150,0.1)',
-                    border: '1px solid rgba(95,210,150,0.28)',
-                  }}
-                >
-                  <Check size={15} color="#5fd296" weight="bold" />
-                  <span className="font-mono text-[12px]" style={{ color: '#7fe0a8' }}>
-                    {tt({ ru: 'Привязано', en: 'Bound', de: 'Verknüpft' })}: _tgr_{boundCode}
-                  </span>
-                </div>
-              )}
-
-              <input
-                value={affLink}
-                onChange={(e) => setAffLink(e.target.value)}
-                placeholder="https://t.me/lucid_ai_robot?start=_tgr_…"
-                className="w-full rounded-xl px-3 py-2.5 font-mono text-[12px]"
-                style={{
-                  background: 'rgba(0,0,0,0.3)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  color: 'white',
-                }}
-              />
-              <button
-                onClick={bindLink}
-                disabled={bindBusy || affLink.trim().length === 0}
-                className="no-tap-highlight rounded-xl py-3 text-sm font-semibold"
-                style={{
-                  background:
-                    !bindBusy && affLink.trim().length > 0
-                      ? 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)'
-                      : 'rgba(255,255,255,0.04)',
-                  color: !bindBusy && affLink.trim().length > 0 ? '#fff' : 'rgba(255,255,255,0.3)',
-                }}
-              >
-                {bindBusy
-                  ? tt({ ru: 'Привязываем…', en: 'Binding…', de: 'Wird verknüpft…' })
-                  : boundCode
-                    ? tt({ ru: 'Обновить ссылку', en: 'Update link', de: 'Link aktualisieren' })
-                    : tt({ ru: 'Привязать ссылку', en: 'Bind link', de: 'Link verknüpfen' })}
-              </button>
-              {bindMsg && (
-                <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                  {bindMsg}
-                </span>
-              )}
-            </section>
 
             <CommissionFeed events={data.recent} />
 
