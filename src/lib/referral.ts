@@ -76,6 +76,17 @@ export function fetchReferralMe(): Promise<ReferralMe> {
   return api<ReferralMe>('/api/v1/referrals/me')
 }
 
+export function fetchAffiliateCode(): Promise<{ code: string }> {
+  return api<{ code: string }>('/api/v1/referrals/affiliate-link')
+}
+
+export function bindAffiliateLink(link: string): Promise<{ code: string }> {
+  return api<{ code: string }>('/api/v1/referrals/affiliate-link', {
+    method: 'POST',
+    body: JSON.stringify({ link }),
+  })
+}
+
 export function createWithdrawal(amountMinor: number, details: string): Promise<Withdrawal> {
   return api<Withdrawal>('/api/v1/referrals/withdrawals', {
     method: 'POST',

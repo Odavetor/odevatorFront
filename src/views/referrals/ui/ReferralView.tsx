@@ -18,7 +18,9 @@ import { fmtRub } from '@entities/pack'
 import { BottomNav } from '@widgets/bottom-nav'
 import { ReviewForm } from '@features/leave-review'
 import {
+  bindAffiliateLink,
   createWithdrawal,
+  fetchAffiliateCode,
   fetchReferralMe,
   type ReferralMe,
   type Withdrawal,
@@ -68,8 +70,36 @@ export function ReferralView() {
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [affLink, setAffLink] = useState('')
+  const [boundCode, setBoundCode] = useState<string | null>(null)
+  const [bindBusy, setBindBusy] = useState(false)
+  const [bindMsg, setBindMsg] = useState<string | null>(null)
+
+  async function bindLink() {
+    setBindMsg(null)
+    setBindBusy(true)
+    try {
+      const r = await bindAffiliateLink(affLink.trim())
+      setBoundCode(r.code || null)
+      setAffLink('')
+      hapticNotify('success')
+      setBindMsg(tt({ ru: 'Ссылка привязана ✓', en: 'Link bound ✓', de: 'Link verknüpft ✓' }))
+    } catch (e) {
+      hapticNotify('error')
+      setBindMsg(
+        e instanceof Error
+          ? e.message
+          : tt({ ru: 'Не удалось привязать', en: 'Failed to bind', de: 'Verknüpfung fehlgeschlagen' }),
+      )
+    } finally {
+      setBindBusy(false)
+    }
+  }
 
   async function reload() {
+    fetchAffiliateCode()
+      .then((r) => setBoundCode(r.code || null))
+      .catch(() => {})
     try {
       setData(await fetchReferralMe())
     } catch (e) {
@@ -380,6 +410,81 @@ export function ReferralView() {
                 </button>
               </div>
             )}
+
+            <section
+              className="flex flex-col gap-3 rounded-2xl px-4 py-4"
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              <div className="flex flex-col gap-1">
+                <span className="text-kicker">
+                  {tt({
+                    ru: 'партнёрская ссылка telegram',
+                    en: 'telegram affiliate link',
+                    de: 'telegram-partnerlink',
+                  })}
+                </span>
+                <p className="text-[12px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                  {tt({
+                    ru: '⭐ Звёзды Telegram начисляет вам автоматически. 💳 Оплаты по СБП/крипте начисляются на ваш баланс здесь — вывод вы заказываете сами. Чтобы засчитывались оплаты по СБП/крипте, привяжите свою партнёрскую ссылку Telegram (профиль бота → «Партнёрская программа» → ваша ссылка).',
+                    en: '⭐ Telegram credits Stars to you automatically. 💳 SBP/crypto payments are credited to your balance here — you request the withdrawal yourself. To get SBP/crypto credited, bind your Telegram affiliate link (bot profile → “Affiliate program” → your link).',
+                    de: '⭐ Sterne schreibt Telegram dir automatisch gut. 💳 SBP/Krypto-Zahlungen werden hier deinem Guthaben gutgeschrieben — die Auszahlung beantragst du selbst. Damit SBP/Krypto gutgeschrieben wird, verknüpfe deinen Telegram-Partnerlink (Bot-Profil → „Partnerprogramm“ → dein Link).',
+                  })}
+                </p>
+              </div>
+
+              {boundCode && (
+                <div
+                  className="flex items-center gap-2 rounded-xl px-3 py-2.5"
+                  style={{
+                    background: 'rgba(95,210,150,0.1)',
+                    border: '1px solid rgba(95,210,150,0.28)',
+                  }}
+                >
+                  <Check size={15} color="#5fd296" weight="bold" />
+                  <span className="font-mono text-[12px]" style={{ color: '#7fe0a8' }}>
+                    {tt({ ru: 'Привязано', en: 'Bound', de: 'Verknüpft' })}: _tgr_{boundCode}
+                  </span>
+                </div>
+              )}
+
+              <input
+                value={affLink}
+                onChange={(e) => setAffLink(e.target.value)}
+                placeholder="https://t.me/lucid_ai_robot?start=_tgr_…"
+                className="w-full rounded-xl px-3 py-2.5 font-mono text-[12px]"
+                style={{
+                  background: 'rgba(0,0,0,0.3)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: 'white',
+                }}
+              />
+              <button
+                onClick={bindLink}
+                disabled={bindBusy || affLink.trim().length === 0}
+                className="no-tap-highlight rounded-xl py-3 text-sm font-semibold"
+                style={{
+                  background:
+                    !bindBusy && affLink.trim().length > 0
+                      ? 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)'
+                      : 'rgba(255,255,255,0.04)',
+                  color: !bindBusy && affLink.trim().length > 0 ? '#fff' : 'rgba(255,255,255,0.3)',
+                }}
+              >
+                {bindBusy
+                  ? tt({ ru: 'Привязываем…', en: 'Binding…', de: 'Wird verknüpft…' })
+                  : boundCode
+                    ? tt({ ru: 'Обновить ссылку', en: 'Update link', de: 'Link aktualisieren' })
+                    : tt({ ru: 'Привязать ссылку', en: 'Bind link', de: 'Link verknüpfen' })}
+              </button>
+              {bindMsg && (
+                <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                  {bindMsg}
+                </span>
+              )}
+            </section>
 
             <CommissionFeed events={data.recent} />
 
