@@ -53,6 +53,10 @@ declare global {
         ready(): void
         openLink(url: string): void
         openTelegramLink(url: string): void
+        openInvoice(
+          url: string,
+          cb?: (status: 'paid' | 'cancelled' | 'failed' | 'pending') => void,
+        ): void
         showAlert(message: string, cb?: () => void): void
         showConfirm(message: string, cb: (ok: boolean) => void): void
       }
@@ -101,6 +105,13 @@ export function openLink(url: string) {
     return
   }
   getWebApp()?.openLink(url)
+}
+
+export function openInvoice(
+  url: string,
+  cb?: (status: 'paid' | 'cancelled' | 'failed' | 'pending') => void,
+) {
+  getWebApp()?.openInvoice(url, cb)
 }
 
 export function getTimeGreeting(): string {

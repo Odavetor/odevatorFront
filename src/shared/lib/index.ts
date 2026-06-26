@@ -18,6 +18,7 @@ export {
   expand,
   ready,
   openLink,
+  openInvoice,
   getTimeGreeting,
 } from './telegram'
 export type { TelegramUserLike } from './telegram'

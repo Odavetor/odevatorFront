@@ -1,6 +1,6 @@
 'use client'
 
-import { CheckCircle, CurrencyEth } from '@phosphor-icons/react'
+import { CheckCircle, CurrencyEth, Star } from '@phosphor-icons/react'
 import { SbpLogo } from '@shared/ui'
 import { tt, useLang } from '@shared/lib'
 import { haptic } from '@/lib/telegram'
@@ -10,11 +10,21 @@ type Spec = {
   id: PaymentMethodId
   label: string
   sub: string
-  icon: 'sbp' | 'crypto'
+  icon: 'sbp' | 'crypto' | 'stars'
 }
 
 function paymentMethodsSpec(): Spec[] {
   return [
+    {
+      id: PAYMENT_METHOD.STARS,
+      label: tt({ ru: 'Звёзды', en: 'Stars', de: 'Sterne' }),
+      sub: tt({
+        ru: 'Telegram Stars · мгновенно',
+        en: 'Telegram Stars · instant',
+        de: 'Telegram Stars · sofort',
+      }),
+      icon: 'stars',
+    },
     {
       id: PAYMENT_METHOD.SBP,
       label: tt({ ru: 'СБП', en: 'SBP', de: 'SBP' }),
@@ -89,6 +99,8 @@ export function PaymentMethodGrid({ selected, onSelect, stepLabel }: Props) {
               >
                 {m.icon === 'sbp' ? (
                   <SbpLogo size={22} />
+                ) : m.icon === 'stars' ? (
+                  <Star size={20} weight="fill" color={active ? 'var(--rose)' : '#f5b942'} />
                 ) : (
                   <CurrencyEth
                     size={20}

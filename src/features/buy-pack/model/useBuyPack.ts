@@ -1,10 +1,15 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { getGenerationPackCatalog, initGenerationPackPayment } from '@entities/pack'
+import {
+  getGenerationPackCatalog,
+  initGenerationPackPayment,
+  initGenerationPackStarsInvoice,
+} from '@entities/pack'
+import { PAYMENT_METHOD } from '@shared/api'
 import type { GenerationPackCatalog, GenerationPackOption, PaymentMethodId } from '@shared/api'
 import { useUser } from '@entities/user'
-import { haptic, hapticNotify, openLink } from '@shared/lib'
+import { haptic, hapticNotify, openInvoice, openLink } from '@shared/lib'
 
 export type BuyStep = 'select' | 'pending' | 'success'
 export type Tier = 'standard'
@@ -102,6 +107,24 @@ export function useBuyPack(): UseBuyPackResult {
       haptic('medium')
       try {
         setWalletAtInit(wallet?.prepaid_generations_remaining ?? 0)
+        if (selectedMethod === PAYMENT_METHOD.STARS) {
+          const inv = await initGenerationPackStarsInvoice({
+            tier,
+            quantity: selectedOption.quantity,
+            paymentMethod: selectedMethod,
+          })
+          if (!inv.invoice_link) throw new Error(errorNoLink)
+          openInvoice(inv.invoice_link, (status) => {
+            if (status === 'paid') {
+              hapticNotify('success')
+              setStep('pending')
+            } else if (status === 'failed') {
+              hapticNotify('error')
+              setError(errorFallback)
+            }
+          })
+          return
+        }
         const r = await initGenerationPackPayment({
           tier,
           quantity: selectedOption.quantity,

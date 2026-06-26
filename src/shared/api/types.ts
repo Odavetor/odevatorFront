@@ -73,9 +73,16 @@ export interface InitGenerationPackRequest {
 
 export const PAYMENT_METHOD = {
   SBP: 2,
+  STARS: 4,
   CRYPTO: 13,
 } as const
 export type PaymentMethodId = (typeof PAYMENT_METHOD)[keyof typeof PAYMENT_METHOD]
+
+export interface StarsInvoiceResponse {
+  internal_id: number
+  invoice_link: string
+  stars: number
+}
 
 export interface LedgerEntry {
   id: number
