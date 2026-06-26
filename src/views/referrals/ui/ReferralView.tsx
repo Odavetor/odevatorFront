@@ -89,7 +89,11 @@ export function ReferralView() {
       setBindMsg(
         e instanceof Error
           ? e.message
-          : tt({ ru: 'Не удалось привязать', en: 'Failed to bind', de: 'Verknüpfung fehlgeschlagen' }),
+          : tt({
+              ru: 'Не удалось привязать',
+              en: 'Failed to bind',
+              de: 'Verknüpfung fehlgeschlagen',
+            }),
       )
     } finally {
       setBindBusy(false)
@@ -426,7 +430,10 @@ export function ReferralView() {
                     de: 'telegram-partnerlink',
                   })}
                 </span>
-                <p className="text-[12px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                <p
+                  className="text-[12px] leading-relaxed"
+                  style={{ color: 'rgba(255,255,255,0.6)' }}
+                >
                   {tt({
                     ru: '⭐ Звёзды Telegram начисляет вам автоматически. 💳 Оплаты по СБП/крипте начисляются на ваш баланс здесь — вывод вы заказываете сами. Чтобы засчитывались оплаты по СБП/крипте, привяжите свою партнёрскую ссылку Telegram (профиль бота → «Партнёрская программа» → ваша ссылка).',
                     en: '⭐ Telegram credits Stars to you automatically. 💳 SBP/crypto payments are credited to your balance here — you request the withdrawal yourself. To get SBP/crypto credited, bind your Telegram affiliate link (bot profile → “Affiliate program” → your link).',

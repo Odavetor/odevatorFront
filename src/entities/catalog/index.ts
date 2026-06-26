@@ -4,6 +4,7 @@ export { HERO_SAMPLES } from './model/hero-samples'
 export {
   fetchPhotoCatalog,
   getPhotoCatalogCached,
+  invalidateCatalogCache,
   createPhotoCategory,
   updatePhotoCategory,
   deletePhotoCategory,

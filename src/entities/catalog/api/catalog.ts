@@ -78,13 +78,20 @@ export interface PhotoCatalogResponse {
 }
 
 export async function fetchPhotoCatalog(): Promise<PhotoCatalogResponse> {
-  const raw = await api<BackPhotoCatalog>('/api/v1/catalog/photo')
+  const raw = await api<BackPhotoCatalog>('/api/v1/catalog/photo', { cache: 'no-store' })
   return { categories: (raw.categories ?? []).map(mapCategory) }
 }
 
-const CATALOG_TTL_MS = 5 * 60 * 1000
+const CATALOG_TTL_MS = 60 * 1000
 let catalogCache: { data: PhotoCatalogResponse; at: number } | null = null
 let catalogInFlight: Promise<PhotoCatalogResponse> | null = null
+
+// invalidateCatalogCache drops the in-memory catalog cache so the next read
+// refetches fresh data — call after admin edits so changes show immediately.
+export function invalidateCatalogCache(): void {
+  catalogCache = null
+  catalogInFlight = null
+}
 
 // getPhotoCatalogCached dedupes concurrent calls and caches the (static between
 // deploys) catalog for a few minutes, so the home and generate screens share a

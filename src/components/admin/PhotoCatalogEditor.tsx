@@ -14,6 +14,7 @@ import {
 } from '@phosphor-icons/react'
 import {
   fetchPhotoCatalog,
+  invalidateCatalogCache,
   updatePhotoOption,
   createPhotoOption,
   deletePhotoOption,
@@ -103,6 +104,7 @@ export default function PhotoCatalogEditor() {
   async function reload() {
     setLoading(true)
     setError(null)
+    invalidateCatalogCache()
     try {
       const data = await fetchPhotoCatalog()
       setCategories(data.categories)
