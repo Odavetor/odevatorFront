@@ -155,10 +155,8 @@ const config: Config = {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'surface-shine': 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 60%)',
-        'gold-rule':
-          'linear-gradient(90deg, transparent, rgba(201,150,106,0.55), transparent)',
-        'rose-rule':
-          'linear-gradient(90deg, transparent, rgba(224,63,106,0.45), transparent)',
+        'gold-rule': 'linear-gradient(90deg, transparent, rgba(201,150,106,0.55), transparent)',
+        'rose-rule': 'linear-gradient(90deg, transparent, rgba(224,63,106,0.45), transparent)',
         'champagne-sweep':
           'linear-gradient(135deg, rgba(201,150,106,0.22) 0%, rgba(176,125,82,0.05) 100%)',
       },

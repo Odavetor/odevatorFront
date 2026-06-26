@@ -116,7 +116,10 @@ export default function ReviewsAdmin() {
       {stats && (
         <div
           className="flex items-center justify-between rounded-xl px-3 py-2.5"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+          style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
         >
           <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.55)' }}>
             Активных отзывов: {stats.count}
@@ -125,7 +128,7 @@ export default function ReviewsAdmin() {
             <span className="flex items-center gap-1.5">
               <Stars rating={Math.round(stats.average)} />
               <span
-                className="font-sans tabular-nums text-[12px]"
+                className="font-sans text-[12px] tabular-nums"
                 style={{ color: 'var(--text)', fontWeight: 700 }}
               >
                 {stats.average.toFixed(1)}

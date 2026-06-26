@@ -29,6 +29,7 @@ export interface PackPricingItem {
   tier: string
   quantity: number
   price_minor: number
+  discount_price_minor?: number | null
   is_active: boolean
 }
 
@@ -45,7 +46,7 @@ export async function fetchPackPricing(): Promise<PackPricingItem[]> {
 export function updatePackPricing(
   tier: string,
   quantity: number,
-  payload: { price_minor?: number; is_active?: boolean },
+  payload: { price_minor?: number; is_active?: boolean; discount_price_minor?: number | null },
 ): Promise<{ status: string }> {
   return api<{ status: string }>(
     `/api/v1/admin/payments/packs/${encodeURIComponent(tier)}/${quantity}`,

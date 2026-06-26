@@ -36,7 +36,7 @@ function BottomNavBase() {
 
   return (
     <nav
-      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-50 pointer-events-none"
+      className="pointer-events-none fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2"
       style={{
         paddingBottom: 'max(env(safe-area-inset-bottom), 10px)',
       }}
@@ -44,19 +44,18 @@ function BottomNavBase() {
       {/* Soft fade подложка чтобы контент за баром не сливался при скролле */}
       <div
         aria-hidden
-        className="absolute left-0 right-0 bottom-0 h-32 pointer-events-none"
+        className="pointer-events-none absolute bottom-0 left-0 right-0 h-32"
         style={{
           background:
             'linear-gradient(to top, var(--bg) 30%, rgba(13,13,15,0.6) 70%, transparent 100%)',
         }}
       />
 
-      <div className="relative mx-4 pointer-events-auto" style={{ overflow: 'visible' }}>
+      <div className="pointer-events-auto relative mx-4" style={{ overflow: 'visible' }}>
         <div
           className="relative rounded-full"
           style={{
-            background:
-              'linear-gradient(180deg, rgba(28,24,36,0.96) 0%, rgba(15,13,18,0.98) 100%)',
+            background: 'linear-gradient(180deg, rgba(28,24,36,0.96) 0%, rgba(15,13,18,0.98) 100%)',
             border: '1px solid rgba(255,255,255,0.12)',
             boxShadow:
               'inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(255,255,255,0.04), 0 14px 40px rgba(0,0,0,0.5)',
@@ -87,7 +86,7 @@ function SideItem({ item, active }: { item: NavItem; active: boolean }) {
       href={href}
       onClick={hapticSelect}
       aria-label={label}
-      className="relative flex flex-col items-center gap-1 px-3 py-1 flex-1"
+      className="relative flex flex-1 flex-col items-center gap-1 px-3 py-1"
       style={{
         WebkitTapHighlightColor: 'transparent',
       }}
@@ -144,7 +143,7 @@ function CenterFab({ item, active }: { item: NavItem; active: boolean }) {
       href={href}
       onClick={hapticSelect}
       aria-label={label}
-      className="relative flex flex-col items-center flex-1"
+      className="relative flex flex-1 flex-col items-center"
       style={{
         WebkitTapHighlightColor: 'transparent',
       }}
@@ -167,7 +166,7 @@ function CenterFab({ item, active }: { item: NavItem; active: boolean }) {
         {/* Внешнее кольцо-подложка — отделяет FAB от навбара */}
         <span
           aria-hidden
-          className="absolute inset-[-4px] rounded-full pointer-events-none"
+          className="pointer-events-none absolute inset-[-4px] rounded-full"
           style={{ background: 'var(--bg)', zIndex: -1 }}
         />
 
@@ -178,12 +177,12 @@ function CenterFab({ item, active }: { item: NavItem; active: boolean }) {
           <>
             <span
               aria-hidden
-              className="absolute rounded-full pointer-events-none fab-ring"
+              className="fab-ring pointer-events-none absolute rounded-full"
               style={{ inset: -3, border: '1.5px solid var(--rose)' }}
             />
             <span
               aria-hidden
-              className="absolute rounded-full pointer-events-none fab-ring"
+              className="fab-ring pointer-events-none absolute rounded-full"
               style={{ inset: -3, border: '1.5px solid var(--rose)', animationDelay: '1.1s' }}
             />
           </>

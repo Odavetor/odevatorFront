@@ -140,9 +140,9 @@ export default function PricingEditor() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [drafts, setDrafts] = useState<Record<string, string>>({})
-  const [packDrafts, setPackDrafts] = useState<Record<string, { price: string; active: boolean }>>(
-    {},
-  )
+  const [packDrafts, setPackDrafts] = useState<
+    Record<string, { price: string; active: boolean; discount: string }>
+  >({})
   const [savingKey, setSavingKey] = useState<string | null>(null)
 
   function packKey(p: PackPricingItem) {
@@ -166,7 +166,11 @@ export default function PricingEditor() {
           Object.fromEntries(
             p.value.map((x) => [
               packKey(x),
-              { price: minorToRub(x.price_minor), active: x.is_active },
+              {
+                price: minorToRub(x.price_minor),
+                active: x.is_active,
+                discount: x.discount_price_minor != null ? minorToRub(x.discount_price_minor) : '',
+              },
             ]),
           ),
         )
@@ -220,11 +224,28 @@ export default function PricingEditor() {
       setError('Цена должна быть числом ≥ 0')
       return
     }
+    const discountRaw = d.discount.trim()
+    let discountMinor: number | null = null
+    if (discountRaw !== '') {
+      const dn = Number(discountRaw)
+      if (Number.isNaN(dn) || dn < 0) {
+        hapticNotify('warning')
+        setError('Цена со скидкой должна быть числом ≥ 0')
+        return
+      }
+      if (rubToMinor(dn) >= rubToMinor(num)) {
+        hapticNotify('warning')
+        setError('Цена со скидкой должна быть меньше обычной')
+        return
+      }
+      discountMinor = rubToMinor(dn)
+    }
     setSavingKey(k)
     try {
       await updatePackPricing(p.tier, p.quantity, {
         price_minor: rubToMinor(num),
         is_active: d.active,
+        discount_price_minor: discountMinor,
       })
       haptic('light')
       hapticNotify('success')
@@ -238,11 +259,13 @@ export default function PricingEditor() {
   }
 
   // Группируем паки по tier для рендера
-  const packsByTier = packs.reduce<Record<string, PackPricingItem[]>>((acc, p) => {
-    if (!acc[p.tier]) acc[p.tier] = []
-    acc[p.tier].push(p)
-    return acc
-  }, {})
+  const packsByTier = packs
+    .filter((p) => p.tier === 'standard')
+    .reduce<Record<string, PackPricingItem[]>>((acc, p) => {
+      if (!acc[p.tier]) acc[p.tier] = []
+      acc[p.tier].push(p)
+      return acc
+    }, {})
   for (const t of Object.keys(packsByTier)) {
     packsByTier[t].sort((a, b) => a.quantity - b.quantity)
   }
@@ -273,8 +296,9 @@ export default function PricingEditor() {
         <div className="text-[12px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>
           Цены в <strong>рублях</strong> (можно с копейками через точку, напр. <strong>49</strong>{' '}
           или <strong>49.90</strong>). Глобальные цены — для всех генераций по умолчанию; у
-          конкретной опции/сценария можно задать своё значение, оно перебьёт глобальное. Тир «Акции»
-          — отдельные акционные цены, кредиты по ним не сгорают.
+          конкретной опции/сценария можно задать своё значение, оно перебьёт глобальное. У пака
+          можно задать <strong>цену со скидкой</strong> — тогда в магазине обычная цена показывается
+          зачёркнутой, а списывается цена со скидкой. Пусто = скидки нет.
         </div>
       </div>
 
@@ -395,76 +419,123 @@ export default function PricingEditor() {
             <div className="flex flex-col gap-1.5">
               {packsByTier[tier].map((p) => {
                 const k = packKey(p)
-                const d = packDrafts[k] ?? { price: minorToRub(p.price_minor), active: p.is_active }
-                const changed = d.price !== minorToRub(p.price_minor) || d.active !== p.is_active
+                const d = packDrafts[k] ?? {
+                  price: minorToRub(p.price_minor),
+                  active: p.is_active,
+                  discount:
+                    p.discount_price_minor != null ? minorToRub(p.discount_price_minor) : '',
+                }
+                const savedDiscount =
+                  p.discount_price_minor != null ? minorToRub(p.discount_price_minor) : ''
+                const changed =
+                  d.price !== minorToRub(p.price_minor) ||
+                  d.active !== p.is_active ||
+                  d.discount.trim() !== savedDiscount
                 return (
                   <div
                     key={k}
-                    className="flex items-center gap-2 rounded-xl px-3 py-2"
+                    className="flex flex-col gap-2 rounded-xl px-3 py-2"
                     style={{
                       background: 'rgba(255,255,255,0.04)',
                       border: '1px solid rgba(255,255,255,0.08)',
                       opacity: d.active ? 1 : 0.55,
                     }}
                   >
-                    <div
-                      className="font-display flex-shrink-0"
-                      style={{ fontSize: 22, color: 'var(--text)', minWidth: 32 }}
-                    >
-                      {p.quantity}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="font-display flex-shrink-0"
+                        style={{ fontSize: 22, color: 'var(--text)', minWidth: 32 }}
+                      >
+                        {p.quantity}
+                      </div>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={d.price}
+                        onChange={(e) =>
+                          setPackDrafts((prev) => ({
+                            ...prev,
+                            [k]: { ...d, price: e.target.value },
+                          }))
+                        }
+                        className="flex-1 rounded-lg px-2.5 py-1.5 font-mono text-sm"
+                        style={{
+                          background: 'rgba(0,0,0,0.3)',
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          color: 'white',
+                        }}
+                      />
+                      <span
+                        className="flex-shrink-0 font-mono text-[10px]"
+                        style={{ color: 'rgba(255,255,255,0.45)', minWidth: 56 }}
+                      >
+                        = {(Number(d.price) || 0).toFixed(2)} ₽
+                      </span>
+                      <button
+                        onClick={() =>
+                          setPackDrafts((prev) => ({ ...prev, [k]: { ...d, active: !d.active } }))
+                        }
+                        title={d.active ? 'Выключить' : 'Включить'}
+                        className="flex-shrink-0 rounded px-2 py-1 text-[10px] font-medium"
+                        style={{
+                          background: d.active ? 'rgba(95,210,150,0.10)' : 'rgba(255,255,255,0.04)',
+                          border: `1px solid ${d.active ? 'rgba(95,210,150,0.28)' : 'var(--border-1)'}`,
+                          color: d.active ? '#5fd296' : 'rgba(255,255,255,0.4)',
+                        }}
+                      >
+                        {d.active ? 'on' : 'off'}
+                      </button>
+                      <button
+                        onClick={() => handleSavePack(p)}
+                        disabled={!changed || savingKey === k}
+                        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md"
+                        style={{
+                          background: changed ? 'var(--rose-dim)' : 'rgba(255,255,255,0.04)',
+                          border: changed
+                            ? '1px solid var(--border-rose)'
+                            : '1px solid var(--border-1)',
+                          color: changed ? 'var(--rose)' : 'rgba(255,255,255,0.3)',
+                          opacity: savingKey === k ? 0.5 : 1,
+                        }}
+                      >
+                        <FloppyDisk size={11} weight="fill" />
+                      </button>
                     </div>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={d.price}
-                      onChange={(e) =>
-                        setPackDrafts((prev) => ({
-                          ...prev,
-                          [k]: { ...d, price: e.target.value },
-                        }))
-                      }
-                      className="flex-1 rounded-lg px-2.5 py-1.5 font-mono text-sm"
-                      style={{
-                        background: 'rgba(0,0,0,0.3)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        color: 'white',
-                      }}
-                    />
-                    <span
-                      className="flex-shrink-0 font-mono text-[10px]"
-                      style={{ color: 'rgba(255,255,255,0.45)', minWidth: 56 }}
-                    >
-                      = {(Number(d.price) || 0).toFixed(2)} ₽
-                    </span>
-                    <button
-                      onClick={() =>
-                        setPackDrafts((prev) => ({ ...prev, [k]: { ...d, active: !d.active } }))
-                      }
-                      title={d.active ? 'Выключить' : 'Включить'}
-                      className="flex-shrink-0 rounded px-2 py-1 text-[10px] font-medium"
-                      style={{
-                        background: d.active ? 'rgba(95,210,150,0.10)' : 'rgba(255,255,255,0.04)',
-                        border: `1px solid ${d.active ? 'rgba(95,210,150,0.28)' : 'var(--border-1)'}`,
-                        color: d.active ? '#5fd296' : 'rgba(255,255,255,0.4)',
-                      }}
-                    >
-                      {d.active ? 'on' : 'off'}
-                    </button>
-                    <button
-                      onClick={() => handleSavePack(p)}
-                      disabled={!changed || savingKey === k}
-                      className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md"
-                      style={{
-                        background: changed ? 'var(--rose-dim)' : 'rgba(255,255,255,0.04)',
-                        border: changed
-                          ? '1px solid var(--border-rose)'
-                          : '1px solid var(--border-1)',
-                        color: changed ? 'var(--rose)' : 'rgba(255,255,255,0.3)',
-                        opacity: savingKey === k ? 0.5 : 1,
-                      }}
-                    >
-                      <FloppyDisk size={11} weight="fill" />
-                    </button>
+
+                    <div className="flex items-center gap-2 pl-[40px]">
+                      <span
+                        className="flex-shrink-0 font-mono text-[10px] uppercase"
+                        style={{ color: 'rgba(255,255,255,0.4)', letterSpacing: '0.12em' }}
+                      >
+                        скидка
+                      </span>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        placeholder="нет"
+                        value={d.discount}
+                        onChange={(e) =>
+                          setPackDrafts((prev) => ({
+                            ...prev,
+                            [k]: { ...d, discount: e.target.value },
+                          }))
+                        }
+                        className="flex-1 rounded-lg px-2.5 py-1.5 font-mono text-sm"
+                        style={{
+                          background: 'rgba(0,0,0,0.3)',
+                          border: '1px solid rgba(201,150,106,0.28)',
+                          color: 'white',
+                        }}
+                      />
+                      <span
+                        className="flex-shrink-0 font-mono text-[10px]"
+                        style={{ color: 'rgba(255,255,255,0.45)', minWidth: 56 }}
+                      >
+                        {d.discount.trim() === ''
+                          ? '— ₽'
+                          : `= ${(Number(d.discount) || 0).toFixed(2)} ₽`}
+                      </span>
+                    </div>
                   </div>
                 )
               })}

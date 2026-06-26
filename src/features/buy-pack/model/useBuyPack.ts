@@ -7,7 +7,7 @@ import { useUser } from '@entities/user'
 import { haptic, hapticNotify, openLink } from '@shared/lib'
 
 export type BuyStep = 'select' | 'pending' | 'success'
-export type Tier = 'standard' | 'weekly_promo'
+export type Tier = 'standard'
 
 const FALLBACK_OPTIONS: GenerationPackOption[] = [
   { quantity: 1, price_minor: 4900, currency: 'RUB' },
@@ -39,17 +39,13 @@ function ensureCoreOptions(opts: GenerationPackOption[]): GenerationPackOption[]
 
 export interface UseBuyPackResult {
   step: BuyStep
-  tier: Tier
-  hasPromo: boolean
   options: GenerationPackOption[]
-  standardPriceByQty: Record<number, number>
   selectedOption: GenerationPackOption | null
   selectedMethod: PaymentMethodId | null
   redirectUrl: string | null
   loading: boolean
   error: string | null
 
-  setTier: (t: Tier) => void
   selectQuantity: (q: number) => void
   selectMethod: (m: PaymentMethodId) => void
   pay: (errorFallback: string, errorNoLink: string) => Promise<void>
@@ -62,7 +58,7 @@ export function useBuyPack(): UseBuyPackResult {
   const { wallet, refreshBalance } = useUser()
 
   const [step, setStep] = useState<BuyStep>('select')
-  const [tier, setTier] = useState<Tier>('standard')
+  const tier: Tier = 'standard'
   const [catalog, setCatalog] = useState<GenerationPackCatalog | null>(null)
   const [selectedQty, setSelectedQty] = useState<number | null>(null)
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethodId | null>(null)
@@ -84,17 +80,8 @@ export function useBuyPack(): UseBuyPackResult {
   }, [])
 
   const tierData = catalog?.tiers.find((t) => t.id === tier)
-  const options =
-    tier === 'weekly_promo'
-      ? (tierData?.options ?? [])
-      : ensureCoreOptions(tierData?.options?.length ? tierData.options : FALLBACK_OPTIONS)
+  const options = ensureCoreOptions(tierData?.options?.length ? tierData.options : FALLBACK_OPTIONS)
 
-  const standardTier = catalog?.tiers.find((t) => t.id === 'standard')
-  const standardOptions = standardTier?.options?.length ? standardTier.options : FALLBACK_OPTIONS
-  const standardPriceByQty: Record<number, number> = {}
-  for (const o of standardOptions) standardPriceByQty[o.quantity] = o.price_minor
-
-  const hasPromo = Boolean(catalog?.tiers.find((t) => t.id === 'weekly_promo')?.options?.length)
   const selectedOption = options.find((o) => o.quantity === selectedQty) ?? null
 
   const selectQuantity = useCallback((q: number) => {
@@ -191,16 +178,12 @@ export function useBuyPack(): UseBuyPackResult {
 
   return {
     step,
-    tier,
-    hasPromo,
     options,
-    standardPriceByQty,
     selectedOption,
     selectedMethod,
     redirectUrl,
     loading,
     error,
-    setTier,
     selectQuantity,
     selectMethod,
     pay,

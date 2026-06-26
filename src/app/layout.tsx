@@ -44,15 +44,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="ru"
-      className={`${onest.variable} ${jetbrains.variable}`}
-    >
+    <html lang="ru" className={`${onest.variable} ${jetbrains.variable}`}>
       <body>
-        <Script
-          src="https://telegram.org/js/telegram-web-app.js"
-          strategy="beforeInteractive"
-        />
+        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         <AuroraBg />
         <div style={{ position: 'relative', zIndex: 1, minHeight: '100dvh' }}>
           <TelegramOnlyGate>

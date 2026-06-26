@@ -8,7 +8,6 @@ import { PremiumButton } from '@shared/ui'
 import { EASE_EDITORIAL, tt, useLang, useFx, formatPrice } from '@shared/lib'
 import { useContent } from '@/lib/content'
 import type { UseBuyPackResult } from '@features/buy-pack'
-import { TierSwitch } from './TierSwitch'
 
 interface Props {
   buy: UseBuyPackResult
@@ -22,13 +21,10 @@ export function SelectStep({ buy }: Props) {
   const buttonChoosePack = useContent('shop.button.choose_pack')
   const buttonChooseMethod = useContent('shop.button.choose_method')
   const buttonCreating = useContent('shop.button.creating')
-  const tierStandardLabel = useContent('shop.tier.standard')
-  const tierPromoLabel = useContent('shop.tier.promo')
   const errorPaymentInit = useContent('error.payment_init')
   const errorPaymentNoLink = useContent('error.payment_no_link')
 
   const enabled = !!buy.selectedOption && !!buy.selectedMethod
-  const isPromo = buy.tier === 'weekly_promo'
 
   return (
     <motion.div
@@ -39,21 +35,11 @@ export function SelectStep({ buy }: Props) {
       transition={{ duration: 0.45, ease: EASE_EDITORIAL }}
       className="flex flex-col gap-6"
     >
-      {buy.hasPromo && (
-        <TierSwitch
-          tier={buy.tier}
-          onChange={buy.setTier}
-          standardLabel={tierStandardLabel}
-          promoLabel={tierPromoLabel}
-        />
-      )}
-
       <PackCollection
         options={buy.options}
         selectedQuantity={buy.selectedOption?.quantity ?? null}
         onSelect={buy.selectQuantity}
         tierLabel={stepPack}
-        compareByQty={isPromo ? buy.standardPriceByQty : undefined}
       />
 
       <PaymentMethodGrid
@@ -77,7 +63,7 @@ export function SelectStep({ buy }: Props) {
       )}
 
       <PremiumButton
-        tone={isPromo ? 'gold' : 'rose'}
+        tone="rose"
         size="lg"
         glow={enabled}
         disabled={!enabled || buy.loading}
@@ -87,7 +73,12 @@ export function SelectStep({ buy }: Props) {
         {buy.loading
           ? buttonCreating
           : enabled && buy.selectedOption
-            ? `${tt({ ru: 'Оплатить', en: 'Pay', de: 'Bezahlen' })} ${formatPrice(buy.selectedOption.price_minor)}`
+            ? `${tt({ ru: 'Оплатить', en: 'Pay', de: 'Bezahlen' })} ${formatPrice(
+                buy.selectedOption.discount_price_minor != null &&
+                  buy.selectedOption.discount_price_minor < buy.selectedOption.price_minor
+                  ? buy.selectedOption.discount_price_minor
+                  : buy.selectedOption.price_minor,
+              )}`
             : buy.selectedOption
               ? buttonChooseMethod
               : buttonChoosePack}

@@ -62,7 +62,10 @@ export default function WithdrawalsAdmin() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <div className="flex gap-1 rounded-full p-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-1)' }}>
+        <div
+          className="flex gap-1 rounded-full p-1"
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-1)' }}
+        >
           {[
             { v: true, label: 'Ожидают' },
             { v: false, label: 'Все' },
@@ -88,12 +91,23 @@ export default function WithdrawalsAdmin() {
           className="flex h-8 w-8 items-center justify-center rounded-lg"
           style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-1)' }}
         >
-          <ArrowClockwise size={14} color="rgba(255,255,255,0.6)" className={loading ? 'animate-spin-slow' : ''} />
+          <ArrowClockwise
+            size={14}
+            color="rgba(255,255,255,0.6)"
+            className={loading ? 'animate-spin-slow' : ''}
+          />
         </button>
       </div>
 
       {error && (
-        <p className="rounded-xl px-3 py-2 text-xs" style={{ background: 'rgba(180,30,60,0.12)', border: '1px solid rgba(180,30,60,0.22)', color: '#ff9aae' }}>
+        <p
+          className="rounded-xl px-3 py-2 text-xs"
+          style={{
+            background: 'rgba(180,30,60,0.12)',
+            border: '1px solid rgba(180,30,60,0.22)',
+            color: '#ff9aae',
+          }}
+        >
           {error}
         </p>
       )}
@@ -111,17 +125,29 @@ export default function WithdrawalsAdmin() {
           <div
             key={w.id}
             className="flex flex-col gap-2 rounded-xl px-3 py-3"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+            style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="font-sans tabular-nums" style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>
+              <span
+                className="font-sans tabular-nums"
+                style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)' }}
+              >
                 {fmtRub(w.amount_minor)} ₽
               </span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: meta.color }}>
+              <span
+                className="text-[10px] font-semibold uppercase tracking-wider"
+                style={{ color: meta.color }}
+              >
                 {meta.label}
               </span>
             </div>
-            <div className="flex flex-col gap-0.5 text-[12px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            <div
+              className="flex flex-col gap-0.5 text-[12px]"
+              style={{ color: 'rgba(255,255,255,0.6)' }}
+            >
               <span>{handle}</span>
               <span className="break-all" style={{ color: 'rgba(255,255,255,0.85)' }}>
                 Реквизиты: {w.details}
@@ -136,7 +162,12 @@ export default function WithdrawalsAdmin() {
                   onClick={() => decide(w, true)}
                   disabled={busyId === w.id}
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold"
-                  style={{ background: 'rgba(95,210,150,0.12)', border: '1px solid rgba(95,210,150,0.3)', color: '#5fd296', opacity: busyId === w.id ? 0.5 : 1 }}
+                  style={{
+                    background: 'rgba(95,210,150,0.12)',
+                    border: '1px solid rgba(95,210,150,0.3)',
+                    color: '#5fd296',
+                    opacity: busyId === w.id ? 0.5 : 1,
+                  }}
                 >
                   <Check size={13} weight="bold" /> Подтвердить
                 </button>
@@ -144,7 +175,12 @@ export default function WithdrawalsAdmin() {
                   onClick={() => decide(w, false)}
                   disabled={busyId === w.id}
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold"
-                  style={{ background: 'rgba(180,30,60,0.12)', border: '1px solid rgba(180,30,60,0.28)', color: '#ff9aae', opacity: busyId === w.id ? 0.5 : 1 }}
+                  style={{
+                    background: 'rgba(180,30,60,0.12)',
+                    border: '1px solid rgba(180,30,60,0.28)',
+                    color: '#ff9aae',
+                    opacity: busyId === w.id ? 0.5 : 1,
+                  }}
                 >
                   <X size={13} weight="bold" /> Отклонить
                 </button>

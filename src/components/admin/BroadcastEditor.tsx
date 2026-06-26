@@ -79,7 +79,8 @@ export default function BroadcastEditor() {
     if (!p.text && !p.media_url) return 'Добавьте текст или изображение'
     for (const row of p.buttons) {
       const b = row[0]
-      if (!/^(https?:\/\/|tg:\/\/)/i.test(b.url)) return `Кнопка «${b.text}»: ссылка должна начинаться с http(s):// или tg://`
+      if (!/^(https?:\/\/|tg:\/\/)/i.test(b.url))
+        return `Кнопка «${b.text}»: ссылка должна начинаться с http(s):// или tg://`
     }
     return null
   }
@@ -235,7 +236,13 @@ export default function BroadcastEditor() {
             {uploading ? 'Загрузка…' : 'Прикрепить изображение'}
           </button>
         )}
-        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleUpload}
+        />
       </section>
 
       <section className="flex flex-col gap-2.5">
@@ -246,7 +253,11 @@ export default function BroadcastEditor() {
           <button
             onClick={addButton}
             className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-medium"
-            style={{ background: 'var(--rose-dim)', border: '1px solid var(--border-rose)', color: 'var(--rose)' }}
+            style={{
+              background: 'var(--rose-dim)',
+              border: '1px solid var(--border-rose)',
+              color: 'var(--rose)',
+            }}
           >
             <Plus size={11} weight="bold" /> Добавить
           </button>
@@ -263,7 +274,11 @@ export default function BroadcastEditor() {
               onChange={(e) => updateButton(i, { text: e.target.value })}
               placeholder="Текст"
               className="w-1/3 rounded-lg px-2.5 py-1.5 text-sm"
-              style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+              style={{
+                background: 'rgba(0,0,0,0.3)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                color: 'white',
+              }}
             />
             <input
               value={b.url}
@@ -271,7 +286,11 @@ export default function BroadcastEditor() {
               placeholder="https://…"
               inputMode="url"
               className="flex-1 rounded-lg px-2.5 py-1.5 text-sm"
-              style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+              style={{
+                background: 'rgba(0,0,0,0.3)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                color: 'white',
+              }}
             />
             <button
               onClick={() => removeButton(i)}
@@ -303,9 +322,16 @@ export default function BroadcastEditor() {
 
         <label
           className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[12px]"
-          style={{ background: 'rgba(201,150,106,0.08)', border: '1px solid rgba(201,150,106,0.22)' }}
+          style={{
+            background: 'rgba(201,150,106,0.08)',
+            border: '1px solid rgba(201,150,106,0.22)',
+          }}
         >
-          <input type="checkbox" checked={confirmAll} onChange={(e) => setConfirmAll(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={confirmAll}
+            onChange={(e) => setConfirmAll(e.target.checked)}
+          />
           <span style={{ color: 'rgba(255,255,255,0.7)' }}>
             Понимаю, что сообщение уйдёт всем пользователям бота
           </span>
@@ -314,9 +340,11 @@ export default function BroadcastEditor() {
         <button
           onClick={handleSend}
           disabled={busy || !confirmAll}
-          className="flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold no-tap-highlight"
+          className="no-tap-highlight flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold"
           style={{
-            background: confirmAll ? 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)' : 'rgba(255,255,255,0.04)',
+            background: confirmAll
+              ? 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)'
+              : 'rgba(255,255,255,0.04)',
             color: confirmAll ? '#fff' : 'rgba(255,255,255,0.3)',
             boxShadow: confirmAll ? '0 10px 28px -8px rgba(224,63,106,0.5)' : 'none',
             opacity: busy ? 0.6 : 1,
@@ -380,7 +408,11 @@ function Preview({
               <div
                 key={i}
                 className="rounded-lg py-2 text-center text-[13px] font-medium"
-                style={{ background: 'rgba(63,212,224,0.1)', border: '1px solid rgba(63,212,224,0.22)', color: 'var(--splash-cyan)' }}
+                style={{
+                  background: 'rgba(63,212,224,0.1)',
+                  border: '1px solid rgba(63,212,224,0.22)',
+                  color: 'var(--splash-cyan)',
+                }}
               >
                 {b.text || 'Кнопка'}
               </div>
@@ -405,14 +437,26 @@ function HistoryRow({ b }: { b: Broadcast }) {
         <span className="truncate text-[12px]" style={{ color: 'rgba(255,255,255,0.7)' }}>
           {b.text ? b.text.slice(0, 48) : b.media_type ? '🖼 медиа' : `#${b.id}`}
         </span>
-        <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wider" style={{ color: meta.color }}>
+        <span
+          className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wider"
+          style={{ color: meta.color }}
+        >
           {meta.label}
         </span>
       </div>
-      <div className="h-1 w-full overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
-        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: meta.color, transition: 'width 0.3s ease' }} />
+      <div
+        className="h-1 w-full overflow-hidden rounded-full"
+        style={{ background: 'rgba(255,255,255,0.06)' }}
+      >
+        <div
+          className="h-full rounded-full"
+          style={{ width: `${pct}%`, background: meta.color, transition: 'width 0.3s ease' }}
+        />
       </div>
-      <div className="flex items-center gap-3 text-[10px] tabular-nums" style={{ color: 'rgba(255,255,255,0.45)' }}>
+      <div
+        className="flex items-center gap-3 text-[10px] tabular-nums"
+        style={{ color: 'rgba(255,255,255,0.45)' }}
+      >
         <span style={{ color: '#5fd296' }}>✓ {b.sent_count}</span>
         <span style={{ color: '#ff9aae' }}>✕ {b.failed_count}</span>
         <span>заблок. {b.blocked_count}</span>

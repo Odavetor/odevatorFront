@@ -9,7 +9,6 @@ import type { GenerationPackOption } from '@shared/api'
 
 interface PackCardProps {
   option: GenerationPackOption
-  compareAtMinor?: number
   active: boolean
   featured: boolean
   index: number
@@ -52,23 +51,16 @@ const SPLASH_TOKENS: Record<
   },
 }
 
-export function PackCard({
-  option,
-  compareAtMinor,
-  active,
-  featured,
-  index,
-  onSelect,
-}: PackCardProps) {
+export function PackCard({ option, active, featured, index, onSelect }: PackCardProps) {
   useLang()
   useFx()
   const meta = getPackMeta(option)
   const tokens = SPLASH_TOKENS[meta.splash]
-  const perUnitMinor = Math.round(option.price_minor / option.quantity)
-  const discount =
-    compareAtMinor && compareAtMinor > option.price_minor
-      ? Math.round((1 - option.price_minor / compareAtMinor) * 100)
-      : 0
+  const hasDiscount =
+    option.discount_price_minor != null && option.discount_price_minor < option.price_minor
+  const mainMinor = hasDiscount ? (option.discount_price_minor as number) : option.price_minor
+  const perUnitMinor = Math.round(mainMinor / option.quantity)
+  const discount = hasDiscount ? Math.round((1 - mainMinor / option.price_minor) * 100) : 0
 
   return (
     <motion.button
@@ -172,7 +164,7 @@ export function PackCard({
                 lineHeight: 1,
               }}
             >
-              {formatPrice(compareAtMinor ?? 0)}
+              {formatPrice(option.price_minor)}
             </span>
           )}
           <span
@@ -185,7 +177,7 @@ export function PackCard({
               lineHeight: 1,
             }}
           >
-            {formatPrice(option.price_minor)}
+            {formatPrice(mainMinor)}
           </span>
           <span
             className="font-sans tabular-nums"

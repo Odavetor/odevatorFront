@@ -9,7 +9,6 @@ interface PackCollectionProps {
   selectedQuantity: number | null
   onSelect: (quantity: number) => void
   tierLabel: string
-  compareByQty?: Record<number, number>
 }
 
 export function PackCollection({
@@ -17,7 +16,6 @@ export function PackCollection({
   selectedQuantity,
   onSelect,
   tierLabel,
-  compareByQty,
 }: PackCollectionProps) {
   const sorted = [...options].sort((a, b) => {
     if (isFeaturedQuantity(a.quantity)) return -1
@@ -45,7 +43,6 @@ export function PackCollection({
             key={opt.quantity}
             option={opt}
             index={i}
-            compareAtMinor={compareByQty?.[opt.quantity]}
             active={selectedQuantity === opt.quantity}
             featured={isFeaturedQuantity(opt.quantity)}
             onSelect={onSelect}

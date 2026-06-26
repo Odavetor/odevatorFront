@@ -24,6 +24,11 @@ export function PendingStep({ buy }: Props) {
 
   if (!buy.selectedOption) return null
   const method = PAYMENT_METHODS_SPEC().find((m) => m.id === buy.selectedMethod)
+  const payMinor =
+    buy.selectedOption.discount_price_minor != null &&
+    buy.selectedOption.discount_price_minor < buy.selectedOption.price_minor
+      ? buy.selectedOption.discount_price_minor
+      : buy.selectedOption.price_minor
 
   return (
     <motion.div
@@ -61,7 +66,7 @@ export function PendingStep({ buy }: Props) {
             className="font-display"
             style={{ fontSize: 26, color: 'var(--rose)', letterSpacing: '-0.018em' }}
           >
-            {formatPrice(buy.selectedOption.price_minor)}
+            {formatPrice(payMinor)}
           </span>
           <span
             className="rounded px-2 py-0.5 font-mono text-[11px] uppercase"
