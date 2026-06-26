@@ -1,11 +1,13 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { ShieldCheck } from '@phosphor-icons/react'
+import { ShieldCheck, ArrowRight } from '@phosphor-icons/react'
 import { DisplayTitle, Kicker, LanguageSwitcher } from '@shared/ui'
 import { MemberCard } from '@widgets/member-card'
 import { EASE_EDITORIAL, tt } from '@shared/lib'
+import { fetchAffiliateCode } from '@/lib/referral'
 import { useUser } from '@entities/user'
 import { BottomNav } from '@widgets/bottom-nav'
 import { useContent } from '@entities/content'
@@ -26,6 +28,17 @@ export function ProfileView() {
   const initials =
     ((tgUser?.first_name?.[0] ?? '') + (tgUser?.last_name?.[0] ?? '')).toUpperCase() || 'V'
   const handle = tgUser?.username ? `@${tgUser.username}` : ''
+
+  const [affCode, setAffCode] = useState<string | null>(null)
+  useEffect(() => {
+    fetchAffiliateCode()
+      .then((r) => setAffCode(r.code || null))
+      .catch(() => {})
+  }, [])
+  const affiliateLink =
+    me?.referral_deep_link && affCode
+      ? `${me.referral_deep_link.split('?')[0]}?start=_tgr_${affCode}`
+      : ''
 
   return (
     <div className="flex min-h-[100dvh] flex-col">
@@ -72,12 +85,41 @@ export function ProfileView() {
 
       <DrillDownList />
 
-      {me?.referral_deep_link && (
+      {affiliateLink ? (
         <ReferralCard
-          link={me.referral_deep_link}
-          code={me.referral_code ?? ''}
+          link={affiliateLink}
+          code={affCode ?? ''}
           earnedMinor={refBalanceMinor}
         />
+      ) : (
+        <Link
+          href="/profile/referrals"
+          onClick={() => haptic('light')}
+          className="no-tap-highlight mx-5 mt-4 flex items-center gap-3 rounded-2xl px-4 py-4"
+          style={{
+            background:
+              'linear-gradient(135deg, rgba(224,63,106,0.18) 0%, rgba(31,25,41,0.6) 100%)',
+            border: '1px solid var(--border-rose)',
+          }}
+        >
+          <div className="flex flex-1 flex-col gap-0.5">
+            <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>
+              {tt({
+                ru: 'Привяжите партнёрскую ссылку',
+                en: 'Bind your affiliate link',
+                de: 'Partnerlink verknüpfen',
+              })}
+            </span>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>
+              {tt({
+                ru: 'Чтобы получать 70% с приглашённых',
+                en: 'To earn 70% from your referrals',
+                de: 'Um 70% von Empfehlungen zu verdienen',
+              })}
+            </span>
+          </div>
+          <ArrowRight size={18} color="var(--rose)" weight="bold" />
+        </Link>
       )}
 
       <ContactsCard />

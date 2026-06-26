@@ -428,7 +428,8 @@ export function ReferralView() {
                         !bindBusy && affLink.trim().length > 0
                           ? 'linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%)'
                           : 'rgba(255,255,255,0.04)',
-                      color: !bindBusy && affLink.trim().length > 0 ? '#fff' : 'rgba(255,255,255,0.3)',
+                      color:
+                        !bindBusy && affLink.trim().length > 0 ? '#fff' : 'rgba(255,255,255,0.3)',
                     }}
                   >
                     {bindBusy
