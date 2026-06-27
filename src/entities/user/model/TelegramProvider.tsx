@@ -13,6 +13,7 @@ import {
   getDevViewAs,
   type DevViewAs,
   setLang,
+  setLangPersisted,
   storedLang,
   useLang,
 } from '@shared/lib'
@@ -134,6 +135,13 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
   // Resolve the active UI language: a manual choice (localStorage) always wins,
   // otherwise follow the Telegram-provided language_code (backend, then client).
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlLang = new URLSearchParams(window.location.search).get('lang')
+      if (urlLang === 'ru' || urlLang === 'en' || urlLang === 'de') {
+        setLangPersisted(urlLang)
+        return
+      }
+    }
     const manual = storedLang()
     if (manual) {
       setLang(manual)
