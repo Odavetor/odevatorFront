@@ -86,11 +86,7 @@ export function ProfileView() {
       <DrillDownList />
 
       {affiliateLink ? (
-        <ReferralCard
-          link={affiliateLink}
-          code={affCode ?? ''}
-          earnedMinor={refBalanceMinor}
-        />
+        <ReferralCard link={affiliateLink} code={affCode ?? ''} earnedMinor={refBalanceMinor} />
       ) : (
         <Link
           href="/profile/referrals"

@@ -34,6 +34,7 @@ export interface GenerationPackOption {
   quantity: number
   price_minor: number
   discount_price_minor?: number | null
+  stars?: number
   currency: string
 }
 export interface GenerationPackTier {

@@ -185,6 +185,14 @@ export function PackCard({ option, active, featured, index, onSelect }: PackCard
           >
             {formatPrice(perUnitMinor)}/{tt({ ru: 'фото', en: 'photo', de: 'Foto' })}
           </span>
+          {option.stars ? (
+            <span
+              className="font-sans tabular-nums"
+              style={{ fontSize: 11, color: '#f5b942', fontWeight: 700 }}
+            >
+              ⭐ {option.stars}
+            </span>
+          ) : null}
         </div>
       </div>
 
