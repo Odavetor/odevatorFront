@@ -10,6 +10,7 @@ import HeroEditor from '@/components/admin/HeroEditor'
 import PhotoCatalogEditor from '@/components/admin/PhotoCatalogEditor'
 import TextsEditor from '@/components/admin/TextsEditor'
 import PricingEditor from '@/components/admin/PricingEditor'
+import CreditsAdmin from '@/components/admin/CreditsAdmin'
 import BroadcastEditor from '@/components/admin/BroadcastEditor'
 import StatsDashboard from '@/components/admin/StatsDashboard'
 import WithdrawalsAdmin from '@/components/admin/WithdrawalsAdmin'
@@ -24,6 +25,7 @@ type Tab =
   | 'Главная'
   | 'Фото'
   | 'Цены'
+  | 'Токены'
   | 'Тексты'
   | 'Документы'
   | 'Рассылка'
@@ -35,6 +37,7 @@ const TABS: Tab[] = [
   'Главная',
   'Фото',
   'Цены',
+  'Токены',
   'Тексты',
   'Документы',
   'Рассылка',
@@ -203,6 +206,7 @@ export default function AdminPage() {
           {tab === 'Главная' && <HeroEditor />}
           {tab === 'Фото' && <PhotoCatalogEditor />}
           {tab === 'Цены' && <PricingEditor />}
+          {tab === 'Токены' && <CreditsAdmin />}
           {tab === 'Тексты' && <TextsEditor />}
           {tab === 'Документы' && <LegalEditor />}
           {tab === 'Рассылка' && <BroadcastEditor />}
